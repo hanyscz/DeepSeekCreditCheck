@@ -29,24 +29,12 @@ public class AppDbContext
             ToppedUpBalance TEXT    NOT NULL DEFAULT '0.00'
         );
 
-        CREATE TABLE IF NOT EXISTS UsageRecords (
-            RecordId     INTEGER PRIMARY KEY AUTOINCREMENT,
-            Timestamp    TEXT    NOT NULL,
-            PeriodStart  TEXT,
-            PeriodEnd    TEXT,
-            TotalTokens  INTEGER NOT NULL DEFAULT 0,
-            InputTokens  INTEGER NOT NULL DEFAULT 0,
-            OutputTokens INTEGER NOT NULL DEFAULT 0,
-            CachedTokens INTEGER
-        );
-
         CREATE TABLE IF NOT EXISTS AppSettings (
             Key   TEXT PRIMARY KEY,
             Value TEXT NOT NULL
         );
 
-        CREATE INDEX IF NOT EXISTS idx_balance_timestamp ON BalanceSnapshots(Timestamp);
-        CREATE INDEX IF NOT EXISTS idx_usage_timestamp ON UsageRecords(Timestamp);";
+        CREATE INDEX IF NOT EXISTS idx_balance_timestamp ON BalanceSnapshots(Timestamp);";
 
         await connection.ExecuteAsync(sql);
     }

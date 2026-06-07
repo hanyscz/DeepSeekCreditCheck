@@ -1,6 +1,7 @@
 using System.IO;
 using System.Net.Http;
 using System.Windows;
+using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using DeepSeekCreditCheck.Core.Data;
 using DeepSeekCreditCheck.Core.Repositories;
@@ -14,10 +15,14 @@ public partial class App : Application
 {
     private IServiceProvider _services = null!;
     private TrayIconService _trayIcon = null!;
+    private CancellationTokenSource _pollCts = new();
 
-    protected override async void OnStartup(StartupEventArgs e)
+    protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        // Aplikace se ukončí jen explicitně — ne při zavření všech oken
+        ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
         var appDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -27,7 +32,7 @@ public partial class App : Application
         var dbPath = Path.Combine(appDir, "data.db");
         var logPath = Path.Combine(appDir, "app.log");
 
-        // Logging — inicializovat co nejdřív
+        // Logging
         Logger.Init(logPath);
         Logger.Info("=== DeepSeek Credit Check spuštěn ===");
         Logger.Info($"Log: {logPath}");
@@ -37,12 +42,11 @@ public partial class App : Application
 
         // DB
         var db = new AppDbContext(dbPath);
-        await db.InitializeAsync();
+        db.InitializeAsync().GetAwaiter().GetResult();
         services.AddSingleton(db);
 
         // Repositories
         services.AddSingleton<IBalanceRepository, BalanceRepository>();
-        services.AddSingleton<IUsageRepository, UsageRepository>();
 
         // Services
         services.AddSingleton<IAppSettingsService, AppSettingsService>();
@@ -61,14 +65,18 @@ public partial class App : Application
         // Tray icon
         _trayIcon = new TrayIconService(_services);
         _trayIcon.Initialize();
+        Logger.Info("Tray ikona inicializována");
 
-        // Eventy — MUSÍ být registrované PŘED StartAsync (první poll)
+        // Eventy
         var polling = _services.GetRequiredService<IPollingService>();
         polling.PollCompleted += (_, result) =>
         {
-            Dispatcher.Invoke(() =>
+            Logger.Info($"PollCompleted event — balance={result.Snapshot?.TotalBalance}");
+            Dispatcher.BeginInvoke(() =>
             {
+                Logger.Info($"Dispatcher.BeginInvoke — aktualizuji UI");
                 _trayIcon.UpdateTooltip(result);
+                _trayIcon.SetError("");
                 var dashboardVm = _services.GetRequiredService<DashboardViewModel>();
                 dashboardVm.OnPollCompleted(result);
             });
@@ -76,22 +84,31 @@ public partial class App : Application
 
         polling.PollFailed += (_, message) =>
         {
-            Dispatcher.Invoke(() => _trayIcon.SetError(message));
+            Logger.Warn($"PollFailed: {message}");
+            Dispatcher.BeginInvoke(() => _trayIcon.SetError(message));
         };
 
         var alertService = _services.GetRequiredService<AlertService>();
         alertService.AlertTriggered += (_, args) =>
         {
-            Dispatcher.Invoke(() => _trayIcon.ShowNotification(args.Message));
+            Logger.Info($"Alert: {args.Message}");
+            Dispatcher.BeginInvoke(() => _trayIcon.ShowNotification(args.Message));
         };
 
-        // Spustit polling (první poll proběhne uvnitř StartAsync)
-        var cts = new CancellationTokenSource();
-        await polling.StartAsync(cts.Token);
+        // Spustit polling s mírným zpožděním — až po inicializaci UI
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(async () =>
+        {
+            Logger.Info("Spouštím polling (Loaded priorita)...");
+            await polling.StartAsync(_pollCts.Token);
+            Logger.Info("Polling spuštěn");
+        }));
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
+        Logger.Info("=== DeepSeek Credit Check ukončen ===");
+        _pollCts.Cancel();
+        _pollCts.Dispose();
         _trayIcon.Dispose();
         base.OnExit(e);
     }

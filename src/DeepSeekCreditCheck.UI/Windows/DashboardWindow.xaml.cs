@@ -9,5 +9,10 @@ public partial class DashboardWindow : Window
     {
         InitializeComponent();
         DataContext = viewModel;
+        Closing += (_, e) =>
+        {
+            e.Cancel = true;   // Neukončit aplikaci
+            Hide();            // Jen schovat okno
+        };
     }
 }

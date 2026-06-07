@@ -6,7 +6,6 @@ public class PollingService : IPollingService
 {
     private readonly IDeepSeekApiClient _apiClient;
     private readonly IBalanceRepository _balanceRepo;
-    private readonly IUsageRepository _usageRepo;
     private readonly IAppSettingsService _settings;
     private readonly PredictionEngine _predictionEngine;
     private readonly AlertService _alertService;
@@ -19,14 +18,12 @@ public class PollingService : IPollingService
     public PollingService(
         IDeepSeekApiClient apiClient,
         IBalanceRepository balanceRepo,
-        IUsageRepository usageRepo,
         IAppSettingsService settings,
         PredictionEngine predictionEngine,
         AlertService alertService)
     {
         _apiClient = apiClient;
         _balanceRepo = balanceRepo;
-        _usageRepo = usageRepo;
         _settings = settings;
         _predictionEngine = predictionEngine;
         _alertService = alertService;
@@ -37,7 +34,6 @@ public class PollingService : IPollingService
         _cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         var interval = TimeSpan.FromMinutes(await _settings.GetPollingIntervalMinutesAsync());
 
-        // Okamžitě první poll
         await PollOnceAsync(ct);
 
         _timer = new PeriodicTimer(interval);
@@ -53,7 +49,7 @@ public class PollingService : IPollingService
             catch (OperationCanceledException) { }
             catch (Exception ex)
             {
-                // Chyba v timer loopu — poslední záchrana, nemělo by nastat
+                Logger.Error("Timer loop selhal", ex);
                 PollFailed?.Invoke(this, $"Pollování selhalo: {ex.Message}");
             }
         }, _cts.Token);
@@ -79,39 +75,26 @@ public class PollingService : IPollingService
         Logger.Info("Zahajuji poll...");
         try
         {
-            // 1. Získat balance
+            // Získat balance
             Logger.Info("Volám GET /user/balance...");
             var snapshot = await _apiClient.GetBalanceAsync(apiKey);
             await _balanceRepo.SaveAsync(snapshot);
             Logger.Info($"Balance OK: ${snapshot.TotalBalanceDecimal:F2} ({snapshot.Currency}), available={snapshot.IsAvailable}");
 
-            // 2. Získat usage (volitelné, může selhat)
-            var usage = await _apiClient.GetUsageAsync(apiKey);
-            if (usage != null)
-            {
-                await _usageRepo.SaveAsync(usage);
-                Logger.Info($"Usage OK: {usage.TotalTokens} tokens (in:{usage.InputTokens} out:{usage.OutputTokens})");
-            }
-            else
-            {
-                Logger.Info("Usage endpoint nedostupný — přeskočeno");
-            }
-
-            // 3. Predikce
+            // Predikce
             var history = await _balanceRepo.GetAllAsync(limit: 500);
             var prediction = _predictionEngine.Calculate(history, snapshot.TotalBalanceDecimal);
             Logger.Info($"Predikce: {prediction.FormattedPrediction} (spend: {prediction.FormattedDailySpend}, reliable={prediction.IsReliable})");
 
-            // 4. Alert
+            // Alert
             var thresholdStr = await _settings.GetAlertThresholdAsync();
             var threshold = decimal.TryParse(thresholdStr, out var t) ? t : 2.00m;
             _alertService.Check(snapshot.TotalBalanceDecimal, threshold);
 
-            // 5. Notifikovat UI
+            // Notifikovat UI
             PollCompleted?.Invoke(this, new PollResult
             {
                 Snapshot = snapshot,
-                Usage = usage,
                 Prediction = prediction,
                 Timestamp = DateTime.UtcNow
             });
@@ -120,7 +103,7 @@ public class PollingService : IPollingService
         catch (HttpRequestException ex)
         {
             Logger.Warn($"API nedostupné (StatusCode={ex.StatusCode ?? 0}): zkusím znovu za chvíli...");
-            PollFailed?.Invoke(this, $"API nedostupné ({ex.StatusCode ?? 0}): zkusím znovu za chvíli...");
+            PollFailed?.Invoke(this, $"API nedostupné ({ex.StatusCode ?? 0})");
         }
         catch (TaskCanceledException)
         {
@@ -137,7 +120,6 @@ public class PollingService : IPollingService
 public class PollResult
 {
     public Models.BalanceSnapshot? Snapshot { get; init; }
-    public Models.UsageRecord? Usage { get; init; }
     public PredictionResult? Prediction { get; init; }
     public DateTime Timestamp { get; init; }
 }

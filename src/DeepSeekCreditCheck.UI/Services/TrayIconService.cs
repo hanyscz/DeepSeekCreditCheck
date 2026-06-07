@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows;
 using Hardcodet.Wpf.TaskbarNotification;
 using DeepSeekCreditCheck.Core.Services;
@@ -19,11 +20,12 @@ public class TrayIconService : IDisposable
 
     public void Initialize()
     {
+        // Zkusit načíst ikonu z Resources, fallback na SystemIcons
+        var icon = TryLoadCustomIcon() ?? System.Drawing.SystemIcons.Application;
+
         _notifyIcon = new TaskbarIcon
         {
-            Icon = System.Drawing.Icon.ExtractAssociatedIcon(
-                System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName
-                ?? throw new InvalidOperationException("No main module")),
+            Icon = icon,
             ToolTipText = "DeepSeek Credit Check",
             Visibility = Visibility.Visible
         };
@@ -151,6 +153,20 @@ public class TrayIconService : IDisposable
     {
         var window = new SettingsWindow(_services.GetRequiredService<SettingsViewModel>());
         window.ShowDialog();
+    }
+
+    private static System.Drawing.Icon? TryLoadCustomIcon()
+    {
+        try
+        {
+            // Zkusit najít app.ico vedle exe
+            var exeDir = AppDomain.CurrentDomain.BaseDirectory;
+            var iconPath = Path.Combine(exeDir, "Resources", "app.ico");
+            if (File.Exists(iconPath))
+                return new System.Drawing.Icon(iconPath);
+        }
+        catch { }
+        return null;
     }
 
     public void Dispose()

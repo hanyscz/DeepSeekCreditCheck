@@ -39,41 +39,4 @@ public class DeepSeekApiClient : IDeepSeekApiClient
             ToppedUpBalance = info.GetProperty("topped_up_balance").GetString() ?? "0.00"
         };
     }
-
-    public async Task<UsageRecord?> GetUsageAsync(string apiKey, DateTime? since = null, DateTime? until = null)
-    {
-        var start = since?.ToString("yyyy-MM-dd") ?? DateTime.UtcNow.AddDays(-7).ToString("yyyy-MM-dd");
-        var end = until?.ToString("yyyy-MM-dd") ?? DateTime.UtcNow.ToString("yyyy-MM-dd");
-
-        var request = new HttpRequestMessage(HttpMethod.Get,
-            $"/v1/usage?start_time={start}&end_time={end}");
-        request.Headers.Add("Authorization", $"Bearer {apiKey}");
-
-        var response = await _http.SendAsync(request);
-
-        // Usage endpoint nemusí existovat — vracíme null, fallback výpočet
-        if (!response.IsSuccessStatusCode) return null;
-
-        try
-        {
-            var json = await response.Content.ReadFromJsonAsync<JsonElement>();
-            var total = json.GetProperty("total_usage");
-
-            return new UsageRecord
-            {
-                Timestamp = DateTime.UtcNow,
-                PeriodStart = since ?? DateTime.UtcNow.AddDays(-7),
-                PeriodEnd = until ?? DateTime.UtcNow,
-                TotalTokens = total.GetProperty("total_tokens").GetInt64(),
-                InputTokens = total.GetProperty("input_tokens").GetInt64(),
-                OutputTokens = total.GetProperty("output_tokens").GetInt64(),
-                CachedTokens = total.TryGetProperty("cached_tokens", out var ct)
-                    ? ct.GetInt64() : null
-            };
-        }
-        catch
-        {
-            return null; // Neznámý formát odpovědi
-        }
-    }
 }
