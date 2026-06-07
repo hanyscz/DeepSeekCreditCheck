@@ -54,6 +54,15 @@ public class TrayIconService : IDisposable
 
         menu.Items.Add(new System.Windows.Controls.Separator());
 
+        // Error item (visible only when there's a problem)
+        var errorItem = new System.Windows.Controls.MenuItem
+        {
+            Header = "",
+            IsEnabled = false,
+            Visibility = Visibility.Collapsed
+        };
+        menu.Items.Add(errorItem);
+
         // Actions
         var dashboardItem = new System.Windows.Controls.MenuItem { Header = "\U0001f4c8 Dashboard" };
         dashboardItem.Click += (_, _) => OpenDashboard();
@@ -85,7 +94,8 @@ public class TrayIconService : IDisposable
         {
             BalanceItem = balanceItem,
             ToppedUpItem = toppedUpItem,
-            PredictionItem = predictionItem
+            PredictionItem = predictionItem,
+            ErrorItem = errorItem
         };
     }
 
@@ -103,7 +113,26 @@ public class TrayIconService : IDisposable
             : "\U0001f501 Všechno vlastní kredit";
         refs.PredictionItem.Header = $"\U0001f4ca {pred}";
 
+        // Úspěšný poll = smazat případnou chybu
+        refs.ErrorItem.Visibility = Visibility.Collapsed;
+
         _notifyIcon.ToolTipText = $"Zůstatek: ${bal:F2} | Predikce: {pred} | {DateTime.Now:HH:mm}";
+    }
+
+    public void SetError(string message)
+    {
+        if (_notifyIcon?.Tag is not TrayMenuRefs refs) return;
+
+        if (string.IsNullOrEmpty(message))
+        {
+            refs.ErrorItem.Visibility = Visibility.Collapsed;
+            refs.ErrorItem.Header = "";
+        }
+        else
+        {
+            refs.ErrorItem.Visibility = Visibility.Visible;
+            refs.ErrorItem.Header = $"⚠️ {message}";
+        }
     }
 
     public void ShowNotification(string message)
@@ -134,5 +163,6 @@ public class TrayIconService : IDisposable
         public System.Windows.Controls.MenuItem BalanceItem { get; set; } = null!;
         public System.Windows.Controls.MenuItem ToppedUpItem { get; set; } = null!;
         public System.Windows.Controls.MenuItem PredictionItem { get; set; } = null!;
+        public System.Windows.Controls.MenuItem ErrorItem { get; set; } = null!;
     }
 }

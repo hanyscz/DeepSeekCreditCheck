@@ -53,12 +53,8 @@ public partial class App : Application
         _trayIcon = new TrayIconService(_services);
         _trayIcon.Initialize();
 
-        // Spustit polling
+        // Eventy — MUSÍ být registrované PŘED StartAsync (první poll)
         var polling = _services.GetRequiredService<IPollingService>();
-        var cts = new CancellationTokenSource();
-        await polling.StartAsync(cts.Token);
-
-        // Eventy
         polling.PollCompleted += (_, result) =>
         {
             Dispatcher.Invoke(() =>
@@ -69,11 +65,20 @@ public partial class App : Application
             });
         };
 
+        polling.PollFailed += (_, message) =>
+        {
+            Dispatcher.Invoke(() => _trayIcon.SetError(message));
+        };
+
         var alertService = _services.GetRequiredService<AlertService>();
         alertService.AlertTriggered += (_, args) =>
         {
             Dispatcher.Invoke(() => _trayIcon.ShowNotification(args.Message));
         };
+
+        // Spustit polling (první poll proběhne uvnitř StartAsync)
+        var cts = new CancellationTokenSource();
+        await polling.StartAsync(cts.Token);
     }
 
     protected override void OnExit(ExitEventArgs e)

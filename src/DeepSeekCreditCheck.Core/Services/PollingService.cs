@@ -14,6 +14,7 @@ public class PollingService : IPollingService
     private CancellationTokenSource? _cts;
 
     public event EventHandler<PollResult>? PollCompleted;
+    public event EventHandler<string>? PollFailed;
 
     public PollingService(
         IDeepSeekApiClient apiClient,
@@ -50,6 +51,11 @@ public class PollingService : IPollingService
                 }
             }
             catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                // Chyba v timer loopu — poslední záchrana, nemělo by nastat
+                PollFailed?.Invoke(this, $"Pollování selhalo: {ex.Message}");
+            }
         }, _cts.Token);
     }
 
@@ -95,11 +101,17 @@ public class PollingService : IPollingService
                 Timestamp = DateTime.UtcNow
             });
         }
-        catch (HttpRequestException)
+        catch (HttpRequestException ex)
         {
-            // API nedostupné — ignorovat, zkusí se znovu za interval
+            // API nedostupné — zkusí se znovu za interval
+            PollFailed?.Invoke(this, $"API nedostupné ({ex.StatusCode ?? 0}): zkusím znovu za chvíli...");
         }
         catch (TaskCanceledException) { }
+        catch (Exception ex)
+        {
+            // Jakákoliv jiná chyba — JSON parsing, DB, atd.
+            PollFailed?.Invoke(this, $"Chyba: {ex.Message}");
+        }
     }
 }
 
