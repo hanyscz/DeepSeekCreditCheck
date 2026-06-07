@@ -52,6 +52,7 @@ public partial class App : Application
         services.AddSingleton<PredictionEngine>();
         services.AddSingleton<AlertService>();
         services.AddSingleton<IPollingService, PollingService>();
+        services.AddSingleton<DataSeeder>();
 
         // ViewModels
         services.AddSingleton<DashboardViewModel>();

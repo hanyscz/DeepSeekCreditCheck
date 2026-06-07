@@ -1,4 +1,5 @@
 using DeepSeekCreditCheck.Core.Models;
+using DeepSeekCreditCheck.Core.Repositories;
 using DeepSeekCreditCheck.Core.Services;
 using OxyPlot;
 using OxyPlot.Axes;
@@ -24,6 +25,35 @@ public class DashboardViewModel : BaseViewModel
     public PlotModel? SpendPlot { get => _spendPlot; set => SetProperty(ref _spendPlot, value); }
 
     private readonly List<BalanceSnapshot> _history = new();
+    private readonly IBalanceRepository _balanceRepo;
+    private readonly PredictionEngine _predEngine;
+
+    public DashboardViewModel(IBalanceRepository balanceRepo, PredictionEngine predEngine)
+    {
+        _balanceRepo = balanceRepo;
+        _predEngine = predEngine;
+    }
+
+    public async Task<(BalanceSnapshot? Snapshot, PredictionResult? Prediction)> OnSeedComplete()
+    {
+        var all = await _balanceRepo.GetAllAsync(limit: 500);
+        var latest = all.FirstOrDefault();
+        if (latest == null) return (null, null);
+
+        _history.Clear();
+        _history.AddRange(all);
+
+        var prediction = _predEngine.Calculate(_history, latest.TotalBalanceDecimal);
+
+        CurrentBalance = $"${latest.TotalBalanceDecimal:F2}";
+        Prediction = prediction.FormattedPrediction;
+        DailySpend = prediction.FormattedDailySpend;
+        LastUpdated = DateTime.Now.ToString("HH:mm:ss");
+
+        BuildBalanceChart();
+        BuildSpendChart();
+        return (latest, prediction);
+    }
 
     public void OnPollCompleted(PollResult result)
     {
