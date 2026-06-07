@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace DeepSeekCreditCheck.Core.Models;
 
 public class BalanceSnapshot
@@ -10,8 +12,10 @@ public class BalanceSnapshot
     public string GrantedBalance { get; set; } = "0.00";
     public string ToppedUpBalance { get; set; } = "0.00";
 
-    // Helper properta pro výpočty
-    public decimal TotalBalanceDecimal => decimal.TryParse(TotalBalance, out var v) ? v : 0;
-    public decimal GrantedBalanceDecimal => decimal.TryParse(GrantedBalance, out var v) ? v : 0;
-    public decimal ToppedUpBalanceDecimal => decimal.TryParse(ToppedUpBalance, out var v) ? v : 0;
+    public decimal TotalBalanceDecimal => ParseDecimal(TotalBalance);
+    public decimal GrantedBalanceDecimal => ParseDecimal(GrantedBalance);
+    public decimal ToppedUpBalanceDecimal => ParseDecimal(ToppedUpBalance);
+
+    private static decimal ParseDecimal(string value) =>
+        decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var v) ? v : 0;
 }

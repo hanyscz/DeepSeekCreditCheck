@@ -20,12 +20,9 @@ public class TrayIconService : IDisposable
 
     public void Initialize()
     {
-        // Zkusit načíst ikonu z Resources, fallback na SystemIcons
-        var icon = TryLoadCustomIcon() ?? System.Drawing.SystemIcons.Application;
-
         _notifyIcon = new TaskbarIcon
         {
-            Icon = icon,
+            Icon = CreateAppIcon(),
             ToolTipText = "DeepSeek Credit Check",
             Visibility = Visibility.Visible
         };
@@ -155,18 +152,34 @@ public class TrayIconService : IDisposable
         window.ShowDialog();
     }
 
-    private static System.Drawing.Icon? TryLoadCustomIcon()
+    private static System.Drawing.Icon CreateAppIcon()
     {
+        // 1. Zkusit načíst vlastní ikonu z Resources
         try
         {
-            // Zkusit najít app.ico vedle exe
             var exeDir = AppDomain.CurrentDomain.BaseDirectory;
-            var iconPath = Path.Combine(exeDir, "Resources", "app.ico");
-            if (File.Exists(iconPath))
-                return new System.Drawing.Icon(iconPath);
+            var customPath = Path.Combine(exeDir, "Resources", "app.ico");
+            if (File.Exists(customPath))
+            {
+                Logger.Info($"Používám vlastní ikonu: {customPath}");
+                return new System.Drawing.Icon(customPath);
+            }
         }
-        catch { }
-        return null;
+        catch (Exception ex)
+        {
+            Logger.Warn($"Nepodařilo se načíst vlastní ikonu: {ex.Message}");
+        }
+
+        // 2. Vygenerovat jednoduchou ikonu 16x16 (modrý čtvereček s $)
+        Logger.Info("Generuji výchozí ikonu");
+        using var bitmap = new System.Drawing.Bitmap(16, 16);
+        using var g = System.Drawing.Graphics.FromImage(bitmap);
+        g.Clear(System.Drawing.Color.FromArgb(0, 120, 215)); // #0078D7 modrá
+        using var font = new System.Drawing.Font("Consolas", 10, System.Drawing.FontStyle.Bold);
+        using var brush = new System.Drawing.SolidBrush(System.Drawing.Color.White);
+        g.DrawString("$", font, brush, 3, -1);
+        var hIcon = bitmap.GetHicon();
+        return System.Drawing.Icon.FromHandle(hIcon);
     }
 
     public void Dispose()
