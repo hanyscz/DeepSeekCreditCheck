@@ -79,41 +79,6 @@ public class TrayIconService : IDisposable
         };
         menu.Items.Add(refreshItem);
 
-        var seedItem = new System.Windows.Controls.MenuItem { Header = "🎲 Testovací data" };
-        seedItem.Click += async (_, _) =>
-        {
-            try
-            {
-                var seeder = _services.GetRequiredService<DataSeeder>();
-                await seeder.SeedAsync(14);
-
-                // Reload data do ViewModelu
-                var dashboardVm = _services.GetRequiredService<DashboardViewModel>();
-                var (snapshot, prediction) = await dashboardVm.OnSeedComplete();
-
-                // Aktualizovat tray
-                if (snapshot != null)
-                {
-                    UpdateTooltip(new PollResult
-                    {
-                        Snapshot = snapshot,
-                        Prediction = prediction ?? new PredictionResult { DaysRemaining = null, AvgDailySpend = 0, IsReliable = false },
-                        Timestamp = DateTime.UtcNow
-                    });
-                }
-
-                _notifyIcon?.ShowBalloonTip(
-                    "DeepSeek Credit Check",
-                    "Vygenerováno 14 dní testovacích dat",
-                    BalloonIcon.Info);
-            }
-            catch (Exception ex)
-            {
-                _notifyIcon?.ShowBalloonTip("Chyba", $"Nepodařilo se vygenerovat data: {ex.Message}", BalloonIcon.Error);
-            }
-        };
-        menu.Items.Add(seedItem);
-
         menu.Items.Add(new System.Windows.Controls.Separator());
 
         var exitItem = new System.Windows.Controls.MenuItem { Header = "❌ Ukončit" };
@@ -166,7 +131,7 @@ public class TrayIconService : IDisposable
 
     private static System.Drawing.Icon CreateBalanceIcon(decimal balance)
     {
-        // Zkusit vlastní ikonu z Resources pri balance=0
+        // Zkusit vlastní ikonu z Resources
         if (balance == 0)
         {
             try
@@ -180,20 +145,29 @@ public class TrayIconService : IDisposable
 
         var text = balance > 0 ? FormatBalanceText(balance) : "$";
         var size = 32;
-        using var bitmap = new System.Drawing.Bitmap(size, size);
-        using var g = System.Drawing.Graphics.FromImage(bitmap);
-        g.Clear(System.Drawing.Color.FromArgb(0, 120, 215));
-
-        var fontSize = text.Length <= 2 ? 18 : text.Length <= 3 ? 15 : 12;
-        using var font = new System.Drawing.Font("Segoe UI", fontSize, System.Drawing.FontStyle.Bold);
-        using var brush = new System.Drawing.SolidBrush(System.Drawing.Color.White);
-        var fmt = new System.Drawing.StringFormat
+        var bitmap = new System.Drawing.Bitmap(size, size);
+        try
         {
-            Alignment = System.Drawing.StringAlignment.Center,
-            LineAlignment = System.Drawing.StringAlignment.Center
-        };
-        g.DrawString(text, font, brush, new System.Drawing.RectangleF(0, 0, size, size), fmt);
-        return System.Drawing.Icon.FromHandle(bitmap.GetHicon());
+            using var g = System.Drawing.Graphics.FromImage(bitmap);
+            g.Clear(System.Drawing.Color.FromArgb(0, 120, 215));
+            var fontSize = text.Length <= 2 ? 18 : text.Length <= 3 ? 15 : 12;
+            using var font = new System.Drawing.Font("Segoe UI", fontSize, System.Drawing.FontStyle.Bold);
+            using var brush = new System.Drawing.SolidBrush(System.Drawing.Color.White);
+            var fmt = new System.Drawing.StringFormat
+            {
+                Alignment = System.Drawing.StringAlignment.Center,
+                LineAlignment = System.Drawing.StringAlignment.Center
+            };
+            g.DrawString(text, font, brush, new System.Drawing.RectangleF(0, 0, size, size), fmt);
+
+            // Klonování = vlastní handle, bezpečné pro TaskbarIcon
+            using var temp = System.Drawing.Icon.FromHandle(bitmap.GetHicon());
+            return (System.Drawing.Icon)temp.Clone();
+        }
+        finally
+        {
+            bitmap.Dispose();
+        }
     }
 
     private static string FormatBalanceText(decimal balance)

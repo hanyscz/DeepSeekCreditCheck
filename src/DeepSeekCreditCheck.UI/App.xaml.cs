@@ -21,7 +21,23 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
-        // Aplikace se ukončí jen explicitně — ne při zavření všech oken
+        // Globální error handler — zaloguje SEBEOVŠE
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+        {
+            var ex = args.ExceptionObject as Exception;
+            Logger.Error("CRITICAL: AppDomain unhandled exception", ex);
+        };
+        DispatcherUnhandledException += (_, args) =>
+        {
+            Logger.Error("CRITICAL: Dispatcher unhandled exception", args.Exception);
+            args.Handled = true; // Aplikace zůstane běžet
+        };
+        TaskScheduler.UnobservedTaskException += (_, args) =>
+        {
+            Logger.Error("CRITICAL: Task unobserved exception", args.Exception);
+            args.SetObserved();
+        };
+
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
         var appDir = Path.Combine(
@@ -52,7 +68,6 @@ public partial class App : Application
         services.AddSingleton<PredictionEngine>();
         services.AddSingleton<AlertService>();
         services.AddSingleton<IPollingService, PollingService>();
-        services.AddSingleton<DataSeeder>();
 
         // ViewModels
         services.AddSingleton<DashboardViewModel>();
