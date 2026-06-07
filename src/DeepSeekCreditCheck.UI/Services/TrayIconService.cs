@@ -113,7 +113,13 @@ public class TrayIconService : IDisposable
 
         refs.ErrorItem.Visibility = Visibility.Collapsed;
 
-        _notifyIcon.ToolTipText = $"Zůstatek: ${bal:F2} | Predikce: {pred} | {DateTime.Now:HH:mm}";
+        // Multi-line tooltip pro hover
+        _notifyIcon.ToolTipText = $"DeepSeek Credit Check\n" +
+            $"━━━━━━━━━━━━━━━━━━\n" +
+            $"💰 Zůstatek:  ${bal:F2}\n" +
+            (topped > 0 ? $"🔁 Vlastní:   ${topped:F2}\n" : "") +
+            $"📊 Predikce:  {pred}\n" +
+            $"🕐 {DateTime.Now:HH:mm:ss}";
 
         // Update tray icon with balance number
         _lastBalance = bal;
@@ -143,39 +149,34 @@ public class TrayIconService : IDisposable
             catch { }
         }
 
-        var text = balance > 0 ? FormatBalanceText(balance) : "$";
-        var size = 32;
-        var bitmap = new System.Drawing.Bitmap(size, size);
-        try
-        {
-            using var g = System.Drawing.Graphics.FromImage(bitmap);
-            g.Clear(System.Drawing.Color.FromArgb(0, 120, 215));
-            var fontSize = text.Length <= 2 ? 18 : text.Length <= 3 ? 15 : 12;
-            using var font = new System.Drawing.Font("Segoe UI", fontSize, System.Drawing.FontStyle.Bold);
-            using var brush = new System.Drawing.SolidBrush(System.Drawing.Color.White);
-            var fmt = new System.Drawing.StringFormat
-            {
-                Alignment = System.Drawing.StringAlignment.Center,
-                LineAlignment = System.Drawing.StringAlignment.Center
-            };
-            g.DrawString(text, font, brush, new System.Drawing.RectangleF(0, 0, size, size), fmt);
+        // Kreslíme na 16×16 — systémová traj používá tuto velikost
+        const int size = 16;
+        using var bitmap = new System.Drawing.Bitmap(size, size);
+        using var g = System.Drawing.Graphics.FromImage(bitmap);
+        g.Clear(System.Drawing.Color.FromArgb(0, 120, 215));
 
-            // Klonování = vlastní handle, bezpečné pro TaskbarIcon
-            using var temp = System.Drawing.Icon.FromHandle(bitmap.GetHicon());
-            return (System.Drawing.Icon)temp.Clone();
-        }
-        finally
+        var text = balance > 0 ? FormatBalanceText(balance) : "$";
+        var fontSize = text.Length >= 4 ? 8 : text.Length >= 3 ? 9 : 10;
+        using var font = new System.Drawing.Font("Segoe UI", fontSize, System.Drawing.FontStyle.Bold);
+        using var brush = new System.Drawing.SolidBrush(System.Drawing.Color.White);
+        var fmt = new System.Drawing.StringFormat
         {
-            bitmap.Dispose();
-        }
+            Alignment = System.Drawing.StringAlignment.Center,
+            LineAlignment = System.Drawing.StringAlignment.Center
+        };
+        g.DrawString(text, font, brush, new System.Drawing.RectangleF(0, 0, size, size), fmt);
+
+        using var temp = System.Drawing.Icon.FromHandle(bitmap.GetHicon());
+        return (System.Drawing.Icon)temp.Clone();
     }
 
     private static string FormatBalanceText(decimal balance)
     {
-        if (balance >= 100) return ((int)balance).ToString();
-        if (balance >= 10) return balance.ToString("F0", CultureInfo.InvariantCulture);
-        if (balance >= 1) return balance.ToString("0.0", CultureInfo.InvariantCulture);
-        return balance.ToString("0.00", CultureInfo.InvariantCulture);
+        // Vždy s "$" na začátku pro kontext
+        if (balance >= 100) return $"${(int)balance}";      // $103
+        if (balance >= 10)  return $"${balance:F0}";        // $42
+        if (balance >= 1)   return $"${balance:F1}";        // $8.5
+        return $"${balance:F1}";                             // $0.5
     }
 
     public void SetError(string message)
