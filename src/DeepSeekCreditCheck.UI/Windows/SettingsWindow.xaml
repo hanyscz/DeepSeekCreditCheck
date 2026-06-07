@@ -18,7 +18,7 @@
         <StackPanel Grid.Row="0" Margin="0,0,0,15">
             <TextBlock Text="DeepSeek API Klíč" FontWeight="SemiBold" Margin="0,0,0,5" />
             <PasswordBox x:Name="ApiKeyBox"
-                         Password="{Binding ApiKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         PasswordChanged="ApiKeyBox_PasswordChanged"
                          Width="400" HorizontalAlignment="Left" />
             <TextBlock Text="Zadej API klíč z platform.deepseek.com/api_keys"
                        Foreground="#888" FontSize="12" Margin="0,3,0,0" />
