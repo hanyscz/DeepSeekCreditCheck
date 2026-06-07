@@ -1,6 +1,7 @@
 using System.Windows;
 using Hardcodet.Wpf.TaskbarNotification;
 using DeepSeekCreditCheck.Core.Services;
+using DeepSeekCreditCheck.UI.ViewModels;
 using DeepSeekCreditCheck.UI.Windows;
 using Microsoft.Extensions.DependencyInjection;
 
