@@ -160,18 +160,11 @@ public class TrayIconService : IDisposable
             var exeDir = AppDomain.CurrentDomain.BaseDirectory;
             var customPath = Path.Combine(exeDir, "Resources", "app.ico");
             if (File.Exists(customPath))
-            {
-                Logger.Info($"Používám vlastní ikonu: {customPath}");
                 return new System.Drawing.Icon(customPath);
-            }
         }
-        catch (Exception ex)
-        {
-            Logger.Warn($"Nepodařilo se načíst vlastní ikonu: {ex.Message}");
-        }
+        catch { }
 
         // 2. Vygenerovat jednoduchou ikonu 16x16 (modrý čtvereček s $)
-        Logger.Info("Generuji výchozí ikonu");
         using var bitmap = new System.Drawing.Bitmap(16, 16);
         using var g = System.Drawing.Graphics.FromImage(bitmap);
         g.Clear(System.Drawing.Color.FromArgb(0, 120, 215)); // #0078D7 modrá

@@ -34,9 +34,6 @@ public partial class App : Application
 
         // Logging
         Logger.Init(logPath);
-        Logger.Info("=== DeepSeek Credit Check spuštěn ===");
-        Logger.Info($"Log: {logPath}");
-        Logger.Info($"DB: {dbPath}");
 
         var services = new ServiceCollection();
 
@@ -65,16 +62,13 @@ public partial class App : Application
         // Tray icon
         _trayIcon = new TrayIconService(_services);
         _trayIcon.Initialize();
-        Logger.Info("Tray ikona inicializována");
 
         // Eventy
         var polling = _services.GetRequiredService<IPollingService>();
         polling.PollCompleted += (_, result) =>
         {
-            Logger.Info($"PollCompleted event — balance={result.Snapshot?.TotalBalance}");
             Dispatcher.BeginInvoke(() =>
             {
-                Logger.Info($"Dispatcher.BeginInvoke — aktualizuji UI");
                 _trayIcon.UpdateTooltip(result);
                 _trayIcon.SetError("");
                 var dashboardVm = _services.GetRequiredService<DashboardViewModel>();
@@ -84,29 +78,24 @@ public partial class App : Application
 
         polling.PollFailed += (_, message) =>
         {
-            Logger.Warn($"PollFailed: {message}");
             Dispatcher.BeginInvoke(() => _trayIcon.SetError(message));
         };
 
         var alertService = _services.GetRequiredService<AlertService>();
         alertService.AlertTriggered += (_, args) =>
         {
-            Logger.Info($"Alert: {args.Message}");
             Dispatcher.BeginInvoke(() => _trayIcon.ShowNotification(args.Message));
         };
 
         // Spustit polling s mírným zpožděním — až po inicializaci UI
         Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(async () =>
         {
-            Logger.Info("Spouštím polling (Loaded priorita)...");
             await polling.StartAsync(_pollCts.Token);
-            Logger.Info("Polling spuštěn");
         }));
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
-        Logger.Info("=== DeepSeek Credit Check ukončen ===");
         _pollCts.Cancel();
         _pollCts.Dispose();
         _trayIcon.Dispose();

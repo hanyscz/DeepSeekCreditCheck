@@ -47,11 +47,6 @@ public class PollingService : IPollingService
                 }
             }
             catch (OperationCanceledException) { }
-            catch (Exception ex)
-            {
-                Logger.Error("Timer loop selhal", ex);
-                PollFailed?.Invoke(this, $"Pollování selhalo: {ex.Message}");
-            }
         }, _cts.Token);
     }
 
@@ -66,49 +61,33 @@ public class PollingService : IPollingService
     public async Task PollOnceAsync(CancellationToken ct)
     {
         var apiKey = await _settings.GetApiKeyAsync();
-        if (string.IsNullOrEmpty(apiKey))
-        {
-            Logger.Warn("Poll přeskočen — není nastaven API klíč");
-            return;
-        }
+        if (string.IsNullOrEmpty(apiKey)) return;
 
-        Logger.Info("Zahajuji poll...");
         try
         {
-            // Získat balance
-            Logger.Info("Volám GET /user/balance...");
             var snapshot = await _apiClient.GetBalanceAsync(apiKey);
             await _balanceRepo.SaveAsync(snapshot);
-            Logger.Info($"Balance OK: ${snapshot.TotalBalanceDecimal:F2} ({snapshot.Currency}), available={snapshot.IsAvailable}");
 
-            // Predikce
             var history = await _balanceRepo.GetAllAsync(limit: 500);
             var prediction = _predictionEngine.Calculate(history, snapshot.TotalBalanceDecimal);
-            Logger.Info($"Predikce: {prediction.FormattedPrediction} (spend: {prediction.FormattedDailySpend}, reliable={prediction.IsReliable})");
 
-            // Alert
             var thresholdStr = await _settings.GetAlertThresholdAsync();
             var threshold = decimal.TryParse(thresholdStr, out var t) ? t : 2.00m;
             _alertService.Check(snapshot.TotalBalanceDecimal, threshold);
 
-            // Notifikovat UI
             PollCompleted?.Invoke(this, new PollResult
             {
                 Snapshot = snapshot,
                 Prediction = prediction,
                 Timestamp = DateTime.UtcNow
             });
-            Logger.Info("Poll dokončen");
         }
         catch (HttpRequestException ex)
         {
-            Logger.Warn($"API nedostupné (StatusCode={ex.StatusCode ?? 0}): zkusím znovu za chvíli...");
+            Logger.Error($"API nedostupné (StatusCode={ex.StatusCode ?? 0})", ex);
             PollFailed?.Invoke(this, $"API nedostupné ({ex.StatusCode ?? 0})");
         }
-        catch (TaskCanceledException)
-        {
-            Logger.Info("Poll zrušen (timeout/cancel)");
-        }
+        catch (TaskCanceledException) { }
         catch (Exception ex)
         {
             Logger.Error("Poll selhal", ex);
