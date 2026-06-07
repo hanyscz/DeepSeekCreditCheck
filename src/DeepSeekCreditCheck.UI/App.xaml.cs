@@ -19,10 +19,19 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
-        var dbPath = Path.Combine(
+        var appDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "DeepSeekCreditCheck", "data.db");
-        Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
+            "DeepSeekCreditCheck");
+        Directory.CreateDirectory(appDir);
+
+        var dbPath = Path.Combine(appDir, "data.db");
+        var logPath = Path.Combine(appDir, "app.log");
+
+        // Logging — inicializovat co nejdřív
+        Logger.Init(logPath);
+        Logger.Info("=== DeepSeek Credit Check spuštěn ===");
+        Logger.Info($"Log: {logPath}");
+        Logger.Info($"DB: {dbPath}");
 
         var services = new ServiceCollection();
 
