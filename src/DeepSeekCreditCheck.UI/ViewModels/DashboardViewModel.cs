@@ -155,12 +155,33 @@ public class DashboardViewModel : BaseViewModel
             MarkerSize = 3
         };
 
-        // Jen reálné snapshoty — každý bod = skutečný záznam z DB
-        foreach (var h in _history.OrderBy(h => h.Timestamp))
+        // 24 bodů na den — poslední známá hodnota z reálných snapshotů pro každou hodinu
+        var sorted = _history.OrderBy(h => h.Timestamp).ToList();
+        if (sorted.Count > 0)
         {
-            series.Points.Add(new DataPoint(
-                DateTimeAxis.ToDouble(h.Timestamp.ToLocalTime()),
-                (double)h.TotalBalanceDecimal));
+            int idx = 0;
+            var startDay = sorted.First().Timestamp.Date;
+            var endDay = sorted.Last().Timestamp.Date;
+
+            for (var day = startDay; day <= endDay; day = day.AddDays(1))
+            {
+                for (int hour = 0; hour < 24; hour++)
+                {
+                    var hourUtc = day.AddHours(hour);
+                    // Posunout idx na první snapshot po této hodině
+                    while (idx < sorted.Count && sorted[idx].Timestamp <= hourUtc)
+                        idx++;
+
+                    if (idx > 0)
+                    {
+                        // Hodnota z posledního snapshotu před nebo v této hodině
+                        var val = sorted[idx - 1].TotalBalanceDecimal;
+                        series.Points.Add(new DataPoint(
+                            DateTimeAxis.ToDouble(hourUtc.ToLocalTime()),
+                            (double)val));
+                    }
+                }
+            }
         }
 
         plot.Series.Add(series);
