@@ -15,6 +15,7 @@ public class TrayIconService : IDisposable
     private readonly IServiceProvider _services;
     private TaskbarIcon? _notifyIcon;
     private TextBlock? _tooltipText;
+    private DashboardWindow? _dashboardWindow;
 
     public TrayIconService(IServiceProvider services)
     {
@@ -161,9 +162,16 @@ public class TrayIconService : IDisposable
 
     private void OpenDashboard()
     {
-        var window = new DashboardWindow(_services.GetRequiredService<DashboardViewModel>());
-        window.Show();
-        window.Activate();
+        if (_dashboardWindow == null || !_dashboardWindow.IsLoaded)
+        {
+            _dashboardWindow = new DashboardWindow(_services.GetRequiredService<DashboardViewModel>());
+            _dashboardWindow.Show();
+        }
+        else
+        {
+            _dashboardWindow.Show();
+            _dashboardWindow.Activate();
+        }
     }
 
     private void OpenSettings()
