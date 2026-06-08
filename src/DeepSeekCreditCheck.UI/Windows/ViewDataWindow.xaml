@@ -109,8 +109,6 @@
                                     Width="50" />
                 <DataGridTextColumn Header="Zůstatek" Binding="{Binding TotalBalanceDecimal, StringFormat=\{0:F2\}}"
                                     Width="100" />
-                <DataGridTextColumn Header="Dostupný" Binding="{Binding IsAvailable}"
-                                    Width="70" />
             </DataGrid.Columns>
         </DataGrid>
 

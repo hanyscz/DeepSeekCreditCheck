@@ -55,11 +55,10 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <!-- Loading overlay -->
-        <Border Grid.Row="0" Grid.RowSpan="3"
+        <Border Grid.Row="0" Grid.RowSpan="2"
                 Background="#80000000"
                 Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
                 CornerRadius="8"
@@ -135,13 +134,8 @@
             </Grid>
         </Border>
 
-        <!-- Balance Chart -->
-        <Border Grid.Row="1" Style="{StaticResource CardBorder}" Padding="0" Margin="0,0,0,8">
-            <oxy:PlotView Model="{Binding BalancePlot}" Background="#161616" />
-        </Border>
-
         <!-- Spend Chart -->
-        <Border Grid.Row="2" Style="{StaticResource CardBorder}" Padding="0">
+        <Border Grid.Row="1" Style="{StaticResource CardBorder}" Padding="0">
             <oxy:PlotView Model="{Binding SpendPlot}" Background="#161616" />
         </Border>
     </Grid>

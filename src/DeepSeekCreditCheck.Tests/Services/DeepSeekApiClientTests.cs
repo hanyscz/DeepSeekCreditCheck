@@ -34,7 +34,6 @@ public class DeepSeekApiClientTests
         var client = new DeepSeekApiClient(new HttpClient(handler.Object));
         var result = await client.GetBalanceAsync("test-key");
 
-        Assert.True(result.IsAvailable);
         Assert.Equal("USD", result.Currency);
         Assert.Equal("103.50", result.TotalBalance);
     }

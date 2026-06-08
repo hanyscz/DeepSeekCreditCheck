@@ -23,7 +23,6 @@ public class DashboardViewModel : BaseViewModel
     private string _monthlySpend = "—";
     private string _lastUpdated = "—";
     private bool _isLoading = false;
-    private PlotModel? _balancePlot;
     private PlotModel? _spendPlot;
 
     public string CurrentBalance { get => _currentBalance; set => SetProperty(ref _currentBalance, value); }
@@ -35,7 +34,6 @@ public class DashboardViewModel : BaseViewModel
     public string LastUpdated { get => _lastUpdated; set => SetProperty(ref _lastUpdated, value); }
     public bool IsLoading { get => _isLoading; set => SetProperty(ref _isLoading, value); }
 
-    public PlotModel? BalancePlot { get => _balancePlot; set => SetProperty(ref _balancePlot, value); }
     public PlotModel? SpendPlot { get => _spendPlot; set => SetProperty(ref _spendPlot, value); }
 
     public ICommand RefreshCommand { get; }
@@ -97,7 +95,6 @@ public class DashboardViewModel : BaseViewModel
         LastUpdated = DateTime.Now.ToString("HH:mm:ss");
 
         UpdateSpendStats();
-        BuildBalanceChart();
         BuildSpendChart();
     }
 
@@ -132,103 +129,6 @@ public class DashboardViewModel : BaseViewModel
             MonthlySpend = monthSpend >= 0 ? $"${monthSpend:F2}" : "—";
         }
         else MonthlySpend = "—";
-    }
-
-    private void BuildBalanceChart()
-    {
-        var plot = new PlotModel
-        {
-            Title = "Zůstatek v čase (hodinová granularita)",
-            TitleColor = OxyColors.White,
-            PlotAreaBackground = OxyColor.FromRgb(30, 30, 30),
-            Background = OxyColor.FromRgb(22, 22, 22),
-            TextColor = OxyColor.FromRgb(200, 200, 200),
-        };
-
-        var series = new LineSeries
-        {
-            Title = "USD",
-            Color = OxyColor.FromRgb(0, 120, 215),
-            StrokeThickness = 2,
-            LineStyle = LineStyle.Solid,
-            MarkerType = MarkerType.Circle,
-            MarkerSize = 3
-        };
-
-        // 24 bodů na den — poslední známá hodnota z reálných snapshotů pro každou hodinu
-        var sorted = _history.OrderBy(h => h.Timestamp).ToList();
-        if (sorted.Count > 0)
-        {
-            int idx = 0;
-            var startDay = sorted.First().Timestamp.Date;
-            var endDay = sorted.Last().Timestamp.Date;
-
-            for (var day = startDay; day <= endDay; day = day.AddDays(1))
-            {
-                for (int hour = 0; hour < 24; hour++)
-                {
-                    var hourUtc = day.AddHours(hour);
-                    // Posunout idx na první snapshot po této hodině
-                    while (idx < sorted.Count && sorted[idx].Timestamp <= hourUtc)
-                        idx++;
-
-                    if (idx > 0)
-                    {
-                        // Hodnota z posledního snapshotu před nebo v této hodině
-                        var val = sorted[idx - 1].TotalBalanceDecimal;
-                        series.Points.Add(new DataPoint(
-                            DateTimeAxis.ToDouble(hourUtc.ToLocalTime()),
-                            (double)val));
-                    }
-                }
-            }
-        }
-
-        plot.Series.Add(series);
-
-        // Osa — minimum/maximum podle reálných dat
-        if (_history.Count > 0)
-        {
-            var firstDt = _history.OrderBy(h => h.Timestamp).First().Timestamp.ToLocalTime();
-            var lastDt = _history.OrderBy(h => h.Timestamp).Last().Timestamp.ToLocalTime();
-            var maxDt = lastDt.Date.AddDays(1).AddHours(6);
-            var minVal = DateTimeAxis.ToDouble(firstDt.Date.AddHours(-2));
-            var maxVal = DateTimeAxis.ToDouble(maxDt);
-
-            plot.Axes.Add(new DateTimeAxis
-            {
-                Position = AxisPosition.Bottom,
-                StringFormat = "dd.MM.\nHH:mm",
-                TextColor = OxyColor.FromRgb(160, 160, 160),
-                TicklineColor = OxyColor.FromRgb(60, 60, 60),
-                MajorGridlineColor = OxyColor.FromRgb(40, 40, 40),
-                MajorGridlineStyle = LineStyle.Dot,
-                Minimum = minVal,
-                Maximum = maxVal
-            });
-        }
-        else
-        {
-            plot.Axes.Add(new DateTimeAxis
-            {
-                Position = AxisPosition.Bottom,
-                StringFormat = "dd.MM.\nHH:mm",
-                TextColor = OxyColor.FromRgb(160, 160, 160),
-                TicklineColor = OxyColor.FromRgb(60, 60, 60),
-                MajorGridlineColor = OxyColor.FromRgb(40, 40, 40),
-                MajorGridlineStyle = LineStyle.Dot
-            });
-        }
-        plot.Axes.Add(new LinearAxis
-        {
-            Position = AxisPosition.Left,
-            TextColor = OxyColor.FromRgb(160, 160, 160),
-            TicklineColor = OxyColor.FromRgb(60, 60, 60),
-            MajorGridlineColor = OxyColor.FromRgb(40, 40, 40),
-            MajorGridlineStyle = LineStyle.Dot
-        });
-
-        BalancePlot = plot;
     }
 
     private void BuildSpendChart()

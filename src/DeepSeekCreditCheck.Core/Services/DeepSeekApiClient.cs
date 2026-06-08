@@ -25,14 +25,12 @@ public class DeepSeekApiClient : IDeepSeekApiClient
         response.EnsureSuccessStatusCode();
 
         var json = await response.Content.ReadFromJsonAsync<JsonElement>();
-        var isAvailable = json.GetProperty("is_available").GetBoolean();
         var infos = json.GetProperty("balance_infos");
         var info = infos[0];
 
         return new BalanceSnapshot
         {
             Timestamp = DateTime.UtcNow,
-            IsAvailable = isAvailable,
             Currency = info.GetProperty("currency").GetString() ?? "USD",
             TotalBalance = info.GetProperty("total_balance").GetString() ?? "0.00"
         };

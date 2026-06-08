@@ -2,7 +2,6 @@
 CREATE TABLE IF NOT EXISTS BalanceSnapshots (
     SnapshotId      INTEGER PRIMARY KEY AUTOINCREMENT,
     Timestamp       TEXT    NOT NULL,
-    IsAvailable     INTEGER NOT NULL DEFAULT 1,
     Currency        TEXT    NOT NULL DEFAULT 'USD',
     TotalBalance    TEXT    NOT NULL DEFAULT '0.00'
 );

@@ -15,12 +15,11 @@ public class BalanceRepository : IBalanceRepository
         using var conn = _db.CreateConnection();
         conn.Open();
         await conn.ExecuteAsync(
-            @"INSERT INTO BalanceSnapshots (Timestamp, IsAvailable, Currency, TotalBalance)
-              VALUES (@Timestamp, @IsAvailable, @Currency, @TotalBalance)",
+            @"INSERT INTO BalanceSnapshots (Timestamp, Currency, TotalBalance)
+              VALUES (@Timestamp, @Currency, @TotalBalance)",
             new
             {
                 Timestamp = snapshot.Timestamp.ToString("O"),
-                IsAvailable = snapshot.IsAvailable ? 1 : 0,
                 snapshot.Currency,
                 snapshot.TotalBalance
             });
