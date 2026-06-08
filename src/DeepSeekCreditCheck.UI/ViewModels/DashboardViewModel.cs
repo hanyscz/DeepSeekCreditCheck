@@ -51,8 +51,6 @@ public class DashboardViewModel : BaseViewModel
     private void OpenDataBrowser()
     {
         var window = new Windows.ViewDataWindow(_balanceRepo);
-        window.Owner = System.Windows.Application.Current.MainWindow;
-        window.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterOwner;
         window.ShowDialog();
     }
 
@@ -177,17 +175,28 @@ public class DashboardViewModel : BaseViewModel
         {
             var spend = sorted[i - 1].TotalBalanceDecimal - sorted[i].TotalBalanceDecimal;
             if (spend < 0) spend = 0;
-            series.Items.Add(new BarItem { Value = (double)spend, CategoryIndex = i - 1 });
+            series.Items.Add(new BarItem { Value = (double)spend });
         }
 
         plot.Series.Add(series);
+
+        // BarSeries vyžaduje CategoryAxis na ose X
+        plot.Axes.Add(new CategoryAxis
+        {
+            Position = AxisPosition.Bottom,
+            TextColor = OxyColor.FromRgb(160, 160, 160),
+            TicklineColor = OxyColor.FromRgb(60, 60, 60),
+            MajorStep = 1
+        });
         plot.Axes.Add(new LinearAxis
         {
             Position = AxisPosition.Left,
             TextColor = OxyColor.FromRgb(160, 160, 160),
             TicklineColor = OxyColor.FromRgb(60, 60, 60),
             MajorGridlineColor = OxyColor.FromRgb(40, 40, 40),
-            MajorGridlineStyle = LineStyle.Dot
+            MajorGridlineStyle = LineStyle.Dot,
+            Title = "USD",
+            TitleColor = OxyColor.FromRgb(160, 160, 160)
         });
 
         SpendPlot = plot;
