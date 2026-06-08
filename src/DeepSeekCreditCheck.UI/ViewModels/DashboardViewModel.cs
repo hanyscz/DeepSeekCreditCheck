@@ -106,25 +106,26 @@ public class DashboardViewModel : BaseViewModel
             return;
         }
 
-        var now = DateTime.UtcNow;
+        // Používáme kalendářní dny — začátek dnešního dne (midnight local time)
+        var todayStart = DateTime.Today; // local midnight, 00:00:00
 
-        // Celková spotřeba za posledních 7 dní
-        var weekAgo = now.AddDays(-7);
-        var weekRecs = _history.Where(h => h.Timestamp >= weekAgo).ToList();
+        // Celková spotřeba za posledních 7 kalendářních dní (včetně dneška)
+        var weekStart = todayStart.AddDays(-7).ToUniversalTime();
+        var weekRecs = _history.Where(h => h.Timestamp >= weekStart).ToList();
         if (weekRecs.Count >= 2)
         {
             var weekSpend = weekRecs.First().TotalBalanceDecimal - weekRecs.Last().TotalBalanceDecimal;
-            WeeklySpend = weekSpend > 0 ? $"${weekSpend:F2}" : "—";
+            WeeklySpend = weekSpend >= 0 ? $"${weekSpend:F2}" : "—";
         }
         else WeeklySpend = "—";
 
-        // Celková spotřeba za posledních 30 dní
-        var monthAgo = now.AddDays(-30);
-        var monthRecs = _history.Where(h => h.Timestamp >= monthAgo).ToList();
+        // Celková spotřeba za posledních 30 kalendářních dní
+        var monthStart = todayStart.AddDays(-30).ToUniversalTime();
+        var monthRecs = _history.Where(h => h.Timestamp >= monthStart).ToList();
         if (monthRecs.Count >= 2)
         {
             var monthSpend = monthRecs.First().TotalBalanceDecimal - monthRecs.Last().TotalBalanceDecimal;
-            MonthlySpend = monthSpend > 0 ? $"${monthSpend:F2}" : "—";
+            MonthlySpend = monthSpend >= 0 ? $"${monthSpend:F2}" : "—";
         }
         else MonthlySpend = "—";
     }
@@ -137,7 +138,7 @@ public class DashboardViewModel : BaseViewModel
             TitleColor = OxyColors.White,
             PlotAreaBackground = OxyColor.FromRgb(30, 30, 30),
             Background = OxyColor.FromRgb(22, 22, 22),
-            TextColor = OxyColor.FromRgb(200, 200, 200)
+            TextColor = OxyColor.FromRgb(200, 200, 200),
         };
 
         var series = new LineSeries
@@ -184,7 +185,7 @@ public class DashboardViewModel : BaseViewModel
             TitleColor = OxyColors.White,
             PlotAreaBackground = OxyColor.FromRgb(30, 30, 30),
             Background = OxyColor.FromRgb(22, 22, 22),
-            TextColor = OxyColor.FromRgb(200, 200, 200)
+            TextColor = OxyColor.FromRgb(200, 200, 200),
         };
 
         var series = new LineSeries
