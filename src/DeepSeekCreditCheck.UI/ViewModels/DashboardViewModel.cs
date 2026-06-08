@@ -155,42 +155,21 @@ public class DashboardViewModel : BaseViewModel
             MarkerSize = 3
         };
 
-        // Schodovitý graf — jeden bod za každou hodinu s poslední známou hodnotou
-        var sorted = _history.OrderBy(h => h.Timestamp).ToList();
-        if (sorted.Count > 0)
+        // Jen reálné snapshoty — každý bod = skutečný záznam z DB
+        foreach (var h in _history.OrderBy(h => h.Timestamp))
         {
-            var startDay = sorted.First().Timestamp.Date;
-            var endDay = sorted.Last().Timestamp.Date;
-
-            // Index do historie — pro efektivní hledání
-            int idx = 0;
-            for (var day = startDay; day <= endDay; day = day.AddDays(1))
-            {
-                for (int hour = 0; hour < 24; hour++)
-                {
-                    var hourUtc = day.AddHours(hour);
-                    // Posunout index na snapshoty <= aktuální hodina
-                    while (idx < sorted.Count && sorted[idx].Timestamp <= hourUtc)
-                        idx++;
-
-                    if (idx > 0)
-                    {
-                        var value = sorted[idx - 1].TotalBalanceDecimal;
-                        series.Points.Add(new DataPoint(
-                            DateTimeAxis.ToDouble(hourUtc.ToLocalTime()),
-                            (double)value));
-                    }
-                }
-            }
+            series.Points.Add(new DataPoint(
+                DateTimeAxis.ToDouble(h.Timestamp.ToLocalTime()),
+                (double)h.TotalBalanceDecimal));
         }
 
         plot.Series.Add(series);
 
-        // Osa s pevným minimem a maximem
-        if (sorted.Count > 0)
+        // Osa — minimum/maximum podle reálných dat
+        if (_history.Count > 0)
         {
-            var firstDt = sorted.First().Timestamp.ToLocalTime();
-            var lastDt = sorted.Last().Timestamp.ToLocalTime();
+            var firstDt = _history.OrderBy(h => h.Timestamp).First().Timestamp.ToLocalTime();
+            var lastDt = _history.OrderBy(h => h.Timestamp).Last().Timestamp.ToLocalTime();
             var maxDt = lastDt.Date.AddDays(1).AddHours(6);
             var minVal = DateTimeAxis.ToDouble(firstDt.Date.AddHours(-2));
             var maxVal = DateTimeAxis.ToDouble(maxDt);
