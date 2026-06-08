@@ -25,6 +25,16 @@ jobs:
       with:
         dotnet-version: 8.0.x
 
+    - name: Read version from csproj
+      id: get_version
+      shell: pwsh
+      run: |
+        $xml = [Xml]::new()
+        $xml.Load('src/DeepSeekCreditCheck.UI/DeepSeekCreditCheck.UI.csproj')
+        $v = $xml.Project.PropertyGroup.Version
+        if (-not $v) { $v = '0.0.0' }
+        echo "version=$v" >> $env:GITHUB_OUTPUT
+
     - name: Restore dependencies
       run: dotnet restore
 
@@ -34,16 +44,16 @@ jobs:
     - name: Run tests
       run: dotnet test --configuration ${{ matrix.configuration }} --no-build --verbosity normal
 
-    - name: Publish (self-contained)
+    - name: Publish
       run: |
         dotnet publish src/DeepSeekCreditCheck.UI/DeepSeekCreditCheck.UI.csproj `
           --configuration ${{ matrix.configuration }} `
           --runtime win-x64 `
-          --self-contained false `
+          --self-contained true `
           --output publish/
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: DeepSeekCreditCheck-v1.0.0
+        name: DeepSeekCreditCheck-v${{ steps.get_version.outputs.version }}
         path: publish/
