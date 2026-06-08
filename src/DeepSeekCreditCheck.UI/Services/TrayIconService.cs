@@ -38,13 +38,6 @@ public class TrayIconService : IDisposable
         };
         menu.Items.Add(balanceItem);
 
-        var toppedUpItem = new System.Windows.Controls.MenuItem
-        {
-            Header = "🔁 Načítám...",
-            IsEnabled = false
-        };
-        menu.Items.Add(toppedUpItem);
-
         var predictionItem = new System.Windows.Controls.MenuItem
         {
             Header = "📊 Načítám...",
@@ -91,7 +84,6 @@ public class TrayIconService : IDisposable
         _notifyIcon.Tag = new TrayMenuRefs
         {
             BalanceItem = balanceItem,
-            ToppedUpItem = toppedUpItem,
             PredictionItem = predictionItem,
             ErrorItem = errorItem
         };
@@ -102,13 +94,9 @@ public class TrayIconService : IDisposable
         if (_notifyIcon?.Tag is not TrayMenuRefs refs) return;
 
         var bal = result.Snapshot?.TotalBalanceDecimal ?? 0;
-        var topped = result.Snapshot?.ToppedUpBalanceDecimal ?? 0;
         var pred = result.Prediction?.FormattedPrediction ?? "—";
 
         refs.BalanceItem.Header = $"💰 ${bal:F2} zbývá";
-        refs.ToppedUpItem.Header = topped > 0
-            ? $"🔁 Z toho ${topped:F2} vlastní"
-            : "🔁 Všechno vlastní kredit";
         refs.PredictionItem.Header = $"📊 {pred}";
 
         refs.ErrorItem.Visibility = Visibility.Collapsed;
@@ -117,7 +105,6 @@ public class TrayIconService : IDisposable
         _notifyIcon.ToolTipText = $"DeepSeek Credit Check\n" +
             $"━━━━━━━━━━━━━━━━━━\n" +
             $"💰 Zůstatek:  ${bal:F2}\n" +
-            (topped > 0 ? $"🔁 Vlastní:   ${topped:F2}\n" : "") +
             $"📊 Predikce:  {pred}\n" +
             $"🕐 {DateTime.Now:HH:mm:ss}";
 
@@ -221,7 +208,6 @@ public class TrayIconService : IDisposable
     private class TrayMenuRefs
     {
         public System.Windows.Controls.MenuItem BalanceItem { get; set; } = null!;
-        public System.Windows.Controls.MenuItem ToppedUpItem { get; set; } = null!;
         public System.Windows.Controls.MenuItem PredictionItem { get; set; } = null!;
         public System.Windows.Controls.MenuItem ErrorItem { get; set; } = null!;
     }

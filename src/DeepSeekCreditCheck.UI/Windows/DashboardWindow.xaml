@@ -8,12 +8,20 @@
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <Style TargetType="TextBlock" x:Key="StatLabel">
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="Foreground" Value="#666" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="#888" />
         </Style>
         <Style TargetType="TextBlock" x:Key="StatValue">
-            <Setter Property="FontSize" Value="28" />
+            <Setter Property="FontSize" Value="24" />
             <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style TargetType="Button" x:Key="RefreshBtn">
+            <Setter Property="Background" Value="#0078D7" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontSize" Value="13" />
         </Style>
     </Window.Resources>
     <Grid Margin="20">
@@ -24,33 +32,48 @@
         </Grid.RowDefinitions>
 
         <!-- Stats Row -->
-        <Border Grid.Row="0" Background="#F5F5F5" CornerRadius="8" Padding="15" Margin="0,0,0,15">
-            <UniformGrid Rows="1" Columns="4">
-                <StackPanel>
-                    <TextBlock Style="{StaticResource StatLabel}" Text="Aktualnizustatek" />
+        <Border Grid.Row="0" Background="#F5F5F5" CornerRadius="8" Padding="15" Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Style="{StaticResource StatLabel}" Text="Aktuální zůstatek" />
                     <TextBlock Style="{StaticResource StatValue}" Text="{Binding CurrentBalance}"
                                Foreground="#0078D7" />
                 </StackPanel>
-                <StackPanel>
+                <StackPanel Grid.Column="1">
                     <TextBlock Style="{StaticResource StatLabel}" Text="Predikce" />
                     <TextBlock Style="{StaticResource StatValue}" Text="{Binding Prediction}"
                                Foreground="#107C10" />
                 </StackPanel>
-                <StackPanel>
-                    <TextBlock Style="{StaticResource StatLabel}" Text="Denni spotreba" />
-                    <TextBlock Style="{StaticResource StatValue}" Text="{Binding DailySpend}"
+                <StackPanel Grid.Column="2">
+                    <TextBlock Style="{StaticResource StatLabel}" Text="Spotřeba / týden" />
+                    <TextBlock Style="{StaticResource StatValue}" Text="{Binding WeeklySpend}"
                                Foreground="#D83B01" />
                 </StackPanel>
-                <StackPanel>
-                    <TextBlock Style="{StaticResource StatLabel}" Text="Naposledy aktualizovano" />
-                    <TextBlock Style="{StaticResource StatValue}" Text="{Binding LastUpdated}"
-                               FontSize="20" Foreground="#333" />
+                <StackPanel Grid.Column="3">
+                    <TextBlock Style="{StaticResource StatLabel}" Text="Spotřeba / měsíc" />
+                    <TextBlock Style="{StaticResource StatValue}" Text="{Binding MonthlySpend}"
+                               Foreground="#D83B01" />
                 </StackPanel>
-            </UniformGrid>
+
+                <StackPanel Grid.Column="4" VerticalAlignment="Bottom" Margin="10,0,0,0">
+                    <Button Content="🔄 Obnovit" Command="{Binding RefreshCommand}"
+                            Style="{StaticResource RefreshBtn}" />
+                    <TextBlock Text="{Binding LastUpdated}" FontSize="11" Foreground="#999"
+                               Margin="0,4,0,0" TextAlignment="Center" />
+                </StackPanel>
+            </Grid>
         </Border>
 
         <!-- Balance Chart -->
-        <Border Grid.Row="1" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="4" Margin="0,0,0,10">
+        <Border Grid.Row="1" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="4" Margin="0,0,0,8">
             <oxy:PlotView Model="{Binding BalancePlot}" />
         </Border>
 

@@ -1,3 +1,4 @@
+using System.Windows.Input;
 using DeepSeekCreditCheck.Core.Models;
 using DeepSeekCreditCheck.Core.Services;
 using OxyPlot;
@@ -8,9 +9,12 @@ namespace DeepSeekCreditCheck.UI.ViewModels;
 
 public class DashboardViewModel : BaseViewModel
 {
+    private readonly IPollingService _polling;
     private string _currentBalance = "—";
     private string _prediction = "—";
     private string _dailySpend = "—";
+    private string _weeklySpend = "—";
+    private string _monthlySpend = "—";
     private string _lastUpdated = "—";
     private PlotModel? _balancePlot;
     private PlotModel? _spendPlot;
@@ -18,19 +22,32 @@ public class DashboardViewModel : BaseViewModel
     public string CurrentBalance { get => _currentBalance; set => SetProperty(ref _currentBalance, value); }
     public string Prediction { get => _prediction; set => SetProperty(ref _prediction, value); }
     public string DailySpend { get => _dailySpend; set => SetProperty(ref _dailySpend, value); }
+    public string WeeklySpend { get => _weeklySpend; set => SetProperty(ref _weeklySpend, value); }
+    public string MonthlySpend { get => _monthlySpend; set => SetProperty(ref _monthlySpend, value); }
     public string LastUpdated { get => _lastUpdated; set => SetProperty(ref _lastUpdated, value); }
 
     public PlotModel? BalancePlot { get => _balancePlot; set => SetProperty(ref _balancePlot, value); }
     public PlotModel? SpendPlot { get => _spendPlot; set => SetProperty(ref _spendPlot, value); }
 
+    public ICommand RefreshCommand { get; }
+
     private readonly List<BalanceSnapshot> _history = new();
+
+    public DashboardViewModel(IPollingService polling)
+    {
+        _polling = polling;
+        RefreshCommand = new RelayCommand(async _ =>
+        {
+            if (_polling is PollingService ps)
+                await ps.PollOnceAsync(CancellationToken.None);
+        });
+    }
 
     public void OnPollCompleted(PollResult result)
     {
         if (result.Snapshot != null)
             _history.Add(result.Snapshot);
 
-        // Keep last 30 days
         var cutoff = DateTime.UtcNow.AddDays(-30);
         _history.RemoveAll(h => h.Timestamp < cutoff);
 
@@ -39,13 +56,44 @@ public class DashboardViewModel : BaseViewModel
         DailySpend = result.Prediction?.FormattedDailySpend ?? "—";
         LastUpdated = DateTime.Now.ToString("HH:mm:ss");
 
+        UpdateSpendStats();
         BuildBalanceChart();
         BuildSpendChart();
     }
 
+    private void UpdateSpendStats()
+    {
+        var sorted = _history.OrderBy(h => h.Timestamp).ToList();
+        var now = DateTime.UtcNow;
+
+        // Týdenní spotřeba
+        var weekAgo = now.AddDays(-7);
+        var weeklySpend = sorted
+            .Where(h => h.Timestamp >= weekAgo)
+            .Select(h => h.TotalBalanceDecimal)
+            .DefaultIfEmpty(0)
+            .ToList();
+        var weekTotal = weeklySpend.Count >= 2
+            ? weeklySpend.First() - weeklySpend.Last()
+            : 0;
+        WeeklySpend = weekTotal > 0 ? $"${weekTotal:F2}" : "—";
+
+        // Měsíční spotřeba
+        var monthAgo = now.AddDays(-30);
+        var monthlySpend = sorted
+            .Where(h => h.Timestamp >= monthAgo)
+            .Select(h => h.TotalBalanceDecimal)
+            .DefaultIfEmpty(0)
+            .ToList();
+        var monthTotal = monthlySpend.Count >= 2
+            ? monthlySpend.First() - monthlySpend.Last()
+            : 0;
+        MonthlySpend = monthTotal > 0 ? $"${monthTotal:F2}" : "—";
+    }
+
     private void BuildBalanceChart()
     {
-        var plot = new PlotModel { Title = "Zustatek v case" };
+        var plot = new PlotModel { Title = "Zůstatek v čase" };
         var series = new LineSeries
         {
             Title = "USD",
@@ -77,7 +125,7 @@ public class DashboardViewModel : BaseViewModel
 
     private void BuildSpendChart()
     {
-        var plot = new PlotModel { Title = "Denni spotreba (USD)" };
+        var plot = new PlotModel { Title = "Denní spotřeba (USD)" };
         var series = new BarSeries
         {
             FillColor = OxyColor.FromRgb(220, 80, 60),
