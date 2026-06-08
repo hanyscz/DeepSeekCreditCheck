@@ -134,7 +134,7 @@ public class DashboardViewModel : BaseViewModel
     {
         var plot = new PlotModel
         {
-            Title = "Zůstatek v čase",
+            Title = "Zůstatek v čase (unikátní hodnoty)",
             TitleColor = OxyColors.White,
             PlotAreaBackground = OxyColor.FromRgb(30, 30, 30),
             Background = OxyColor.FromRgb(22, 22, 22),
@@ -150,10 +150,17 @@ public class DashboardViewModel : BaseViewModel
             MarkerSize = 3
         };
 
+        // Jen unikátní hodnoty — pokud je stejný zůstatek, přidáme jen první výskyt
+        decimal? lastValue = null;
         foreach (var h in _history.OrderBy(h => h.Timestamp))
+        {
+            if (lastValue.HasValue && h.TotalBalanceDecimal == lastValue.Value)
+                continue; // přeskočit duplicitní hodnotu
+            lastValue = h.TotalBalanceDecimal;
             series.Points.Add(new DataPoint(
                 DateTimeAxis.ToDouble(h.Timestamp.ToLocalTime()),
                 (double)h.TotalBalanceDecimal));
+        }
 
         plot.Series.Add(series);
         plot.Axes.Add(new DateTimeAxis
@@ -181,7 +188,7 @@ public class DashboardViewModel : BaseViewModel
     {
         var plot = new PlotModel
         {
-            Title = "Denní spotřeba (USD)",
+            Title = "Spotřeba za kalendářní den (USD)",
             TitleColor = OxyColors.White,
             PlotAreaBackground = OxyColor.FromRgb(30, 30, 30),
             Background = OxyColor.FromRgb(22, 22, 22),

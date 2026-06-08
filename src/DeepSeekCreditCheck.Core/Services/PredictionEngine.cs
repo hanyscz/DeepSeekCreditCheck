@@ -11,7 +11,8 @@ public class PredictionEngine
 
         var sorted = history.OrderBy(h => h.Timestamp).ToList();
 
-        // Agregovat denní spotřebu po kalendářních dnech
+        // Agregovat denní spotřebu po kalendářních dnech (UTC)
+        // Každý den se spočítá rozdíl: první hodnota dne - poslední hodnota dne
         var daySpends = AggregateDailySpend(sorted);
 
         if (daySpends.Count < 1)
@@ -38,7 +39,7 @@ public class PredictionEngine
             var sumOfSquares = daySpends.Sum(d => Math.Pow((double)d.Spend - mean, 2));
             var stdDev = (decimal)Math.Sqrt(sumOfSquares / dayCount);
 
-            if (stdDev > 0.3m * avgDailySpend && stdDev < avgDailySpend * 2)
+            if (stdDev > 0.01m && stdDev < avgDailySpend * 2)
             {
                 rangeLow = currentBalance / Math.Max(avgDailySpend + stdDev, 0.001m);
                 rangeHigh = currentBalance / Math.Max(avgDailySpend - stdDev, 0.001m);
@@ -61,36 +62,22 @@ public class PredictionEngine
     {
         // Seskupit snapshoty po kalendářních dnech (UTC)
         var groups = sorted
-            .GroupBy(h => h.Timestamp.Date) // UTC day
+            .GroupBy(h => h.Timestamp.Date)
             .OrderBy(g => g.Key)
             .ToList();
 
         var result = new List<DaySpend>();
-        for (int i = 0; i < groups.Count - 1; i++)
+
+        // Každý den: první snapshot ráno vs poslední snapshot večer = denní spotřeba
+        foreach (var group in groups)
         {
-            var todayGroup = groups[i];
-            var tomorrowGroup = groups[i + 1];
+            var ordered = group.OrderBy(h => h.Timestamp).ToList();
+            var firstBalance = ordered.First().TotalBalanceDecimal;
+            var lastBalance = ordered.Last().TotalBalanceDecimal;
+            var spend = firstBalance - lastBalance;
 
-            // Vzít první snapshot dnešního dne a poslední snapshot zítřka (nebo první zítřek)
-            var todayBalance = todayGroup.First().TotalBalanceDecimal;
-
-            // Najít nejbližší snapshot další den
-            var nextDayBalance = tomorrowGroup.First().TotalBalanceDecimal;
-            var daysDiff = (tomorrowGroup.Key - todayGroup.Key).Days;
-
-            if (daysDiff <= 0) continue;
-
-            var spend = todayBalance - nextDayBalance;
-            if (spend < 0) continue; // dobití kreditu
-
-            // Rozpustit do mezer — pokud chybí den, rozpočítat poměrně
-            var spendPerDay = spend / daysDiff;
-
-            for (int d = 0; d < daysDiff; d++)
-            {
-                if (d < daysDiff) // všechny dny kromě posledního (ten patří dalšímu intervalu)
-                    result.Add(new DaySpend { Day = todayGroup.Key.AddDays(d), Spend = spendPerDay });
-            }
+            if (spend > 0)
+                result.Add(new DaySpend { Day = group.Key, Spend = spend });
         }
 
         // Omezit na posledních 90 dní
@@ -122,12 +109,9 @@ public class PredictionResult
             {
                 var rl = Math.Round(RangeLow.Value, 0);
                 var rh = Math.Round(RangeHigh.Value, 0);
-                // Pokud je pásmo příliš široké (>5x), zobrazit jen střední hodnotu
                 if (rh > rl * 5) return $"~{DaysRemaining.Value:F0} dní";
                 return $"~{rl}-{rh} dní";
             }
-            if (DaysRemaining.Value > 365) return "> 1 rok";
-            if (DaysRemaining.Value > 30) return $"~{DaysRemaining.Value / 30:F0} měsíců";
             return $"~{DaysRemaining.Value:F0} dní";
         }
     }

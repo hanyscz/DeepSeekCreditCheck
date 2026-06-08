@@ -74,9 +74,14 @@
                     <TextBlock Text="{Binding CurrentBalance}" FontSize="32" FontWeight="Bold"
                                Foreground="#4FC3F7" Margin="0,2,0,4" />
                     <TextBlock FontSize="13" Foreground="#999" Margin="0,0,0,2">
-                        <Run Text="Predikce:" /><Run Text="{Binding Prediction}" FontWeight="SemiBold" Foreground="#81C784" />
+                        <Run Text="Predikce:" />
+                        <Run Text="{Binding Prediction}" FontWeight="SemiBold" Foreground="#81C784"
+                             ToolTip="Počet dní do vyčerpání kreditu při průměrné denní spotřebě" />
                     </TextBlock>
-                    <TextBlock FontSize="11" Foreground="#666">
+                    <TextBlock FontSize="10" Foreground="#666">
+                        <Run Text="průměr za kalendářní den" />
+                    </TextBlock>
+                    <TextBlock FontSize="11" Foreground="#666" Margin="0,4,0,0">
                         <Run Text="Poslední aktualizace:" />
                         <Run Text="{Binding LastUpdated}" />
                     </TextBlock>
@@ -86,21 +91,24 @@
                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
                     <TextBlock Text="PRŮMĚR/DEN" FontSize="11" Foreground="#888" />
                     <TextBlock Style="{StaticResource StatValue}" Text="{Binding AvgDailySpend}"
-                               Foreground="#64B5F6" />
+                               Foreground="#64B5F6" ToolTip="Průměrná denní spotřeba za kalendářní den (00:00–23:59 UTC)" />
+                    <TextBlock Text="z kalendářních dnů" FontSize="10" Foreground="#666" />
                 </StackPanel>
 
                 <!-- Weekly spend -->
                 <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0">
                     <TextBlock Text="ZA TÝDEN" FontSize="11" Foreground="#888" />
                     <TextBlock Style="{StaticResource StatValue}" Text="{Binding WeeklySpend}"
-                               Foreground="#FF8A65" />
+                               Foreground="#FF8A65" ToolTip="Spotřeba za posledních 7 kalendářních dnů" />
+                    <TextBlock Text="posledních 7 dní" FontSize="10" Foreground="#666" />
                 </StackPanel>
 
                 <!-- Monthly spend -->
                 <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="10,0,0,0">
                     <TextBlock Text="ZA MĚSÍC" FontSize="11" Foreground="#888" />
                     <TextBlock Style="{StaticResource StatValue}" Text="{Binding MonthlySpend}"
-                               Foreground="#E57373" />
+                               Foreground="#E57373" ToolTip="Spotřeba za posledních 30 kalendářních dnů" />
+                    <TextBlock Text="posledních 30 dní" FontSize="10" Foreground="#666" />
                 </StackPanel>
 
                 <!-- Action buttons -->

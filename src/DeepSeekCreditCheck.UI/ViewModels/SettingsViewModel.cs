@@ -19,7 +19,10 @@ public class SettingsViewModel : BaseViewModel
     {
         _settings = settings;
         SaveCommand = new RelayCommand(async _ => await SaveAsync());
+        TestNotificationCommand = new RelayCommand(async _ => await TestNotificationAsync());
     }
+
+    public ICommand TestNotificationCommand { get; }
 
     public string ApiKey { get => _apiKey; set => SetProperty(ref _apiKey, value); }
     public string AlertThreshold { get => _alertThreshold; set => SetProperty(ref _alertThreshold, value); }
@@ -72,6 +75,20 @@ public class SettingsViewModel : BaseViewModel
         System.Diagnostics.Process.Start(
             System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName ?? "");
         System.Windows.Application.Current.Shutdown();
+    }
+
+    public async Task TestNotificationAsync()
+    {
+        var loc = LocalizationService.Instance;
+        var threshold = decimal.TryParse(AlertThreshold, out var t) ? t : 2.00m;
+        var testBalance = threshold / 2;
+        var msg = loc.Format("notification_low_balance",
+            $"${threshold:F2}", $"${testBalance:F2}");
+
+        System.Windows.MessageBox.Show(msg, "🔔 Test notifikace",
+            System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+
+        Status = $"🔔 Test hotov (práh: ${threshold:F2})";
     }
 }
 
