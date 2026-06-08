@@ -37,8 +37,6 @@ public class DeepSeekApiClientTests
         Assert.True(result.IsAvailable);
         Assert.Equal("USD", result.Currency);
         Assert.Equal("103.50", result.TotalBalance);
-        Assert.Equal("14.50", result.GrantedBalance);
-        Assert.Equal("89.00", result.ToppedUpBalance);
     }
 
     [Fact]

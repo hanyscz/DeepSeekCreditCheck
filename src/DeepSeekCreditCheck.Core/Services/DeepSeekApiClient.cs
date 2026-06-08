@@ -34,9 +34,7 @@ public class DeepSeekApiClient : IDeepSeekApiClient
             Timestamp = DateTime.UtcNow,
             IsAvailable = isAvailable,
             Currency = info.GetProperty("currency").GetString() ?? "USD",
-            TotalBalance = info.GetProperty("total_balance").GetString() ?? "0.00",
-            GrantedBalance = info.GetProperty("granted_balance").GetString() ?? "0.00",
-            ToppedUpBalance = info.GetProperty("topped_up_balance").GetString() ?? "0.00"
+            TotalBalance = info.GetProperty("total_balance").GetString() ?? "0.00"
         };
     }
 }

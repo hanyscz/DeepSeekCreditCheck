@@ -8,4 +8,5 @@ public interface IBalanceRepository
     Task<BalanceSnapshot?> GetLatestAsync();
     Task<IReadOnlyList<BalanceSnapshot>> GetHistoryAsync(DateTime since, DateTime until);
     Task<IReadOnlyList<BalanceSnapshot>> GetAllAsync(int limit = 100);
+    Task DeleteAsync(IEnumerable<int> ids);
 }

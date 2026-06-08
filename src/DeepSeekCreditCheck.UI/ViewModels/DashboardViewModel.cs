@@ -12,9 +12,13 @@ public class DashboardViewModel : BaseViewModel
 {
     private readonly IPollingService _polling;
     private readonly IBalanceRepository _balanceRepo;
+    private readonly PredictionEngine _predictionEngine;
+    private bool _historyLoaded = false;
+
     private string _currentBalance = "—";
     private string _prediction = "—";
     private string _dailySpend = "—";
+    private string _avgDailySpend = "—";
     private string _weeklySpend = "—";
     private string _monthlySpend = "—";
     private string _lastUpdated = "—";
@@ -24,6 +28,7 @@ public class DashboardViewModel : BaseViewModel
     public string CurrentBalance { get => _currentBalance; set => SetProperty(ref _currentBalance, value); }
     public string Prediction { get => _prediction; set => SetProperty(ref _prediction, value); }
     public string DailySpend { get => _dailySpend; set => SetProperty(ref _dailySpend, value); }
+    public string AvgDailySpend { get => _avgDailySpend; set => SetProperty(ref _avgDailySpend, value); }
     public string WeeklySpend { get => _weeklySpend; set => SetProperty(ref _weeklySpend, value); }
     public string MonthlySpend { get => _monthlySpend; set => SetProperty(ref _monthlySpend, value); }
     public string LastUpdated { get => _lastUpdated; set => SetProperty(ref _lastUpdated, value); }
@@ -34,12 +39,13 @@ public class DashboardViewModel : BaseViewModel
     public ICommand RefreshCommand { get; }
     public ICommand OpenDataBrowserCommand { get; }
 
-    private readonly List<BalanceSnapshot> _history = new();
+    private List<BalanceSnapshot> _history = new();
 
-    public DashboardViewModel(IPollingService polling, IBalanceRepository balanceRepo)
+    public DashboardViewModel(IPollingService polling, IBalanceRepository balanceRepo, PredictionEngine predictionEngine)
     {
         _polling = polling;
         _balanceRepo = balanceRepo;
+        _predictionEngine = predictionEngine;
         RefreshCommand = new RelayCommand(async _ =>
         {
             if (_polling is PollingService ps)
@@ -48,23 +54,42 @@ public class DashboardViewModel : BaseViewModel
         OpenDataBrowserCommand = new RelayCommand(_ => OpenDataBrowser());
     }
 
+    public async Task LoadHistoryFromDbAsync()
+    {
+        try
+        {
+            var all = await _balanceRepo.GetAllAsync(limit: 10000);
+            _history = all.OrderBy(h => h.Timestamp).ToList();
+            _historyLoaded = true;
+        }
+        catch { }
+    }
+
     private void OpenDataBrowser()
     {
         var window = new Windows.ViewDataWindow(_balanceRepo);
         window.ShowDialog();
     }
 
-    public void OnPollCompleted(PollResult result)
+    public async Task OnPollCompleted(PollResult result)
     {
+        if (!_historyLoaded)
+            await LoadHistoryFromDbAsync();
+
         if (result.Snapshot != null)
             _history.Add(result.Snapshot);
 
-        var cutoff = DateTime.UtcNow.AddDays(-30);
+        var cutoff = DateTime.UtcNow.AddDays(-180);
         _history.RemoveAll(h => h.Timestamp < cutoff);
 
-        CurrentBalance = $"${result.Snapshot?.TotalBalanceDecimal ?? 0:F2}";
-        Prediction = result.Prediction?.FormattedPrediction ?? "—";
-        DailySpend = result.Prediction?.FormattedDailySpend ?? "—";
+        var bal = result.Snapshot?.TotalBalanceDecimal ?? 0;
+        CurrentBalance = $"${bal:F2}";
+
+        // Spočítat vlastní predikci a statistiky z historie
+        var prediction = _predictionEngine.Calculate(_history, bal);
+        Prediction = prediction.FormattedPrediction;
+        AvgDailySpend = prediction.FormattedDailySpend;
+        DailySpend = prediction.FormattedDailySpend;
         LastUpdated = DateTime.Now.ToString("HH:mm:ss");
 
         UpdateSpendStats();
@@ -74,30 +99,34 @@ public class DashboardViewModel : BaseViewModel
 
     private void UpdateSpendStats()
     {
-        var sorted = _history.OrderBy(h => h.Timestamp).ToList();
+        if (_history.Count < 2)
+        {
+            WeeklySpend = "—";
+            MonthlySpend = "—";
+            return;
+        }
+
         var now = DateTime.UtcNow;
 
+        // Celková spotřeba za posledních 7 dní
         var weekAgo = now.AddDays(-7);
-        var weeklySpendList = sorted
-            .Where(h => h.Timestamp >= weekAgo)
-            .Select(h => h.TotalBalanceDecimal)
-            .DefaultIfEmpty(0)
-            .ToList();
-        var weekTotal = weeklySpendList.Count >= 2
-            ? weeklySpendList.First() - weeklySpendList.Last()
-            : 0;
-        WeeklySpend = weekTotal > 0 ? $"${weekTotal:F2}" : "—";
+        var weekRecs = _history.Where(h => h.Timestamp >= weekAgo).ToList();
+        if (weekRecs.Count >= 2)
+        {
+            var weekSpend = weekRecs.First().TotalBalanceDecimal - weekRecs.Last().TotalBalanceDecimal;
+            WeeklySpend = weekSpend > 0 ? $"${weekSpend:F2}" : "—";
+        }
+        else WeeklySpend = "—";
 
+        // Celková spotřeba za posledních 30 dní
         var monthAgo = now.AddDays(-30);
-        var monthlySpendList = sorted
-            .Where(h => h.Timestamp >= monthAgo)
-            .Select(h => h.TotalBalanceDecimal)
-            .DefaultIfEmpty(0)
-            .ToList();
-        var monthTotal = monthlySpendList.Count >= 2
-            ? monthlySpendList.First() - monthlySpendList.Last()
-            : 0;
-        MonthlySpend = monthTotal > 0 ? $"${monthTotal:F2}" : "—";
+        var monthRecs = _history.Where(h => h.Timestamp >= monthAgo).ToList();
+        if (monthRecs.Count >= 2)
+        {
+            var monthSpend = monthRecs.First().TotalBalanceDecimal - monthRecs.Last().TotalBalanceDecimal;
+            MonthlySpend = monthSpend > 0 ? $"${monthSpend:F2}" : "—";
+        }
+        else MonthlySpend = "—";
     }
 
     private void BuildBalanceChart()
@@ -120,15 +149,10 @@ public class DashboardViewModel : BaseViewModel
             MarkerSize = 3
         };
 
-        var points = _history
-            .OrderBy(h => h.Timestamp)
-            .Select(h => new DataPoint(
+        foreach (var h in _history.OrderBy(h => h.Timestamp))
+            series.Points.Add(new DataPoint(
                 DateTimeAxis.ToDouble(h.Timestamp.ToLocalTime()),
-                (double)h.TotalBalanceDecimal))
-            .ToList();
-
-        foreach (var p in points)
-            series.Points.Add(p);
+                (double)h.TotalBalanceDecimal));
 
         plot.Series.Add(series);
         plot.Axes.Add(new DateTimeAxis
@@ -163,30 +187,35 @@ public class DashboardViewModel : BaseViewModel
             TextColor = OxyColor.FromRgb(200, 200, 200)
         };
 
-        var series = new BarSeries
+        var series = new LineSeries
         {
-            FillColor = OxyColor.FromRgb(220, 80, 60),
-            StrokeColor = OxyColor.FromRgb(180, 50, 30),
-            StrokeThickness = 1
+            Title = "USD/den",
+            Color = OxyColor.FromRgb(220, 80, 60),
+            StrokeThickness = 2,
+            MarkerType = MarkerType.Circle,
+            MarkerSize = 3
         };
 
         var sorted = _history.OrderBy(h => h.Timestamp).ToList();
         for (int i = 1; i < sorted.Count; i++)
         {
-            var spend = sorted[i - 1].TotalBalanceDecimal - sorted[i].TotalBalanceDecimal;
-            if (spend < 0) spend = 0;
-            series.Items.Add(new BarItem { Value = (double)spend });
+            var days = (sorted[i].Timestamp - sorted[i - 1].Timestamp).TotalDays;
+            if (days <= 0) continue;
+            var spendPerDay = (sorted[i - 1].TotalBalanceDecimal - sorted[i].TotalBalanceDecimal) / (decimal)days;
+            series.Points.Add(new DataPoint(
+                DateTimeAxis.ToDouble(sorted[i].Timestamp.ToLocalTime()),
+                (double)spendPerDay));
         }
 
         plot.Series.Add(series);
-
-        // BarSeries vyžaduje CategoryAxis na ose X
-        plot.Axes.Add(new CategoryAxis
+        plot.Axes.Add(new DateTimeAxis
         {
             Position = AxisPosition.Bottom,
+            StringFormat = "dd.MM.",
             TextColor = OxyColor.FromRgb(160, 160, 160),
             TicklineColor = OxyColor.FromRgb(60, 60, 60),
-            MajorStep = 1
+            MajorGridlineColor = OxyColor.FromRgb(40, 40, 40),
+            MajorGridlineStyle = LineStyle.Dot
         });
         plot.Axes.Add(new LinearAxis
         {
@@ -195,7 +224,7 @@ public class DashboardViewModel : BaseViewModel
             TicklineColor = OxyColor.FromRgb(60, 60, 60),
             MajorGridlineColor = OxyColor.FromRgb(40, 40, 40),
             MajorGridlineStyle = LineStyle.Dot,
-            Title = "USD",
+            Title = "USD/den",
             TitleColor = OxyColor.FromRgb(160, 160, 160)
         });
 

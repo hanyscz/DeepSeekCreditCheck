@@ -15,16 +15,14 @@ public class BalanceRepository : IBalanceRepository
         using var conn = _db.CreateConnection();
         conn.Open();
         await conn.ExecuteAsync(
-            @"INSERT INTO BalanceSnapshots (Timestamp, IsAvailable, Currency, TotalBalance, GrantedBalance, ToppedUpBalance)
-              VALUES (@Timestamp, @IsAvailable, @Currency, @TotalBalance, @GrantedBalance, @ToppedUpBalance)",
+            @"INSERT INTO BalanceSnapshots (Timestamp, IsAvailable, Currency, TotalBalance)
+              VALUES (@Timestamp, @IsAvailable, @Currency, @TotalBalance)",
             new
             {
                 Timestamp = snapshot.Timestamp.ToString("O"),
                 IsAvailable = snapshot.IsAvailable ? 1 : 0,
                 snapshot.Currency,
-                snapshot.TotalBalance,
-                snapshot.GrantedBalance,
-                snapshot.ToppedUpBalance
+                snapshot.TotalBalance
             });
     }
 
@@ -54,5 +52,23 @@ public class BalanceRepository : IBalanceRepository
             "SELECT * FROM BalanceSnapshots ORDER BY Timestamp DESC LIMIT @limit",
             new { limit });
         return results.AsList();
+    }
+
+    public async Task DeleteAsync(IEnumerable<int> ids)
+    {
+        using var conn = _db.CreateConnection();
+        conn.Open();
+        var list = ids.ToList();
+        if (list.Count == 0) return;
+        await conn.ExecuteAsync(
+            "DELETE FROM BalanceSnapshots WHERE SnapshotId IN @ids",
+            new { ids = list });
+    }
+
+    public async Task DeleteAllAsync()
+    {
+        using var conn = _db.CreateConnection();
+        conn.Open();
+        await conn.ExecuteAsync("DELETE FROM BalanceSnapshots");
     }
 }

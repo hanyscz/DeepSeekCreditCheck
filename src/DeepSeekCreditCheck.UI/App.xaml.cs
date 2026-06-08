@@ -101,14 +101,15 @@ public partial class App : Application
 
         // Eventy
         var polling = _services.GetRequiredService<IPollingService>();
-        polling.PollCompleted += (_, result) =>
+        polling.PollCompleted += async (_, result) =>
         {
+            var dashboardVm = _services.GetRequiredService<DashboardViewModel>();
+            await dashboardVm.OnPollCompleted(result);
+
             Dispatcher.BeginInvoke(() =>
             {
                 _trayIcon.UpdateTooltip(result);
                 _trayIcon.SetError("");
-                var dashboardVm = _services.GetRequiredService<DashboardViewModel>();
-                dashboardVm.OnPollCompleted(result);
             });
         };
 
