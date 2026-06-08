@@ -1,4 +1,5 @@
 using System.Windows;
+using DeepSeekCreditCheck.UI.Services;
 using DeepSeekCreditCheck.UI.ViewModels;
 
 namespace DeepSeekCreditCheck.UI.Windows;
@@ -10,6 +11,7 @@ public partial class SettingsWindow : Window
     public SettingsWindow(SettingsViewModel viewModel)
     {
         InitializeComponent();
+        Icon = WindowIconHelper.GetIcon();
         _viewModel = viewModel;
         DataContext = _viewModel;
 

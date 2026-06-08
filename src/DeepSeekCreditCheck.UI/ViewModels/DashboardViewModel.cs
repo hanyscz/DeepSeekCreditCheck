@@ -22,6 +22,7 @@ public class DashboardViewModel : BaseViewModel
     private string _weeklySpend = "—";
     private string _monthlySpend = "—";
     private string _lastUpdated = "—";
+    private bool _isLoading = false;
     private PlotModel? _balancePlot;
     private PlotModel? _spendPlot;
 
@@ -32,6 +33,7 @@ public class DashboardViewModel : BaseViewModel
     public string WeeklySpend { get => _weeklySpend; set => SetProperty(ref _weeklySpend, value); }
     public string MonthlySpend { get => _monthlySpend; set => SetProperty(ref _monthlySpend, value); }
     public string LastUpdated { get => _lastUpdated; set => SetProperty(ref _lastUpdated, value); }
+    public bool IsLoading { get => _isLoading; set => SetProperty(ref _isLoading, value); }
 
     public PlotModel? BalancePlot { get => _balancePlot; set => SetProperty(ref _balancePlot, value); }
     public PlotModel? SpendPlot { get => _spendPlot; set => SetProperty(ref _spendPlot, value); }
@@ -48,8 +50,10 @@ public class DashboardViewModel : BaseViewModel
         _predictionEngine = predictionEngine;
         RefreshCommand = new RelayCommand(async _ =>
         {
+            IsLoading = true;
             if (_polling is PollingService ps)
                 await ps.PollOnceAsync(CancellationToken.None);
+            IsLoading = false;
         });
         OpenDataBrowserCommand = new RelayCommand(_ => OpenDataBrowser());
     }
@@ -146,48 +150,37 @@ public class DashboardViewModel : BaseViewModel
             Title = "USD",
             Color = OxyColor.FromRgb(0, 120, 215),
             StrokeThickness = 2,
+            LineStyle = LineStyle.Solid,
             MarkerType = MarkerType.Circle,
-            MarkerSize = 3
+            MarkerSize = 4
         };
 
-        // Jen unikátní hodnoty — první výskyt při změně zůstatku
-        var sorted = _history.OrderBy(h => h.Timestamp).ToList();
-        decimal? lastVal = null;
-        foreach (var h in sorted)
-        {
-            if (lastVal.HasValue && h.TotalBalanceDecimal == lastVal.Value)
-                continue;
-            lastVal = h.TotalBalanceDecimal;
-            series.Points.Add(new DataPoint(
-                DateTimeAxis.ToDouble(h.Timestamp.ToLocalTime()),
-                (double)h.TotalBalanceDecimal));
-        }
+        // Agregujeme po kalendářních dnech — jeden bod na den vždy v 23:59
+        var grouped = _history
+            .GroupBy(h => h.Timestamp.Date)
+            .OrderBy(g => g.Key)
+            .ToList();
 
-        // Poslední bod vždy přidáme (i duplicitní) — kvůli dnešku
-        if (sorted.Count > 0)
+        foreach (var dayGroup in grouped)
         {
-            var last = sorted.Last();
-            var lastTime = DateTimeAxis.ToDouble(last.Timestamp.ToLocalTime());
-            if (series.Points.Count == 0 || Math.Abs(series.Points.Last().X - lastTime) > 0.0001)
-            {
-                series.Points.Add(new DataPoint(lastTime, (double)last.TotalBalanceDecimal));
-            }
+            var latest = dayGroup.OrderByDescending(h => h.Timestamp).First();
+            series.Points.Add(new DataPoint(
+                DateTimeAxis.ToDouble(dayGroup.Key.ToLocalTime().AddHours(23).AddMinutes(59)),
+                (double)latest.TotalBalanceDecimal));
         }
 
         plot.Series.Add(series);
 
         // Osa s pevným minimem a maximem = poslední datum + 1 den
-        DateTimeAxis bottomAxis;
-        if (sorted.Count > 0)
+        if (grouped.Count > 0)
         {
-            var lastDt = sorted.Last().Timestamp.ToLocalTime();
-            var minDt = sorted.First().Timestamp.ToLocalTime();
-            // Minimum je první datum ráno, maximum je zítra v 6:00
-            var maxDt = lastDt.Date.AddDays(1).AddHours(6);
-            var minVal = DateTimeAxis.ToDouble(minDt.Date.AddHours(-2)); // trochu mezera na začátku
+            var lastDt = grouped.Last().Key.ToLocalTime();
+            var minDt = grouped.First().Key.ToLocalTime();
+            var maxDt = lastDt.AddDays(1).AddHours(6);
+            var minVal = DateTimeAxis.ToDouble(minDt.AddHours(-2));
             var maxVal = DateTimeAxis.ToDouble(maxDt);
 
-            bottomAxis = new DateTimeAxis
+            plot.Axes.Add(new DateTimeAxis
             {
                 Position = AxisPosition.Bottom,
                 StringFormat = "dd.MM.",
@@ -197,11 +190,11 @@ public class DashboardViewModel : BaseViewModel
                 MajorGridlineStyle = LineStyle.Dot,
                 Minimum = minVal,
                 Maximum = maxVal
-            };
+            });
         }
         else
         {
-            bottomAxis = new DateTimeAxis
+            plot.Axes.Add(new DateTimeAxis
             {
                 Position = AxisPosition.Bottom,
                 StringFormat = "dd.MM.",
@@ -209,9 +202,8 @@ public class DashboardViewModel : BaseViewModel
                 TicklineColor = OxyColor.FromRgb(60, 60, 60),
                 MajorGridlineColor = OxyColor.FromRgb(40, 40, 40),
                 MajorGridlineStyle = LineStyle.Dot
-            };
+            });
         }
-        plot.Axes.Add(bottomAxis);
         plot.Axes.Add(new LinearAxis
         {
             Position = AxisPosition.Left,

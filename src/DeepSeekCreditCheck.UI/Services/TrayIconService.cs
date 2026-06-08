@@ -157,7 +157,7 @@ public class TrayIconService : IDisposable
 
     public void ShowNotification(string message)
     {
-        _notifyIcon?.ShowBalloonTip("DeepSeek Credit Check", message, BalloonIcon.Warning);
+        Windows.NotificationToast.Show(message);
     }
 
     private void OpenDashboard()

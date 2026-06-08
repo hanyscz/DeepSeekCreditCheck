@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using DeepSeekCreditCheck.Core.Models;
 using DeepSeekCreditCheck.Core.Repositories;
+using DeepSeekCreditCheck.UI.Services;
 using DeepSeekCreditCheck.UI.ViewModels;
 
 namespace DeepSeekCreditCheck.UI.Windows
@@ -14,6 +15,7 @@ namespace DeepSeekCreditCheck.UI.Windows
         public ViewDataWindow(IBalanceRepository balanceRepo)
         {
             InitializeComponent();
+            Icon = WindowIconHelper.GetIcon();
             _balanceRepo = balanceRepo;
             ViewModel = new ViewDataViewModel(balanceRepo);
             DataContext = ViewModel;

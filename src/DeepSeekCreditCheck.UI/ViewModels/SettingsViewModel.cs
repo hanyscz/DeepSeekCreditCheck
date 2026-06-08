@@ -85,9 +85,7 @@ public class SettingsViewModel : BaseViewModel
         var msg = loc.Format("notification_low_balance",
             $"${threshold:F2}", $"${testBalance:F2}");
 
-        System.Windows.MessageBox.Show(msg, "🔔 Test notifikace",
-            System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
-
+        Windows.NotificationToast.Show(msg);
         Status = $"🔔 Test hotov (práh: ${threshold:F2})";
     }
 }
