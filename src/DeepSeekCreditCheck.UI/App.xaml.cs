@@ -21,7 +21,6 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
-        // Globální error handler — zaloguje SEBEOVŠE
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>
         {
             var ex = args.ExceptionObject as Exception;
@@ -30,7 +29,7 @@ public partial class App : Application
         DispatcherUnhandledException += (_, args) =>
         {
             Logger.Error("CRITICAL: Dispatcher unhandled exception", args.Exception);
-            args.Handled = true; // Aplikace zůstane běžet
+            args.Handled = true;
         };
         TaskScheduler.UnobservedTaskException += (_, args) =>
         {
@@ -46,10 +45,7 @@ public partial class App : Application
         Directory.CreateDirectory(appDir);
 
         var dbPath = Path.Combine(appDir, "data.db");
-        var logPath = Path.Combine(appDir, "app.log");
-
-        // Logging
-        Logger.Init(logPath);
+        var defaultLogPath = Path.Combine(appDir, "app.log");
 
         var services = new ServiceCollection();
 
@@ -74,6 +70,24 @@ public partial class App : Application
         services.AddSingleton<SettingsViewModel>();
 
         _services = services.BuildServiceProvider();
+
+        // Najít adresář s Lang/ (vedle exe nebo o 1 uroven vyse)
+        var langDir = FindLangDir();
+        var loc = LocalizationService.Instance;
+        loc.SetLangDir(langDir);
+
+        // Načíst jazyk z nastavení
+        var settings = _services.GetRequiredService<IAppSettingsService>();
+        var savedLang = settings.GetLanguageAsync().GetAwaiter().GetResult() ?? "cs";
+        loc.SetLanguage(savedLang);
+
+        // Načíst log path z nastavení (nebo výchozí)
+        var customLogPath = settings.GetLogPathAsync().GetAwaiter().GetResult();
+        var logPath = !string.IsNullOrWhiteSpace(customLogPath) ? customLogPath : defaultLogPath;
+        Logger.Init(logPath);
+        var appDirForLog = Path.GetDirectoryName(logPath);
+        if (!string.IsNullOrEmpty(appDirForLog))
+            Directory.CreateDirectory(appDirForLog);
 
         // Tray icon
         _trayIcon = new TrayIconService(_services);
@@ -103,7 +117,6 @@ public partial class App : Application
             Dispatcher.BeginInvoke(() => _trayIcon.ShowNotification(args.Message));
         };
 
-        // Spustit polling s mírným zpožděním — až po inicializaci UI
         Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(async () =>
         {
             await polling.StartAsync(_pollCts.Token);
@@ -116,5 +129,21 @@ public partial class App : Application
         _pollCts.Dispose();
         _trayIcon.Dispose();
         base.OnExit(e);
+    }
+
+    private static string FindLangDir()
+    {
+        var candidates = new[]
+        {
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Lang"),
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..",
+                         "DeepSeekCreditCheck.Core", "Lang"),
+        };
+        foreach (var dir in candidates)
+        {
+            var resolved = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, dir));
+            if (Directory.Exists(resolved)) return resolved;
+        }
+        return candidates[0];
     }
 }

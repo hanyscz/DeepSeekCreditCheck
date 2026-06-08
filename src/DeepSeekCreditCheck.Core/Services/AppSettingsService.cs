@@ -53,4 +53,16 @@ public class AppSettingsService : IAppSettingsService
 
     public async Task SetPollingIntervalMinutesAsync(int minutes)
         => await SetAsync("PollingIntervalMin", minutes.ToString());
+
+    public async Task<string?> GetLanguageAsync()
+        => await GetAsync("Language") ?? "cs";
+
+    public async Task SetLanguageAsync(string lang)
+        => await SetAsync("Language", lang);
+
+    public async Task<string?> GetLogPathAsync()
+        => await GetAsync("LogPath");
+
+    public async Task SetLogPathAsync(string path)
+        => await SetAsync("LogPath", path);
 }

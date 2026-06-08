@@ -24,4 +24,14 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <LangFiles Include="..\DeepSeekCreditCheck.Core\Lang\*.json" />
+  </ItemGroup>
+  <Target Name="CopyLangFiles" AfterTargets="AfterBuild">
+    <Copy SourceFiles="@(LangFiles)" DestinationFolder="$(OutputPath)Lang\" />
+  </Target>
+  <Target Name="PublishLangFiles" AfterTargets="Publish">
+    <Copy SourceFiles="@(LangFiles)" DestinationFolder="$(PublishDir)Lang\" />
+  </Target>
+
 </Project>

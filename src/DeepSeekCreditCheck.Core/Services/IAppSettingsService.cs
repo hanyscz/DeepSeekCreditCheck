@@ -10,4 +10,8 @@ public interface IAppSettingsService
     Task SetAlertThresholdAsync(string threshold);
     Task<int> GetPollingIntervalMinutesAsync();
     Task SetPollingIntervalMinutesAsync(int minutes);
+    Task<string?> GetLanguageAsync();
+    Task SetLanguageAsync(string lang);
+    Task<string?> GetLogPathAsync();
+    Task SetLogPathAsync(string path);
 }

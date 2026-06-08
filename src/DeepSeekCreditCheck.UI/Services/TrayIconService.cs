@@ -22,6 +22,8 @@ public class TrayIconService : IDisposable
 
     public void Initialize()
     {
+        var loc = LocalizationService.Instance;
+
         _notifyIcon = new TaskbarIcon
         {
             Icon = CreateBalanceIcon(0),
@@ -33,14 +35,14 @@ public class TrayIconService : IDisposable
 
         var balanceItem = new System.Windows.Controls.MenuItem
         {
-            Header = "💰 Načítám...",
+            Header = "💰 " + loc["loading"],
             IsEnabled = false
         };
         menu.Items.Add(balanceItem);
 
         var predictionItem = new System.Windows.Controls.MenuItem
         {
-            Header = "📊 Načítám...",
+            Header = "📊 " + loc["loading"],
             IsEnabled = false
         };
         menu.Items.Add(predictionItem);
@@ -55,15 +57,15 @@ public class TrayIconService : IDisposable
         };
         menu.Items.Add(errorItem);
 
-        var dashboardItem = new System.Windows.Controls.MenuItem { Header = "📈 Dashboard" };
+        var dashboardItem = new System.Windows.Controls.MenuItem { Header = loc["tray_dashboard"] };
         dashboardItem.Click += (_, _) => OpenDashboard();
         menu.Items.Add(dashboardItem);
 
-        var settingsItem = new System.Windows.Controls.MenuItem { Header = "⚙️ Nastavení" };
+        var settingsItem = new System.Windows.Controls.MenuItem { Header = loc["tray_settings"] };
         settingsItem.Click += (_, _) => OpenSettings();
         menu.Items.Add(settingsItem);
 
-        var refreshItem = new System.Windows.Controls.MenuItem { Header = "🔄 Obnovit teď" };
+        var refreshItem = new System.Windows.Controls.MenuItem { Header = loc["tray_refresh"] };
         refreshItem.Click += async (_, _) =>
         {
             var polling = _services.GetRequiredService<IPollingService>();
@@ -74,7 +76,7 @@ public class TrayIconService : IDisposable
 
         menu.Items.Add(new System.Windows.Controls.Separator());
 
-        var exitItem = new System.Windows.Controls.MenuItem { Header = "❌ Ukončit" };
+        var exitItem = new System.Windows.Controls.MenuItem { Header = loc["tray_exit"] };
         exitItem.Click += (_, _) => Application.Current.Shutdown();
         menu.Items.Add(exitItem);
 
@@ -93,19 +95,20 @@ public class TrayIconService : IDisposable
     {
         if (_notifyIcon?.Tag is not TrayMenuRefs refs) return;
 
+        var loc = LocalizationService.Instance;
         var bal = result.Snapshot?.TotalBalanceDecimal ?? 0;
+        var balStr = $"${bal:F2}";
         var pred = result.Prediction?.FormattedPrediction ?? "—";
 
-        refs.BalanceItem.Header = $"💰 ${bal:F2} zbývá";
-        refs.PredictionItem.Header = $"📊 {pred}";
+        refs.BalanceItem.Header = loc.Format("tray_balance", balStr);
+        refs.PredictionItem.Header = loc.Format("tray_prediction", pred);
 
         refs.ErrorItem.Visibility = Visibility.Collapsed;
 
-        // Multi-line tooltip pro hover
-        _notifyIcon.ToolTipText = $"DeepSeek Credit Check\n" +
+        _notifyIcon.ToolTipText = $"{loc["tooltip_title"]}\n" +
             $"━━━━━━━━━━━━━━━━━━\n" +
-            $"💰 Zůstatek:  ${bal:F2}\n" +
-            $"📊 Predikce:  {pred}\n" +
+            $"{loc.Format("tooltip_balance", balStr)}\n" +
+            $"{loc.Format("tooltip_prediction", pred)}\n" +
             $"🕐 {DateTime.Now:HH:mm:ss}";
 
         // Update tray icon with balance number

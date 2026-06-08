@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="⚙️ Nastavení"
-        Width="500" Height="380"
+        Width="520" Height="500"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen">
     <Grid Margin="20">
@@ -11,36 +11,57 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <!-- API Key -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,15">
-            <TextBlock Text="DeepSeek API Klíč" FontWeight="SemiBold" Margin="0,0,0,5" />
+        <StackPanel Grid.Row="0" Margin="0,0,0,12">
+            <TextBlock Text="DeepSeek API Klíč" FontWeight="SemiBold" Margin="0,0,0,4" />
             <PasswordBox x:Name="ApiKeyBox"
                          PasswordChanged="ApiKeyBox_PasswordChanged"
                          Width="400" HorizontalAlignment="Left" />
             <TextBlock Text="Zadej API klíč z platform.deepseek.com/api_keys"
-                       Foreground="#888" FontSize="12" Margin="0,3,0,0" />
+                       Foreground="#888" FontSize="11" Margin="0,2,0,0" />
         </StackPanel>
 
         <!-- Alert Threshold -->
-        <StackPanel Grid.Row="1" Margin="0,0,0,15">
-            <TextBlock Text="Práh pro upozornění (USD)" FontWeight="SemiBold" Margin="0,0,0,5" />
+        <StackPanel Grid.Row="1" Margin="0,0,0,12">
+            <TextBlock Text="Práh pro upozornění (USD)" FontWeight="SemiBold" Margin="0,0,0,4" />
             <TextBox Text="{Binding AlertThreshold, UpdateSourceTrigger=PropertyChanged}"
                      Width="100" HorizontalAlignment="Left" />
         </StackPanel>
 
         <!-- Polling Interval -->
-        <StackPanel Grid.Row="2" Margin="0,0,0,15">
-            <TextBlock Text="Interval kontroly (minuty)" FontWeight="SemiBold" Margin="0,0,0,5" />
+        <StackPanel Grid.Row="2" Margin="0,0,0,12">
+            <TextBlock Text="Interval kontroly (minuty)" FontWeight="SemiBold" Margin="0,0,0,4" />
             <ComboBox ItemsSource="{Binding IntervalOptions}"
                       SelectedItem="{Binding PollingIntervalMin}"
                       Width="100" HorizontalAlignment="Left" />
         </StackPanel>
 
+        <!-- Language -->
+        <StackPanel Grid.Row="3" Margin="0,0,0,12">
+            <TextBlock Text="Jazyk / Language" FontWeight="SemiBold" Margin="0,0,0,4" />
+            <ComboBox ItemsSource="{Binding AvailableLangs}"
+                      DisplayMemberPath="DisplayName"
+                      SelectedValuePath="Code"
+                      SelectedValue="{Binding SelectedLang}"
+                      Width="160" HorizontalAlignment="Left" />
+        </StackPanel>
+
+        <!-- Log Path -->
+        <StackPanel Grid.Row="4" Margin="0,0,0,12">
+            <TextBlock Text="Cesta k log souboru" FontWeight="SemiBold" Margin="0,0,0,4" />
+            <TextBox Text="{Binding LogPath, UpdateSourceTrigger=PropertyChanged}"
+                     Width="460" HorizontalAlignment="Left" />
+            <TextBlock Text="Nech prázdné pro výchozí (%LocalAppData%\DeepSeekCreditCheck\app.log)"
+                       Foreground="#888" FontSize="11" Margin="0,2,0,0" />
+        </StackPanel>
+
         <!-- Buttons -->
-        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,15,0,10">
+        <StackPanel Grid.Row="5" Orientation="Horizontal" Margin="0,10,0,10">
             <Button Content="💾 Uložit" Command="{Binding SaveCommand}"
                     Width="100" Height="32" Margin="0,0,10,0"
                     Background="#0078D7" Foreground="White" BorderThickness="0" />
@@ -48,7 +69,8 @@
                        FontSize="13" Foreground="#107C10" />
         </StackPanel>
 
-        <TextBlock Grid.Row="4" Text="Po uložení se aplikace restartuje s novým nastavením."
+        <TextBlock Grid.Row="6"
+                   Text="Po uložení se aplikace restartuje s novým nastavením."
                    Foreground="#888" FontSize="11" VerticalAlignment="Bottom" />
     </Grid>
 </Window>
