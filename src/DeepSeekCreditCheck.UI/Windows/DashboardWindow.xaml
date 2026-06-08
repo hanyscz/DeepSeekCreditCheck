@@ -7,8 +7,18 @@
         MinWidth="800" MinHeight="550"
         WindowStartupLocation="CenterScreen"
         Background="#1A1A1A"
-        Foreground="#E0E0E0">
+        Foreground="#E0E0E0"
+        TextOptions.TextFormattingMode="Display">
     <Window.Resources>
+        <Style TargetType="oxy:TrackerControl">
+            <Setter Property="Background" Value="#2A2A2A" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="#555" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Padding" Value="8,4" />
+        </Style>
         <Style x:Key="CardBorder" TargetType="Border">
             <Setter Property="Background" Value="#252525" />
             <Setter Property="CornerRadius" Value="8" />

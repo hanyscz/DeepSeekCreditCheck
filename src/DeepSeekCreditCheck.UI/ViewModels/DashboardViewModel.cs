@@ -203,6 +203,8 @@ public class DashboardViewModel : BaseViewModel
             var days = (sorted[i].Timestamp - sorted[i - 1].Timestamp).TotalDays;
             if (days <= 0) continue;
             var spendPerDay = (sorted[i - 1].TotalBalanceDecimal - sorted[i].TotalBalanceDecimal) / (decimal)days;
+            // Přeskočit záporné hodnoty (dobití kreditu) — nemají smysl v grafu spotřeby
+            if (spendPerDay < 0) continue;
             series.Points.Add(new DataPoint(
                 DateTimeAxis.ToDouble(sorted[i].Timestamp.ToLocalTime()),
                 (double)spendPerDay));
