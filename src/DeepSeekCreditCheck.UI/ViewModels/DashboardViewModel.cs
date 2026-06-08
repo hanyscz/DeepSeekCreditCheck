@@ -1,5 +1,6 @@
 using System.Windows.Input;
 using DeepSeekCreditCheck.Core.Models;
+using DeepSeekCreditCheck.Core.Repositories;
 using DeepSeekCreditCheck.Core.Services;
 using OxyPlot;
 using OxyPlot.Axes;
@@ -10,6 +11,7 @@ namespace DeepSeekCreditCheck.UI.ViewModels;
 public class DashboardViewModel : BaseViewModel
 {
     private readonly IPollingService _polling;
+    private readonly IBalanceRepository _balanceRepo;
     private string _currentBalance = "—";
     private string _prediction = "—";
     private string _dailySpend = "—";
@@ -30,17 +32,28 @@ public class DashboardViewModel : BaseViewModel
     public PlotModel? SpendPlot { get => _spendPlot; set => SetProperty(ref _spendPlot, value); }
 
     public ICommand RefreshCommand { get; }
+    public ICommand OpenDataBrowserCommand { get; }
 
     private readonly List<BalanceSnapshot> _history = new();
 
-    public DashboardViewModel(IPollingService polling)
+    public DashboardViewModel(IPollingService polling, IBalanceRepository balanceRepo)
     {
         _polling = polling;
+        _balanceRepo = balanceRepo;
         RefreshCommand = new RelayCommand(async _ =>
         {
             if (_polling is PollingService ps)
                 await ps.PollOnceAsync(CancellationToken.None);
         });
+        OpenDataBrowserCommand = new RelayCommand(_ => OpenDataBrowser());
+    }
+
+    private void OpenDataBrowser()
+    {
+        var window = new Windows.ViewDataWindow(_balanceRepo);
+        window.Owner = System.Windows.Application.Current.MainWindow;
+        window.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterOwner;
+        window.ShowDialog();
     }
 
     public void OnPollCompleted(PollResult result)
@@ -66,34 +79,40 @@ public class DashboardViewModel : BaseViewModel
         var sorted = _history.OrderBy(h => h.Timestamp).ToList();
         var now = DateTime.UtcNow;
 
-        // Týdenní spotřeba
         var weekAgo = now.AddDays(-7);
-        var weeklySpend = sorted
+        var weeklySpendList = sorted
             .Where(h => h.Timestamp >= weekAgo)
             .Select(h => h.TotalBalanceDecimal)
             .DefaultIfEmpty(0)
             .ToList();
-        var weekTotal = weeklySpend.Count >= 2
-            ? weeklySpend.First() - weeklySpend.Last()
+        var weekTotal = weeklySpendList.Count >= 2
+            ? weeklySpendList.First() - weeklySpendList.Last()
             : 0;
         WeeklySpend = weekTotal > 0 ? $"${weekTotal:F2}" : "—";
 
-        // Měsíční spotřeba
         var monthAgo = now.AddDays(-30);
-        var monthlySpend = sorted
+        var monthlySpendList = sorted
             .Where(h => h.Timestamp >= monthAgo)
             .Select(h => h.TotalBalanceDecimal)
             .DefaultIfEmpty(0)
             .ToList();
-        var monthTotal = monthlySpend.Count >= 2
-            ? monthlySpend.First() - monthlySpend.Last()
+        var monthTotal = monthlySpendList.Count >= 2
+            ? monthlySpendList.First() - monthlySpendList.Last()
             : 0;
         MonthlySpend = monthTotal > 0 ? $"${monthTotal:F2}" : "—";
     }
 
     private void BuildBalanceChart()
     {
-        var plot = new PlotModel { Title = "Zůstatek v čase" };
+        var plot = new PlotModel
+        {
+            Title = "Zůstatek v čase",
+            TitleColor = OxyColors.White,
+            PlotAreaBackground = OxyColor.FromRgb(30, 30, 30),
+            Background = OxyColor.FromRgb(22, 22, 22),
+            TextColor = OxyColor.FromRgb(200, 200, 200)
+        };
+
         var series = new LineSeries
         {
             Title = "USD",
@@ -117,7 +136,19 @@ public class DashboardViewModel : BaseViewModel
         plot.Axes.Add(new DateTimeAxis
         {
             Position = AxisPosition.Bottom,
-            StringFormat = "dd.MM."
+            StringFormat = "dd.MM.",
+            TextColor = OxyColor.FromRgb(160, 160, 160),
+            TicklineColor = OxyColor.FromRgb(60, 60, 60),
+            MajorGridlineColor = OxyColor.FromRgb(40, 40, 40),
+            MajorGridlineStyle = LineStyle.Dot
+        });
+        plot.Axes.Add(new LinearAxis
+        {
+            Position = AxisPosition.Left,
+            TextColor = OxyColor.FromRgb(160, 160, 160),
+            TicklineColor = OxyColor.FromRgb(60, 60, 60),
+            MajorGridlineColor = OxyColor.FromRgb(40, 40, 40),
+            MajorGridlineStyle = LineStyle.Dot
         });
 
         BalancePlot = plot;
@@ -125,7 +156,15 @@ public class DashboardViewModel : BaseViewModel
 
     private void BuildSpendChart()
     {
-        var plot = new PlotModel { Title = "Denní spotřeba (USD)" };
+        var plot = new PlotModel
+        {
+            Title = "Denní spotřeba (USD)",
+            TitleColor = OxyColors.White,
+            PlotAreaBackground = OxyColor.FromRgb(30, 30, 30),
+            Background = OxyColor.FromRgb(22, 22, 22),
+            TextColor = OxyColor.FromRgb(200, 200, 200)
+        };
+
         var series = new BarSeries
         {
             FillColor = OxyColor.FromRgb(220, 80, 60),
@@ -138,14 +177,19 @@ public class DashboardViewModel : BaseViewModel
         {
             var spend = sorted[i - 1].TotalBalanceDecimal - sorted[i].TotalBalanceDecimal;
             if (spend < 0) spend = 0;
-            series.Items.Add(new BarItem
-            {
-                Value = (double)spend,
-                CategoryIndex = i - 1
-            });
+            series.Items.Add(new BarItem { Value = (double)spend, CategoryIndex = i - 1 });
         }
 
         plot.Series.Add(series);
+        plot.Axes.Add(new LinearAxis
+        {
+            Position = AxisPosition.Left,
+            TextColor = OxyColor.FromRgb(160, 160, 160),
+            TicklineColor = OxyColor.FromRgb(60, 60, 60),
+            MajorGridlineColor = OxyColor.FromRgb(40, 40, 40),
+            MajorGridlineStyle = LineStyle.Dot
+        });
+
         SpendPlot = plot;
     }
 }

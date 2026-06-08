@@ -3,83 +3,106 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:oxy="http://oxyplot.org/wpf"
         Title="DeepSeek Kredit — Dashboard"
-        Width="900" Height="650"
-        MinWidth="700" MinHeight="500"
-        WindowStartupLocation="CenterScreen">
+        Width="960" Height="680"
+        MinWidth="800" MinHeight="550"
+        WindowStartupLocation="CenterScreen"
+        Background="#1A1A1A"
+        Foreground="#E0E0E0">
     <Window.Resources>
-        <Style TargetType="TextBlock" x:Key="StatLabel">
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="Foreground" Value="#888" />
+        <Style x:Key="CardBorder" TargetType="Border">
+            <Setter Property="Background" Value="#252525" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="BorderBrush" Value="#3A3A3A" />
+            <Setter Property="BorderThickness" Value="1" />
         </Style>
-        <Style TargetType="TextBlock" x:Key="StatValue">
-            <Setter Property="FontSize" Value="24" />
+        <Style x:Key="StatValue" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="22" />
             <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Margin" Value="0,2,0,0" />
         </Style>
-        <Style TargetType="Button" x:Key="RefreshBtn">
-            <Setter Property="Background" Value="#0078D7" />
-            <Setter Property="Foreground" Value="White" />
+        <Style x:Key="ActionBtn" TargetType="Button">
+            <Setter Property="Background" Value="#3A3A3A" />
+            <Setter Property="Foreground" Value="#E0E0E0" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="Padding" Value="14,8" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="FontSize" Value="13" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="6"
+                                Padding="{TemplateBinding Padding}" BorderBrush="#555" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </Window.Resources>
-    <Grid Margin="20">
+
+    <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Stats Row -->
-        <Border Grid.Row="0" Background="#F5F5F5" CornerRadius="8" Padding="15" Margin="0,0,0,12">
+        <!-- Stats Cards Row -->
+        <Border Grid.Row="0" Style="{StaticResource CardBorder}" Padding="16" Margin="0,0,0,12">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="2*" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
+                <!-- Left: Balance + prediction stacked -->
                 <StackPanel Grid.Column="0">
-                    <TextBlock Style="{StaticResource StatLabel}" Text="Aktuální zůstatek" />
-                    <TextBlock Style="{StaticResource StatValue}" Text="{Binding CurrentBalance}"
-                               Foreground="#0078D7" />
-                </StackPanel>
-                <StackPanel Grid.Column="1">
-                    <TextBlock Style="{StaticResource StatLabel}" Text="Predikce" />
-                    <TextBlock Style="{StaticResource StatValue}" Text="{Binding Prediction}"
-                               Foreground="#107C10" />
-                </StackPanel>
-                <StackPanel Grid.Column="2">
-                    <TextBlock Style="{StaticResource StatLabel}" Text="Spotřeba / týden" />
-                    <TextBlock Style="{StaticResource StatValue}" Text="{Binding WeeklySpend}"
-                               Foreground="#D83B01" />
-                </StackPanel>
-                <StackPanel Grid.Column="3">
-                    <TextBlock Style="{StaticResource StatLabel}" Text="Spotřeba / měsíc" />
-                    <TextBlock Style="{StaticResource StatValue}" Text="{Binding MonthlySpend}"
-                               Foreground="#D83B01" />
+                    <TextBlock Text="AKTUÁLNÍ ZŮSTATEK" FontSize="11" Foreground="#888" />
+                    <TextBlock Text="{Binding CurrentBalance}" FontSize="32" FontWeight="Bold"
+                               Foreground="#4FC3F7" Margin="0,2,0,4" />
+                    <TextBlock FontSize="13" Foreground="#999" Margin="0,0,0,2">
+                        <Run Text="Predikce:" /><Run Text="{Binding Prediction}" FontWeight="SemiBold" Foreground="#81C784" />
+                    </TextBlock>
+                    <TextBlock FontSize="11" Foreground="#666">
+                        <Run Text="Poslední aktualizace:" />
+                        <Run Text="{Binding LastUpdated}" />
+                    </TextBlock>
                 </StackPanel>
 
-                <StackPanel Grid.Column="4" VerticalAlignment="Bottom" Margin="10,0,0,0">
+                <!-- Weekly spend -->
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
+                    <TextBlock Text="ZA TÝDEN" FontSize="11" Foreground="#888" />
+                    <TextBlock Style="{StaticResource StatValue}" Text="{Binding WeeklySpend}"
+                               Foreground="#FF8A65" />
+                </StackPanel>
+
+                <!-- Monthly spend -->
+                <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0">
+                    <TextBlock Text="ZA MĚSÍC" FontSize="11" Foreground="#888" />
+                    <TextBlock Style="{StaticResource StatValue}" Text="{Binding MonthlySpend}"
+                               Foreground="#E57373" />
+                </StackPanel>
+
+                <!-- Action buttons -->
+                <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="20,0,0,0">
                     <Button Content="🔄 Obnovit" Command="{Binding RefreshCommand}"
-                            Style="{StaticResource RefreshBtn}" />
-                    <TextBlock Text="{Binding LastUpdated}" FontSize="11" Foreground="#999"
-                               Margin="0,4,0,0" TextAlignment="Center" />
+                            Style="{StaticResource ActionBtn}" Margin="0,0,0,6" />
+                    <Button Content="📁 Záznamy v DB" Command="{Binding OpenDataBrowserCommand}"
+                            Style="{StaticResource ActionBtn}" Background="#2E7D32" />
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- Balance Chart -->
-        <Border Grid.Row="1" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="4" Margin="0,0,0,8">
-            <oxy:PlotView Model="{Binding BalancePlot}" />
+        <Border Grid.Row="1" Style="{StaticResource CardBorder}" Padding="0" Margin="0,0,0,8">
+            <oxy:PlotView Model="{Binding BalancePlot}" Background="#161616" />
         </Border>
 
         <!-- Spend Chart -->
-        <Border Grid.Row="2" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="4">
-            <oxy:PlotView Model="{Binding SpendPlot}" />
+        <Border Grid.Row="2" Style="{StaticResource CardBorder}" Padding="0">
+            <oxy:PlotView Model="{Binding SpendPlot}" Background="#161616" />
         </Border>
     </Grid>
 </Window>
