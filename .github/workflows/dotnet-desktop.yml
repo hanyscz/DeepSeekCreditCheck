@@ -39,11 +39,14 @@ jobs:
         dotnet publish src/DeepSeekCreditCheck.UI/DeepSeekCreditCheck.UI.csproj `
           --configuration ${{ matrix.configuration }} `
           --runtime win-x64 `
-          --self-contained false `
+          --self-contained true `
+          /p:Version=1.0.0.${{ github.run_number }} `
+          /p:AssemblyVersion=1.0.0.${{ github.run_number }} `
+          /p:FileVersion=1.0.0.${{ github.run_number }} `
           --output publish/
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: DeepSeekCreditCheck-v1.0.0
+        name: DeepSeekCreditCheck-v${{ github.run_number }}
         path: publish/
