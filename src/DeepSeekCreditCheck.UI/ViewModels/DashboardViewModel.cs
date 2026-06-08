@@ -138,7 +138,7 @@ public class DashboardViewModel : BaseViewModel
     {
         var plot = new PlotModel
         {
-            Title = "Zůstatek v čase (unikátní hodnoty)",
+            Title = "Zůstatek v čase (hodinová granularita)",
             TitleColor = OxyColors.White,
             PlotAreaBackground = OxyColor.FromRgb(30, 30, 30),
             Background = OxyColor.FromRgb(22, 22, 22),
@@ -152,38 +152,53 @@ public class DashboardViewModel : BaseViewModel
             StrokeThickness = 2,
             LineStyle = LineStyle.Solid,
             MarkerType = MarkerType.Circle,
-            MarkerSize = 4
+            MarkerSize = 3
         };
 
-        // Agregujeme po kalendářních dnech — jeden bod na den vždy v 23:59
-        var grouped = _history
-            .GroupBy(h => h.Timestamp.Date)
-            .OrderBy(g => g.Key)
-            .ToList();
-
-        foreach (var dayGroup in grouped)
+        // Schodovitý graf — jeden bod za každou hodinu s poslední známou hodnotou
+        var sorted = _history.OrderBy(h => h.Timestamp).ToList();
+        if (sorted.Count > 0)
         {
-            var latest = dayGroup.OrderByDescending(h => h.Timestamp).First();
-            series.Points.Add(new DataPoint(
-                DateTimeAxis.ToDouble(dayGroup.Key.ToLocalTime().AddHours(23).AddMinutes(59)),
-                (double)latest.TotalBalanceDecimal));
+            var startDay = sorted.First().Timestamp.Date;
+            var endDay = sorted.Last().Timestamp.Date;
+
+            // Index do historie — pro efektivní hledání
+            int idx = 0;
+            for (var day = startDay; day <= endDay; day = day.AddDays(1))
+            {
+                for (int hour = 0; hour < 24; hour++)
+                {
+                    var hourUtc = day.AddHours(hour);
+                    // Posunout index na snapshoty <= aktuální hodina
+                    while (idx < sorted.Count && sorted[idx].Timestamp <= hourUtc)
+                        idx++;
+
+                    if (idx > 0)
+                    {
+                        var value = sorted[idx - 1].TotalBalanceDecimal;
+                        series.Points.Add(new DataPoint(
+                            DateTimeAxis.ToDouble(hourUtc.ToLocalTime()),
+                            (double)value));
+                    }
+                }
+            }
         }
 
         plot.Series.Add(series);
 
-        // Osa s pevným minimem a maximem = poslední datum + 1 den
-        if (grouped.Count > 0)
+        // Osa s pevným minimem a maximem
+        if (sorted.Count > 0)
         {
-            var lastDt = grouped.Last().Key.ToLocalTime();
-            var minDt = grouped.First().Key.ToLocalTime();
-            var maxDt = lastDt.AddDays(1).AddHours(6);
-            var minVal = DateTimeAxis.ToDouble(minDt.AddHours(-2));
+            var firstDt = sorted.First().Timestamp.ToLocalTime();
+            var lastDt = sorted.Last().Timestamp.ToLocalTime();
+            var maxDt = lastDt.Date.AddDays(1).AddHours(6);
+            var minVal = DateTimeAxis.ToDouble(firstDt.Date.AddHours(-2));
             var maxVal = DateTimeAxis.ToDouble(maxDt);
 
             plot.Axes.Add(new DateTimeAxis
             {
                 Position = AxisPosition.Bottom,
-                StringFormat = "dd.MM.",
+                StringFormat = "dd.MM.\nHH:mm",
                 TextColor = OxyColor.FromRgb(160, 160, 160),
                 TicklineColor = OxyColor.FromRgb(60, 60, 60),
                 MajorGridlineColor = OxyColor.FromRgb(40, 40, 40),
@@ -197,7 +212,7 @@ public class DashboardViewModel : BaseViewModel
             plot.Axes.Add(new DateTimeAxis
             {
                 Position = AxisPosition.Bottom,
-                StringFormat = "dd.MM.",
+                StringFormat = "dd.MM.\nHH:mm",
                 TextColor = OxyColor.FromRgb(160, 160, 160),
                 TicklineColor = OxyColor.FromRgb(60, 60, 60),
                 MajorGridlineColor = OxyColor.FromRgb(40, 40, 40),
@@ -229,43 +244,48 @@ public class DashboardViewModel : BaseViewModel
 
         // Agregovat spotřebu po kalendářních dnech
         var sorted = _history.OrderBy(h => h.Timestamp).ToList();
-        var byDay = new Dictionary<DateTime, decimal>();
+        var byDay = new SortedDictionary<DateTime, decimal>();
 
         for (int i = 1; i < sorted.Count; i++)
         {
             var spend = sorted[i - 1].TotalBalanceDecimal - sorted[i].TotalBalanceDecimal;
-            if (spend <= 0) continue; // dobití — přeskočit
+            if (spend <= 0) continue;
 
-            var day = sorted[i].Timestamp.Date; // kalendářní den (UTC)
+            var day = sorted[i].Timestamp.Date;
             if (!byDay.ContainsKey(day))
                 byDay[day] = 0;
             byDay[day] += spend;
         }
 
-        var series = new LineSeries
+        if (byDay.Count > 0)
         {
-            Title = "USD/den",
-            Color = OxyColor.FromRgb(220, 80, 60),
-            StrokeThickness = 2,
-            MarkerType = MarkerType.Circle,
-            MarkerSize = 3
-        };
+            var catAxis = new CategoryAxis
+            {
+                Position = AxisPosition.Bottom,
+                TextColor = OxyColor.FromRgb(160, 160, 160),
+                TicklineColor = OxyColor.FromRgb(60, 60, 60),
+                FontSize = 10
+            };
 
-        foreach (var kv in byDay.OrderBy(kv => kv.Key))
-            series.Points.Add(new DataPoint(
-                DateTimeAxis.ToDouble(kv.Key.ToLocalTime()),
-                (double)kv.Value));
+            var series = new BarSeries
+            {
+                Title = "USD/den",
+                FillColor = OxyColor.FromRgb(220, 80, 60),
+                StrokeColor = OxyColor.FromRgb(180, 50, 30),
+                StrokeThickness = 1,
+                BarWidth = 20
+            };
 
-        plot.Series.Add(series);
-        plot.Axes.Add(new DateTimeAxis
-        {
-            Position = AxisPosition.Bottom,
-            StringFormat = "dd.MM.",
-            TextColor = OxyColor.FromRgb(160, 160, 160),
-            TicklineColor = OxyColor.FromRgb(60, 60, 60),
-            MajorGridlineColor = OxyColor.FromRgb(40, 40, 40),
-            MajorGridlineStyle = LineStyle.Dot
-        });
+            foreach (var kv in byDay)
+            {
+                series.Items.Add(new BarItem { Value = (double)kv.Value });
+                catAxis.Labels.Add(kv.Key.ToLocalTime().ToString("dd.MM"));
+            }
+
+            plot.Series.Add(series);
+            plot.Axes.Add(catAxis);
+        }
+
         plot.Axes.Add(new LinearAxis
         {
             Position = AxisPosition.Left,
@@ -273,7 +293,7 @@ public class DashboardViewModel : BaseViewModel
             TicklineColor = OxyColor.FromRgb(60, 60, 60),
             MajorGridlineColor = OxyColor.FromRgb(40, 40, 40),
             MajorGridlineStyle = LineStyle.Dot,
-            Title = "USD/den",
+            Title = "USD",
             TitleColor = OxyColor.FromRgb(160, 160, 160)
         });
 
