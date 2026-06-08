@@ -49,7 +49,7 @@ jobs:
         dotnet publish src/DeepSeekCreditCheck.UI/DeepSeekCreditCheck.UI.csproj `
           --configuration ${{ matrix.configuration }} `
           --runtime win-x64 `
-          --self-contained true `
+          --self-contained false `
           --output publish/
 
     - name: Upload build artifacts
