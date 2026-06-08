@@ -127,3 +127,14 @@ dotnet publish src/DeepSeekCreditCheck.UI/DeepSeekCreditCheck.UI.csproj -c Relea
 ```
 
 Requires .NET 8 SDK and Windows (DPAPI dependency).
+
+---
+
+## Screenshots
+
+<p align="center">
+  <img src="screenshots/tray.png" alt="Tray icon" width="200" />
+  <img src="screenshots/popup.png" alt="Notification toast" width="380" />
+  <br/>
+  <img src="screenshots/dashboard.png" alt="Dashboard" width="800" />
+</p>
