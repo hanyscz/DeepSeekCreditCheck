@@ -1,6 +1,7 @@
 using System.IO;
-using System.Globalization;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 using Hardcodet.Wpf.TaskbarNotification;
 using DeepSeekCreditCheck.Core.Services;
 using DeepSeekCreditCheck.UI.ViewModels;
@@ -13,7 +14,7 @@ public class TrayIconService : IDisposable
 {
     private readonly IServiceProvider _services;
     private TaskbarIcon? _notifyIcon;
-    private decimal _lastBalance;
+    private TextBlock? _tooltipText;
 
     public TrayIconService(IServiceProvider services)
     {
@@ -26,10 +27,31 @@ public class TrayIconService : IDisposable
 
         _notifyIcon = new TaskbarIcon
         {
-            Icon = CreateBalanceIcon(0),
-            ToolTipText = "DeepSeek Credit Check",
+            Icon = CreateAppIcon(),
             Visibility = Visibility.Visible
         };
+
+        // Custom tooltip ovládací prvek — 2x větší, černý podklad
+        _tooltipText = new TextBlock
+        {
+            Text = "DeepSeek Credit Check",
+            FontSize = 20,
+            Foreground = new SolidColorBrush(Colors.White),
+            TextAlignment = TextAlignment.Center,
+            Margin = new Thickness(14)
+        };
+
+        var tooltipBorder = new Border
+        {
+            Background = new SolidColorBrush(Color.FromRgb(40, 40, 40)),
+            BorderBrush = new SolidColorBrush(Color.FromRgb(80, 80, 80)),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(6),
+            Child = _tooltipText,
+            Padding = new Thickness(4)
+        };
+
+        _notifyIcon.TrayToolTip = tooltipBorder;
 
         var menu = new System.Windows.Controls.ContextMenu();
 
@@ -105,68 +127,15 @@ public class TrayIconService : IDisposable
 
         refs.ErrorItem.Visibility = Visibility.Collapsed;
 
-        _notifyIcon.ToolTipText = $"{loc["tooltip_title"]}\n" +
-            $"━━━━━━━━━━━━━━━━━━\n" +
-            $"{loc.Format("tooltip_balance", balStr)}\n" +
-            $"{loc.Format("tooltip_prediction", pred)}\n" +
-            $"🕐 {DateTime.Now:HH:mm:ss}";
-
-        // Update tray icon with balance number
-        _lastBalance = bal;
-        UpdateIcon(bal);
-    }
-
-    private void UpdateIcon(decimal balance)
-    {
-        try
+        // Custom tooltip — 2x větší
+        if (_tooltipText != null)
         {
-            _notifyIcon!.Icon = CreateBalanceIcon(balance);
+            _tooltipText.Text = $"{loc["tooltip_title"]}\n" +
+                $"━━━━━━━━━━━━━━━━━━\n" +
+                $"{loc.Format("tooltip_balance", balStr)}\n" +
+                $"{loc.Format("tooltip_prediction", pred)}\n" +
+                $"🕐 {DateTime.Now:HH:mm:ss}";
         }
-        catch { }
-    }
-
-    private static System.Drawing.Icon CreateBalanceIcon(decimal balance)
-    {
-        // Zkusit vlastní ikonu z Resources
-        if (balance == 0)
-        {
-            try
-            {
-                var exeDir = AppDomain.CurrentDomain.BaseDirectory;
-                var customPath = Path.Combine(exeDir, "Resources", "app.ico");
-                if (File.Exists(customPath)) return new System.Drawing.Icon(customPath);
-            }
-            catch { }
-        }
-
-        // Kreslíme na 16×16 — systémová traj používá tuto velikost
-        const int size = 16;
-        using var bitmap = new System.Drawing.Bitmap(size, size);
-        using var g = System.Drawing.Graphics.FromImage(bitmap);
-        g.Clear(System.Drawing.Color.FromArgb(0, 120, 215));
-
-        var text = FormatBalanceText(balance);
-        var fontSize = text.Length >= 4 ? 8 : text.Length >= 3 ? 9 : 10;
-        using var font = new System.Drawing.Font("Segoe UI", fontSize, System.Drawing.FontStyle.Bold);
-        using var brush = new System.Drawing.SolidBrush(System.Drawing.Color.White);
-        var fmt = new System.Drawing.StringFormat
-        {
-            Alignment = System.Drawing.StringAlignment.Center,
-            LineAlignment = System.Drawing.StringAlignment.Center
-        };
-        g.DrawString(text, font, brush, new System.Drawing.RectangleF(0, 0, size, size), fmt);
-
-        using var temp = System.Drawing.Icon.FromHandle(bitmap.GetHicon());
-        return (System.Drawing.Icon)temp.Clone();
-    }
-
-    private static string FormatBalanceText(decimal balance)
-    {
-        if (balance >= 100) return ((int)balance).ToString();
-        if (balance >= 10)  return balance.ToString("F0");
-        if (balance >= 1)   return balance.ToString("F1");
-        if (balance > 0)    return balance.ToString("F1");
-        return "0";
     }
 
     public void SetError(string message)
@@ -201,6 +170,27 @@ public class TrayIconService : IDisposable
     {
         var window = new SettingsWindow(_services.GetRequiredService<SettingsViewModel>());
         window.ShowDialog();
+    }
+
+    private static System.Drawing.Icon CreateAppIcon()
+    {
+        try
+        {
+            var exeDir = AppDomain.CurrentDomain.BaseDirectory;
+            var customPath = Path.Combine(exeDir, "Resources", "app.ico");
+            if (File.Exists(customPath))
+                return new System.Drawing.Icon(customPath);
+        }
+        catch { }
+
+        using var bitmap = new System.Drawing.Bitmap(16, 16);
+        using var g = System.Drawing.Graphics.FromImage(bitmap);
+        g.Clear(System.Drawing.Color.FromArgb(0, 120, 215));
+        using var font = new System.Drawing.Font("Segoe UI", 10, System.Drawing.FontStyle.Bold);
+        using var brush = new System.Drawing.SolidBrush(System.Drawing.Color.White);
+        g.DrawString("$", font, brush, 3, -1);
+        using var temp = System.Drawing.Icon.FromHandle(bitmap.GetHicon());
+        return (System.Drawing.Icon)temp.Clone();
     }
 
     public void Dispose()
