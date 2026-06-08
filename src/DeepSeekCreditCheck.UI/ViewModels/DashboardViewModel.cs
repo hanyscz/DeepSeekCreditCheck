@@ -150,8 +150,7 @@ public class DashboardViewModel : BaseViewModel
             MarkerSize = 3
         };
 
-        // Unikátní hodnoty, ale vždy včetně posledního bodu (kvůli dnešku)
-        // a padding bodu pro roztažení osy
+        // Jen unikátní hodnoty — první výskyt při změně zůstatku
         var sorted = _history.OrderBy(h => h.Timestamp).ToList();
         decimal? lastVal = null;
         foreach (var h in sorted)
@@ -164,7 +163,7 @@ public class DashboardViewModel : BaseViewModel
                 (double)h.TotalBalanceDecimal));
         }
 
-        // Vždy přidat poslední bod ze sorted (i duplicitní) — kvůli dnešku
+        // Poslední bod vždy přidáme (i duplicitní) — kvůli dnešku
         if (sorted.Count > 0)
         {
             var last = sorted.Last();
@@ -173,23 +172,46 @@ public class DashboardViewModel : BaseViewModel
             {
                 series.Points.Add(new DataPoint(lastTime, (double)last.TotalBalanceDecimal));
             }
-
-            // Padding bod zítra v 6:00 pro roztažení osy
-            var tomorrow = last.Timestamp.ToLocalTime().Date.AddDays(1).AddHours(6);
-            var padX = DateTimeAxis.ToDouble(tomorrow);
-            series.Points.Add(new DataPoint(padX, (double)last.TotalBalanceDecimal));
         }
 
         plot.Series.Add(series);
-        plot.Axes.Add(new DateTimeAxis
+
+        // Osa s pevným minimem a maximem = poslední datum + 1 den
+        DateTimeAxis bottomAxis;
+        if (sorted.Count > 0)
         {
-            Position = AxisPosition.Bottom,
-            StringFormat = "dd.MM.",
-            TextColor = OxyColor.FromRgb(160, 160, 160),
-            TicklineColor = OxyColor.FromRgb(60, 60, 60),
-            MajorGridlineColor = OxyColor.FromRgb(40, 40, 40),
-            MajorGridlineStyle = LineStyle.Dot
-        });
+            var lastDt = sorted.Last().Timestamp.ToLocalTime();
+            var minDt = sorted.First().Timestamp.ToLocalTime();
+            // Minimum je první datum ráno, maximum je zítra v 6:00
+            var maxDt = lastDt.Date.AddDays(1).AddHours(6);
+            var minVal = DateTimeAxis.ToDouble(minDt.Date.AddHours(-2)); // trochu mezera na začátku
+            var maxVal = DateTimeAxis.ToDouble(maxDt);
+
+            bottomAxis = new DateTimeAxis
+            {
+                Position = AxisPosition.Bottom,
+                StringFormat = "dd.MM.",
+                TextColor = OxyColor.FromRgb(160, 160, 160),
+                TicklineColor = OxyColor.FromRgb(60, 60, 60),
+                MajorGridlineColor = OxyColor.FromRgb(40, 40, 40),
+                MajorGridlineStyle = LineStyle.Dot,
+                Minimum = minVal,
+                Maximum = maxVal
+            };
+        }
+        else
+        {
+            bottomAxis = new DateTimeAxis
+            {
+                Position = AxisPosition.Bottom,
+                StringFormat = "dd.MM.",
+                TextColor = OxyColor.FromRgb(160, 160, 160),
+                TicklineColor = OxyColor.FromRgb(60, 60, 60),
+                MajorGridlineColor = OxyColor.FromRgb(40, 40, 40),
+                MajorGridlineStyle = LineStyle.Dot
+            };
+        }
+        plot.Axes.Add(bottomAxis);
         plot.Axes.Add(new LinearAxis
         {
             Position = AxisPosition.Left,
