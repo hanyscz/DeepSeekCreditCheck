@@ -145,7 +145,7 @@ public class TrayIconService : IDisposable
         using var g = System.Drawing.Graphics.FromImage(bitmap);
         g.Clear(System.Drawing.Color.FromArgb(0, 120, 215));
 
-        var text = balance > 0 ? FormatBalanceText(balance) : "$";
+        var text = FormatBalanceText(balance);
         var fontSize = text.Length >= 4 ? 8 : text.Length >= 3 ? 9 : 10;
         using var font = new System.Drawing.Font("Segoe UI", fontSize, System.Drawing.FontStyle.Bold);
         using var brush = new System.Drawing.SolidBrush(System.Drawing.Color.White);
@@ -162,11 +162,11 @@ public class TrayIconService : IDisposable
 
     private static string FormatBalanceText(decimal balance)
     {
-        // Vždy s "$" na začátku pro kontext
-        if (balance >= 100) return $"${(int)balance}";      // $103
-        if (balance >= 10)  return $"${balance:F0}";        // $42
-        if (balance >= 1)   return $"${balance:F1}";        // $8.5
-        return $"${balance:F1}";                             // $0.5
+        if (balance >= 100) return ((int)balance).ToString();
+        if (balance >= 10)  return balance.ToString("F0");
+        if (balance >= 1)   return balance.ToString("F1");
+        if (balance > 0)    return balance.ToString("F1");
+        return "0";
     }
 
     public void SetError(string message)

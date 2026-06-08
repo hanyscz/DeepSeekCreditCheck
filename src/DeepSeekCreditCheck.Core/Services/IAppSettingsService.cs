@@ -14,4 +14,6 @@ public interface IAppSettingsService
     Task SetLanguageAsync(string lang);
     Task<string?> GetLogPathAsync();
     Task SetLogPathAsync(string path);
+    Task<string?> GetDbPathAsync();
+    Task SetDbPathAsync(string path);
 }

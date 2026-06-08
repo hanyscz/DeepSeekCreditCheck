@@ -65,4 +65,10 @@ public class AppSettingsService : IAppSettingsService
 
     public async Task SetLogPathAsync(string path)
         => await SetAsync("LogPath", path);
+
+    public async Task<string?> GetDbPathAsync()
+        => await GetAsync("DbPath");
+
+    public async Task SetDbPathAsync(string path)
+        => await SetAsync("DbPath", path);
 }

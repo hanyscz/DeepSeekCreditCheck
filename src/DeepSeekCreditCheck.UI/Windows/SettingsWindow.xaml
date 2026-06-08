@@ -2,11 +2,12 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="⚙️ Nastavení"
-        Width="520" Height="500"
+        Width="520" Height="560"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen">
     <Grid Margin="20">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -60,8 +61,17 @@
                        Foreground="#888" FontSize="11" Margin="0,2,0,0" />
         </StackPanel>
 
+        <!-- DB Path -->
+        <StackPanel Grid.Row="5" Margin="0,0,0,12">
+            <TextBlock Text="Cesta k databázi (sdílení mezi PC)" FontWeight="SemiBold" Margin="0,0,0,4" />
+            <TextBox Text="{Binding DbPath, UpdateSourceTrigger=PropertyChanged}"
+                     Width="460" HorizontalAlignment="Left" />
+            <TextBlock Text="Nech prázdné pro výchozí (%LocalAppData%\DeepSeekCreditCheck\data.db)"
+                       Foreground="#888" FontSize="11" Margin="0,2,0,0" />
+        </StackPanel>
+
         <!-- Buttons -->
-        <StackPanel Grid.Row="5" Orientation="Horizontal" Margin="0,10,0,10">
+        <StackPanel Grid.Row="6" Orientation="Horizontal" Margin="0,10,0,10">
             <Button Content="💾 Uložit" Command="{Binding SaveCommand}"
                     Width="100" Height="32" Margin="0,0,10,0"
                     Background="#0078D7" Foreground="White" BorderThickness="0" />
@@ -69,7 +79,7 @@
                        FontSize="13" Foreground="#107C10" />
         </StackPanel>
 
-        <TextBlock Grid.Row="6"
+        <TextBlock Grid.Row="7"
                    Text="Po uložení se aplikace restartuje s novým nastavením."
                    Foreground="#888" FontSize="11" VerticalAlignment="Bottom" />
     </Grid>

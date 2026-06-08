@@ -44,8 +44,26 @@ public partial class App : Application
             "DeepSeekCreditCheck");
         Directory.CreateDirectory(appDir);
 
-        var dbPath = Path.Combine(appDir, "data.db");
+        var defaultDbPath = Path.Combine(appDir, "data.db");
         var defaultLogPath = Path.Combine(appDir, "app.log");
+
+        // Bootstrap — načíst nastavení z výchozí DB (DbPath, LogPath, Language)
+        var bootstrapDb = new AppDbContext(defaultDbPath);
+        bootstrapDb.InitializeAsync().GetAwaiter().GetResult();
+        var bootstrapSettings = new AppSettingsService(bootstrapDb);
+        var customDbPath = bootstrapSettings.GetDbPathAsync().GetAwaiter().GetResult();
+        var dbPath = !string.IsNullOrWhiteSpace(customDbPath) ? customDbPath : defaultDbPath;
+        if (dbPath != defaultDbPath)
+            Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
+
+        var customLogPath = bootstrapSettings.GetLogPathAsync().GetAwaiter().GetResult();
+        var logPath = !string.IsNullOrWhiteSpace(customLogPath) ? customLogPath : defaultLogPath;
+        var appDirForLog = Path.GetDirectoryName(logPath);
+        if (!string.IsNullOrEmpty(appDirForLog)) Directory.CreateDirectory(appDirForLog);
+
+        var savedLang = bootstrapSettings.GetLanguageAsync().GetAwaiter().GetResult() ?? "cs";
+
+        Logger.Init(logPath);
 
         var services = new ServiceCollection();
 
@@ -71,23 +89,11 @@ public partial class App : Application
 
         _services = services.BuildServiceProvider();
 
-        // Najít adresář s Lang/ (vedle exe nebo o 1 uroven vyse)
+        // Načíst jazykové soubory
         var langDir = FindLangDir();
         var loc = LocalizationService.Instance;
         loc.SetLangDir(langDir);
-
-        // Načíst jazyk z nastavení
-        var settings = _services.GetRequiredService<IAppSettingsService>();
-        var savedLang = settings.GetLanguageAsync().GetAwaiter().GetResult() ?? "cs";
         loc.SetLanguage(savedLang);
-
-        // Načíst log path z nastavení (nebo výchozí)
-        var customLogPath = settings.GetLogPathAsync().GetAwaiter().GetResult();
-        var logPath = !string.IsNullOrWhiteSpace(customLogPath) ? customLogPath : defaultLogPath;
-        Logger.Init(logPath);
-        var appDirForLog = Path.GetDirectoryName(logPath);
-        if (!string.IsNullOrEmpty(appDirForLog))
-            Directory.CreateDirectory(appDirForLog);
 
         // Tray icon
         _trayIcon = new TrayIconService(_services);
