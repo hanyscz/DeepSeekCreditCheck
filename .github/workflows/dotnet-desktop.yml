@@ -1,0 +1,49 @@
+name: Build and Publish
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        configuration: [Release]
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Install .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --configuration ${{ matrix.configuration }} --no-restore
+
+    - name: Run tests
+      run: dotnet test --configuration ${{ matrix.configuration }} --no-build --verbosity normal
+
+    - name: Publish (self-contained)
+      run: |
+        dotnet publish src/DeepSeekCreditCheck.UI/DeepSeekCreditCheck.UI.csproj `
+          --configuration ${{ matrix.configuration }} `
+          --runtime win-x64 `
+          --self-contained false `
+          --output publish/
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: DeepSeekCreditCheck-v1.0.0
+        path: publish/
