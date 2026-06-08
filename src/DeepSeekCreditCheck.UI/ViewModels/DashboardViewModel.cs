@@ -188,6 +188,21 @@ public class DashboardViewModel : BaseViewModel
             TextColor = OxyColor.FromRgb(200, 200, 200),
         };
 
+        // Agregovat spotřebu po kalendářních dnech
+        var sorted = _history.OrderBy(h => h.Timestamp).ToList();
+        var byDay = new Dictionary<DateTime, decimal>();
+
+        for (int i = 1; i < sorted.Count; i++)
+        {
+            var spend = sorted[i - 1].TotalBalanceDecimal - sorted[i].TotalBalanceDecimal;
+            if (spend <= 0) continue; // dobití — přeskočit
+
+            var day = sorted[i].Timestamp.Date; // kalendářní den (UTC)
+            if (!byDay.ContainsKey(day))
+                byDay[day] = 0;
+            byDay[day] += spend;
+        }
+
         var series = new LineSeries
         {
             Title = "USD/den",
@@ -197,18 +212,10 @@ public class DashboardViewModel : BaseViewModel
             MarkerSize = 3
         };
 
-        var sorted = _history.OrderBy(h => h.Timestamp).ToList();
-        for (int i = 1; i < sorted.Count; i++)
-        {
-            var days = (sorted[i].Timestamp - sorted[i - 1].Timestamp).TotalDays;
-            if (days <= 0) continue;
-            var spendPerDay = (sorted[i - 1].TotalBalanceDecimal - sorted[i].TotalBalanceDecimal) / (decimal)days;
-            // Přeskočit záporné hodnoty (dobití kreditu) — nemají smysl v grafu spotřeby
-            if (spendPerDay < 0) continue;
+        foreach (var kv in byDay.OrderBy(kv => kv.Key))
             series.Points.Add(new DataPoint(
-                DateTimeAxis.ToDouble(sorted[i].Timestamp.ToLocalTime()),
-                (double)spendPerDay));
-        }
+                DateTimeAxis.ToDouble(kv.Key.ToLocalTime()),
+                (double)kv.Value));
 
         plot.Series.Add(series);
         plot.Axes.Add(new DateTimeAxis
