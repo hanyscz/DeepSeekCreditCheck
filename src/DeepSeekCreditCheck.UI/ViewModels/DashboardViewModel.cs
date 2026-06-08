@@ -235,55 +235,85 @@ public class DashboardViewModel : BaseViewModel
     {
         var plot = new PlotModel
         {
-            Title = "Spotřeba za kalendářní den (USD)",
+            Title = "Spotřeba (USD/hodina)",
             TitleColor = OxyColors.White,
             PlotAreaBackground = OxyColor.FromRgb(30, 30, 30),
             Background = OxyColor.FromRgb(22, 22, 22),
             TextColor = OxyColor.FromRgb(200, 200, 200),
         };
 
-        // Agregovat spotřebu po kalendářních dnech
+        // Agregovat spotřebu po hodinách
         var sorted = _history.OrderBy(h => h.Timestamp).ToList();
-        var byDay = new SortedDictionary<DateTime, decimal>();
+        var byHour = new SortedDictionary<DateTime, decimal>();
 
         for (int i = 1; i < sorted.Count; i++)
         {
             var spend = sorted[i - 1].TotalBalanceDecimal - sorted[i].TotalBalanceDecimal;
             if (spend <= 0) continue;
 
-            var day = sorted[i].Timestamp.Date;
-            if (!byDay.ContainsKey(day))
-                byDay[day] = 0;
-            byDay[day] += spend;
+            var t1 = sorted[i - 1].Timestamp;
+            var t2 = sorted[i].Timestamp;
+            var totalMinutes = (t2 - t1).TotalMinutes;
+            if (totalMinutes <= 0) continue;
+
+            var current = t1;
+            while (current < t2)
+            {
+                var hourStart = new DateTime(current.Year, current.Month, current.Day, current.Hour, 0, 0, DateTimeKind.Utc);
+                var hourEnd = hourStart.AddHours(1);
+                var sliceStart = current > hourStart ? current : hourStart;
+                var sliceEnd = t2 < hourEnd ? t2 : hourEnd;
+                var minutesInSlice = (sliceEnd - sliceStart).TotalMinutes;
+                if (minutesInSlice > 0)
+                {
+                    var proportion = minutesInSlice / totalMinutes;
+                    var hourlySpend = spend * (decimal)proportion;
+                    if (!byHour.ContainsKey(hourStart))
+                        byHour[hourStart] = 0;
+                    byHour[hourStart] += hourlySpend;
+                }
+                current = hourEnd;
+            }
         }
 
-        if (byDay.Count > 0)
+        if (byHour.Count > 0)
         {
-            var catAxis = new CategoryAxis
+            var series = new LineSeries
             {
-                Position = AxisPosition.Bottom,
-                TextColor = OxyColor.FromRgb(160, 160, 160),
-                TicklineColor = OxyColor.FromRgb(60, 60, 60),
-                FontSize = 10
+                Title = "USD/hod",
+                Color = OxyColor.FromRgb(220, 80, 60),
+                StrokeThickness = 2,
+                MarkerType = MarkerType.Circle,
+                MarkerSize = 3
             };
 
-            var series = new BarSeries
-            {
-                Title = "USD/den",
-                FillColor = OxyColor.FromRgb(220, 80, 60),
-                StrokeColor = OxyColor.FromRgb(180, 50, 30),
-                StrokeThickness = 1,
-                BarWidth = 20
-            };
-
-            foreach (var kv in byDay)
-            {
-                series.Items.Add(new BarItem { Value = (double)kv.Value });
-                catAxis.Labels.Add(kv.Key.ToLocalTime().ToString("dd.MM"));
-            }
+            foreach (var kv in byHour)
+                series.Points.Add(new DataPoint(
+                    DateTimeAxis.ToDouble(kv.Key.ToLocalTime()),
+                    (double)kv.Value));
 
             plot.Series.Add(series);
-            plot.Axes.Add(catAxis);
+
+            if (sorted.Count > 0)
+            {
+                var firstDt = sorted.First().Timestamp.ToLocalTime();
+                var lastDt = sorted.Last().Timestamp.ToLocalTime();
+                var maxDt = lastDt.Date.AddDays(1).AddHours(6);
+                var minVal = DateTimeAxis.ToDouble(firstDt.Date.AddHours(-2));
+                var maxVal = DateTimeAxis.ToDouble(maxDt);
+
+                plot.Axes.Add(new DateTimeAxis
+                {
+                    Position = AxisPosition.Bottom,
+                    StringFormat = "dd.MM.\nHH:mm",
+                    TextColor = OxyColor.FromRgb(160, 160, 160),
+                    TicklineColor = OxyColor.FromRgb(60, 60, 60),
+                    MajorGridlineColor = OxyColor.FromRgb(40, 40, 40),
+                    MajorGridlineStyle = LineStyle.Dot,
+                    Minimum = minVal,
+                    Maximum = maxVal
+                });
+            }
         }
 
         plot.Axes.Add(new LinearAxis
