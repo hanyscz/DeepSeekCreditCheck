@@ -150,16 +150,34 @@ public class DashboardViewModel : BaseViewModel
             MarkerSize = 3
         };
 
-        // Jen unikátní hodnoty — pokud je stejný zůstatek, přidáme jen první výskyt
-        decimal? lastValue = null;
-        foreach (var h in _history.OrderBy(h => h.Timestamp))
+        // Unikátní hodnoty, ale vždy včetně posledního bodu (kvůli dnešku)
+        // a padding bodu pro roztažení osy
+        var sorted = _history.OrderBy(h => h.Timestamp).ToList();
+        decimal? lastVal = null;
+        foreach (var h in sorted)
         {
-            if (lastValue.HasValue && h.TotalBalanceDecimal == lastValue.Value)
-                continue; // přeskočit duplicitní hodnotu
-            lastValue = h.TotalBalanceDecimal;
+            if (lastVal.HasValue && h.TotalBalanceDecimal == lastVal.Value)
+                continue;
+            lastVal = h.TotalBalanceDecimal;
             series.Points.Add(new DataPoint(
                 DateTimeAxis.ToDouble(h.Timestamp.ToLocalTime()),
                 (double)h.TotalBalanceDecimal));
+        }
+
+        // Vždy přidat poslední bod ze sorted (i duplicitní) — kvůli dnešku
+        if (sorted.Count > 0)
+        {
+            var last = sorted.Last();
+            var lastTime = DateTimeAxis.ToDouble(last.Timestamp.ToLocalTime());
+            if (series.Points.Count == 0 || Math.Abs(series.Points.Last().X - lastTime) > 0.0001)
+            {
+                series.Points.Add(new DataPoint(lastTime, (double)last.TotalBalanceDecimal));
+            }
+
+            // Padding bod zítra v 6:00 pro roztažení osy
+            var tomorrow = last.Timestamp.ToLocalTime().Date.AddDays(1).AddHours(6);
+            var padX = DateTimeAxis.ToDouble(tomorrow);
+            series.Points.Add(new DataPoint(padX, (double)last.TotalBalanceDecimal));
         }
 
         plot.Series.Add(series);
