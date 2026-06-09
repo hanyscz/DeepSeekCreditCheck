@@ -5,14 +5,22 @@
 ## [1.1.0] — 2026-06-09
 
 🇬🇧 **Added**
-- **Today's spend** — shows how much credit has been used today (difference between first and last snapshot of the day)
+- **Today's spend** — shows how much credit has been used today (sum of positive balance deltas)
 - Displayed in tray tooltip, tray context menu, and dashboard stats row
 - Localized in both Czech and English
 
+🇬🇧 **Fixed**
+- **Weekly/monthly spend** calculation now correctly handles credit top-ups by summing only positive consecutive balance deltas (instead of first-last snapshot difference), preventing under-reporting or hidden values when credit is recharged within the period
+- Introduced `SpendCalculator.SumPositiveDeltas()` — a reusable, tested utility replacing the broken first-last approach in all three spend calculations (today, weekly, monthly)
+
 🇨🇿 **Přidáno**
-- **Spotřeba dnes** — zobrazuje, kolik kreditu se dnes utratilo (rozdíl mezi prvním a posledním snapshotem dne)
+- **Spotřeba dnes** — zobrazuje, kolik kreditu se dnes utratilo (součet kladných delta zůstatku)
 - Zobrazeno v tooltipu traye, kontextovém menu traye a v řádku statistik na dashboardu
 - Lokalizováno v češtině i angličtině
+
+🇨🇿 **Opraveno**
+- **Výpočet týdenní/měsíční/dnešní spotřeby** nyní správně pracuje s dobíjením kreditu — sčítá pouze kladné mezisnapshotové rozdíly (místo rozdílu první minus poslední snapshot), takže dobíjení nezkresluje výsledky
+- Přidán `SpendCalculator.SumPositiveDeltas()` — znovupoužitelná, otestovaná utilita nahrazující chybný first-last přístup ve všech třech výpočtech spotřeby
 
 ---
 

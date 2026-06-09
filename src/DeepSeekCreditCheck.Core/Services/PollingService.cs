@@ -77,8 +77,8 @@ public class PollingService : IPollingService
             var todayRecs = history.Where(h => h.Timestamp >= todayStart).OrderBy(h => h.Timestamp).ToList();
             if (todayRecs.Count >= 2)
             {
-                var spend = todayRecs.First().TotalBalanceDecimal - todayRecs.Last().TotalBalanceDecimal;
-                if (spend >= 0) todaySpend = spend;
+                var spend = SpendCalculator.SumPositiveDeltas(todayRecs);
+                todaySpend = spend;
             }
 
             var thresholdStr = await _settings.GetAlertThresholdAsync();

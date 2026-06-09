@@ -122,8 +122,8 @@ public class DashboardViewModel : BaseViewModel
         var weekRecs = _history.Where(h => h.Timestamp >= weekStart).ToList();
         if (weekRecs.Count >= 2)
         {
-            var weekSpend = weekRecs.First().TotalBalanceDecimal - weekRecs.Last().TotalBalanceDecimal;
-            WeeklySpend = weekSpend >= 0 ? $"${weekSpend:F2}" : "—";
+            var weekSpend = SpendCalculator.SumPositiveDeltas(weekRecs);
+            WeeklySpend = weekSpend > 0 ? $"${weekSpend:F2}" : "$0.00";
         }
         else WeeklySpend = "—";
 
@@ -132,8 +132,8 @@ public class DashboardViewModel : BaseViewModel
         var monthRecs = _history.Where(h => h.Timestamp >= monthStart).ToList();
         if (monthRecs.Count >= 2)
         {
-            var monthSpend = monthRecs.First().TotalBalanceDecimal - monthRecs.Last().TotalBalanceDecimal;
-            MonthlySpend = monthSpend >= 0 ? $"${monthSpend:F2}" : "—";
+            var monthSpend = SpendCalculator.SumPositiveDeltas(monthRecs);
+            MonthlySpend = monthSpend > 0 ? $"${monthSpend:F2}" : "$0.00";
         }
         else MonthlySpend = "—";
     }
