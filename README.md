@@ -19,14 +19,16 @@ A lightweight Windows application that runs in the system tray and periodically 
 - **📁 Data browser** — view and delete historical balance records with multi-select
 - **📝 Logging** — errors logged to file; configurable log path for multi-PC sync
 - **🗄️ Configurable DB path** — share database across PCs via network drive or cloud sync
+- **🔄 Auto-update** — checks for new releases on startup and every 4 hours; one-click download and install from GitHub Releases
 - **🌙 Dark theme** — all windows with modern dark design
 
 ### How to use
 
-1. Download the latest build from `publish/`
+1. Download the latest build from [GitHub Releases](https://github.com/hanyscz/DeepSeekCreditCheck/releases)
 2. Run `DeepSeekCreditCheck.UI.exe`
 3. Right-click the tray icon → **⚙️ Settings** → enter your DeepSeek API key
 4. Click **Save** — app restarts and begins polling
+5. When a new version is released, you'll get a notification — click to update automatically
 
 Your API key can be obtained at [platform.deepseek.com/api_keys](https://platform.deepseek.com/api_keys).
 
@@ -77,14 +79,16 @@ Odlehčená Windows aplikace běžící v systémové trayi, která pravidelně 
 - **📁 Prohlížeč dat** — prohlížení a mazání historických záznamů s možností výběru více položek
 - **📝 Logování** — chyby se zapisují do souboru; nastavitelná cesta pro synchronizaci mezi PC
 - **🗄️ Sdílení databáze** — vlastní cesta k DB pro sdílení mezi počítači
+- **🔄 Auto-update** — kontrola nových verzí při startu a každé 4 hodiny; stažení a instalace na jedno kliknutí z GitHub Releases
 - **🌙 Tmavý režim** — všechna okna v moderním dark designu
 
 ### Použití
 
-1. Stáhni build ze složky `publish/`
+1. Stáhni build z [GitHub Releases](https://github.com/hanyscz/DeepSeekCreditCheck/releases)
 2. Spusť `DeepSeekCreditCheck.UI.exe`
 3. Klikni pravým na tray ikonu → **⚙️ Nastavení** → zadej DeepSeek API klíč
 4. Klikni **Uložit** — aplikace se restartuje a začne kontrolovat zůstatek
+5. Při vydání nové verze se zobrazí notifikace — klikni pro automatickou aktualizaci
 
 API klíč získáš na [platform.deepseek.com/api_keys](https://platform.deepseek.com/api_keys).
 

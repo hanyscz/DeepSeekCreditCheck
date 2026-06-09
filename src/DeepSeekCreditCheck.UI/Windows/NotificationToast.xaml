@@ -24,6 +24,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
@@ -39,6 +40,13 @@
 
             <TextBlock Grid.Row="1" Grid.Column="1" x:Name="MessageText" FontSize="13"
                        Foreground="#E0E0E0" TextWrapping="Wrap" VerticalAlignment="Center" />
+
+            <Button Grid.Row="2" Grid.Column="1" x:Name="ActionButton"
+                    HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                    Visibility="Collapsed" Cursor="Hand"
+                    Background="#0078D7" Foreground="White" BorderThickness="0"
+                    Padding="12,4" FontSize="12"
+                    Click="ActionButton_Click" />
         </Grid>
     </Border>
 </Window>

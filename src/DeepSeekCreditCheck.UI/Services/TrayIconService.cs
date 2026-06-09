@@ -1,8 +1,10 @@
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using Hardcodet.Wpf.TaskbarNotification;
+using DeepSeekCreditCheck.Core.Models;
 using DeepSeekCreditCheck.Core.Services;
 using DeepSeekCreditCheck.UI.ViewModels;
 using DeepSeekCreditCheck.UI.Windows;
@@ -16,6 +18,10 @@ public class TrayIconService : IDisposable
     private TaskbarIcon? _notifyIcon;
     private TextBlock? _tooltipText;
     private DashboardWindow? _dashboardWindow;
+    private MenuItem? _updateCheckItem;
+    private MenuItem? _updateActionItem;
+    private bool _isUpdating;
+    private CancellationTokenSource? _periodicTimerCts;
 
     public TrayIconService(IServiceProvider services)
     {
@@ -104,6 +110,29 @@ public class TrayIconService : IDisposable
         };
         menu.Items.Add(refreshItem);
 
+        // Update check (always visible)
+        _updateCheckItem = new MenuItem { Header = loc["tray_check_updates"] };
+        _updateCheckItem.Click += async (_, _) =>
+        {
+            _updateCheckItem.IsEnabled = false;
+            await CheckForUpdatesAsync();
+            _updateCheckItem.IsEnabled = true;
+        };
+        menu.Items.Add(_updateCheckItem);
+
+        // Update action (hidden until update found)
+        _updateActionItem = new MenuItem
+        {
+            Header = "",
+            Visibility = Visibility.Collapsed
+        };
+        _updateActionItem.Click += async (_, _) =>
+        {
+            if (_isUpdating) return;
+            await DownloadAndApplyUpdateAsync();
+        };
+        menu.Items.Add(_updateActionItem);
+
         menu.Items.Add(new System.Windows.Controls.Separator());
 
         var exitItem = new System.Windows.Controls.MenuItem { Header = loc["tray_exit"] };
@@ -166,16 +195,21 @@ public class TrayIconService : IDisposable
         }
     }
 
-    public void ShowNotification(string message)
+    public void ShowNotification(string message, string? actionText = null, Action? action = null)
     {
-        Windows.NotificationToast.Show(message);
+        if (actionText != null && action != null)
+            NotificationToast.Show(message, actionText, action);
+        else
+            NotificationToast.Show(message);
     }
 
     private void OpenDashboard()
     {
         if (_dashboardWindow == null || !_dashboardWindow.IsLoaded)
         {
-            _dashboardWindow = new DashboardWindow(_services.GetRequiredService<DashboardViewModel>());
+            var vm = _services.GetRequiredService<DashboardViewModel>();
+            vm.RefreshUpdateInfo();
+            _dashboardWindow = new DashboardWindow(vm);
             _dashboardWindow.Show();
         }
         else
@@ -212,8 +246,178 @@ public class TrayIconService : IDisposable
         return (System.Drawing.Icon)temp.Clone();
     }
 
+    public async Task CheckForUpdatesOnStartupAsync()
+    {
+        try
+        {
+            var updateService = _services.GetRequiredService<IUpdateService>();
+            var release = await updateService.CheckForUpdateAsync(CancellationToken.None);
+
+            if (release != null)
+            {
+                updateService.MarkUpdateAvailable(release);
+                var loc = LocalizationService.Instance;
+                var menuLabel = loc.Format("update_available_menu", release.TagName);
+                _updateActionItem.Header = menuLabel;
+                _updateActionItem.Visibility = Visibility.Visible;
+                _updateActionItem.IsEnabled = true;
+
+                ShowNotification(
+                    loc.Format("update_available_notify", release.TagName),
+                    menuLabel,
+                    async () => await DownloadAndApplyUpdateAsync());
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Startup update check failed", ex);
+        }
+        finally
+        {
+            StartPeriodicUpdateChecks();
+        }
+    }
+
+    private void StartPeriodicUpdateChecks()
+    {
+        _periodicTimerCts?.Cancel();
+        _periodicTimerCts = new CancellationTokenSource();
+        var ct = _periodicTimerCts.Token;
+
+        _ = Task.Run(async () =>
+        {
+            using var timer = new PeriodicTimer(TimeSpan.FromHours(4));
+            while (await timer.WaitForNextTickAsync(ct))
+            {
+                try
+                {
+                    var updateService = _services.GetRequiredService<IUpdateService>();
+                    var release = await updateService.CheckForUpdateAsync(ct);
+
+                    if (release != null)
+                    {
+                        updateService.MarkUpdateAvailable(release);
+                        var loc = LocalizationService.Instance;
+                        var menuLabel = loc.Format("update_available_menu", release.TagName);
+
+                        await Application.Current.Dispatcher.BeginInvoke(() =>
+                        {
+                            _updateActionItem!.Header = menuLabel;
+                            _updateActionItem.Visibility = Visibility.Visible;
+                            _updateActionItem.IsEnabled = true;
+                            ShowNotification(
+                                loc.Format("update_available_notify", release.TagName),
+                                menuLabel,
+                                async () => await DownloadAndApplyUpdateAsync());
+                        });
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Periodic update check failed", ex);
+                }
+            }
+        }, ct);
+    }
+
+    private async Task CheckForUpdatesAsync()
+    {
+        var loc = LocalizationService.Instance;
+        try
+        {
+            var updateService = _services.GetRequiredService<IUpdateService>();
+            _updateCheckItem.Header = loc["tray_check_updates"] + "...";
+            _updateCheckItem.IsEnabled = false;
+
+            var release = await updateService.CheckForUpdateAsync(CancellationToken.None);
+
+            if (release != null)
+            {
+                updateService.MarkUpdateAvailable(release);
+                var menuLabel = loc.Format("update_available_menu", release.TagName);
+                _updateActionItem.Header = menuLabel;
+                _updateActionItem.Visibility = Visibility.Visible;
+                _updateActionItem.IsEnabled = true;
+                ShowNotification(loc.Format("update_available_notify", release.TagName), menuLabel,
+                    async () => await DownloadAndApplyUpdateAsync());
+            }
+            else
+            {
+                ShowNotification(loc["update_up_to_date"]);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Manual update check failed", ex);
+            ShowNotification(loc.Format("update_check_failed", ex.Message));
+        }
+        finally
+        {
+            _updateCheckItem.Header = loc["tray_check_updates"];
+            _updateCheckItem.IsEnabled = true;
+        }
+    }
+
+    private async Task DownloadAndApplyUpdateAsync()
+    {
+        var updateService = _services.GetRequiredService<IUpdateService>();
+        if (updateService.PendingRelease == null) return;
+        _isUpdating = true;
+
+        var loc = LocalizationService.Instance;
+        try
+        {
+            _updateActionItem.Header = loc.Format("update_downloading", 0);
+            _updateActionItem.IsEnabled = false;
+
+            var progress = new Progress<double>(p =>
+            {
+                var pct = (int)(p * 100);
+                Application.Current.Dispatcher.BeginInvoke(() =>
+                {
+                    _updateActionItem.Header = loc.Format("update_downloading", pct);
+                });
+            });
+
+            var scriptPath = await updateService.DownloadAndApplyAsync(progress, CancellationToken.None);
+
+            _updateActionItem.Header = loc.Format("update_ready_menu", updateService.PendingRelease.TagName);
+
+            var psi = new ProcessStartInfo
+            {
+                FileName = "cmd.exe",
+                Arguments = $"/c start \"\" /MIN \"{scriptPath}\"",
+                WindowStyle = ProcessWindowStyle.Hidden,
+                CreateNoWindow = true,
+                UseShellExecute = true
+            };
+            Process.Start(psi);
+
+            _notifyIcon?.Dispose();
+            Application.Current.Dispatcher.Invoke(() => Application.Current.Shutdown());
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Download/apply update failed", ex);
+            ShowNotification(loc.Format("update_failed", ex.Message));
+            var tag = updateService.PendingRelease?.TagName ?? "";
+            _updateActionItem.Header = loc.Format("update_retry", tag);
+            _updateActionItem.IsEnabled = true;
+        }
+        finally
+        {
+            _isUpdating = false;
+        }
+    }
+
     public void Dispose()
     {
+        _periodicTimerCts?.Cancel();
+        _periodicTimerCts?.Dispose();
         _notifyIcon?.Dispose();
     }
 

@@ -82,6 +82,7 @@ public partial class App : Application
         services.AddSingleton<PredictionEngine>();
         services.AddSingleton<AlertService>();
         services.AddSingleton<IPollingService, PollingService>();
+        services.AddSingleton<IUpdateService, UpdateService>();
 
         // ViewModels
         services.AddSingleton<DashboardViewModel>();
@@ -98,6 +99,9 @@ public partial class App : Application
         // Tray icon
         _trayIcon = new TrayIconService(_services);
         _trayIcon.Initialize();
+
+        // Přečíst marker hned (než ho CleanupStaleUpdates smaže), ale notifikaci ukázat až po načtení UI
+        var updateSuccessVersion = _services.GetRequiredService<IUpdateService>().ConsumeSuccessMarker();
 
         // Eventy
         var polling = _services.GetRequiredService<IPollingService>();
@@ -126,6 +130,16 @@ public partial class App : Application
         Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(async () =>
         {
             await polling.StartAsync(_pollCts.Token);
+
+            // Notifikace o úspěšné aktualizaci — s dostatečným odstupem, spolehlivé i po startu z batch skriptu
+            if (updateSuccessVersion != null)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(3));
+                _trayIcon.ShowNotification(loc.Format("update_success_notify", updateSuccessVersion));
+            }
+
+            await Task.Delay(TimeSpan.FromSeconds(5));
+            await _trayIcon.CheckForUpdatesOnStartupAsync();
         }));
     }
 

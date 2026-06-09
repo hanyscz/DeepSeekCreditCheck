@@ -35,5 +35,16 @@
   "errors_api": "API nedostupné ({0})",
   "errors_generic": "Chyba: {0}",
   "notification_low_balance": "⚠️ Kredit klesl pod {0} — aktuálně {1}",
-  "saving_restart": "Po uložení se aplikace restartuje."
+  "saving_restart": "Po uložení se aplikace restartuje.",
+  "update_available_notify": "Aktualizace {0} je k dispozici",
+  "tray_check_updates": "Zkontrolovat aktualizace",
+  "update_available_menu": "Stáhnout {0}",
+  "update_downloading": "Stahuji... {0} %",
+  "update_ready_menu": "Nainstalovat {0} (restart)",
+  "update_up_to_date": "Máte nejnovější verzi",
+  "update_check_failed": "Kontrola aktualizací selhala: {0}",
+  "update_failed": "Aktualizace selhala: {0}",
+  "update_retry": "Zkusit znovu {0}",
+  "update_no_asset": "Verze {0} neobsahuje soubory ke stažení",
+  "update_success_notify": "✅ Aktualizace na {0} proběhla úspěšně"
 }

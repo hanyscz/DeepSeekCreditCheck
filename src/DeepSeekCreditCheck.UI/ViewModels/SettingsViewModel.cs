@@ -13,11 +13,13 @@ public class SettingsViewModel : BaseViewModel
     private string _logPath = "";
     private string _dbPath = "";
     private string _status = "";
+    private string _appVersion = "";
     private List<LangOption> _availableLangs = new();
 
-    public SettingsViewModel(IAppSettingsService settings)
+    public SettingsViewModel(IAppSettingsService settings, IUpdateService updateService)
     {
         _settings = settings;
+        AppVersion = $"v{updateService.CurrentVersion}";
         SaveCommand = new RelayCommand(async _ => await SaveAsync());
         TestNotificationCommand = new RelayCommand(async _ => await TestNotificationAsync());
     }
@@ -31,6 +33,7 @@ public class SettingsViewModel : BaseViewModel
     public string LogPath { get => _logPath; set => SetProperty(ref _logPath, value); }
     public string DbPath { get => _dbPath; set => SetProperty(ref _dbPath, value); }
     public string Status { get => _status; set => SetProperty(ref _status, value); }
+    public string AppVersion { get => _appVersion; set => SetProperty(ref _appVersion, value); }
     public List<LangOption> AvailableLangs { get => _availableLangs; set => SetProperty(ref _availableLangs, value); }
 
     public ICommand SaveCommand { get; }

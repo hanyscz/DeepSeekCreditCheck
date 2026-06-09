@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Windows;
 using System.Windows.Input;
 using DeepSeekCreditCheck.Core.Models;
 using DeepSeekCreditCheck.Core.Repositories;
@@ -13,6 +15,7 @@ public class DashboardViewModel : BaseViewModel
     private readonly IPollingService _polling;
     private readonly IBalanceRepository _balanceRepo;
     private readonly PredictionEngine _predictionEngine;
+    private readonly IUpdateService _updateService;
     private bool _historyLoaded = false;
 
     private string _currentBalance = "—";
@@ -25,6 +28,9 @@ public class DashboardViewModel : BaseViewModel
     private string _lastUpdated = "—";
     private bool _isLoading = false;
     private PlotModel? _spendPlot;
+    private string _updateBannerText = "";
+    private bool _isUpdateAvailable;
+    private bool _isDownloadingUpdate;
 
     public string CurrentBalance { get => _currentBalance; set => SetProperty(ref _currentBalance, value); }
     public string TodaySpend { get => _todaySpend; set => SetProperty(ref _todaySpend, value); }
@@ -35,19 +41,24 @@ public class DashboardViewModel : BaseViewModel
     public string MonthlySpend { get => _monthlySpend; set => SetProperty(ref _monthlySpend, value); }
     public string LastUpdated { get => _lastUpdated; set => SetProperty(ref _lastUpdated, value); }
     public bool IsLoading { get => _isLoading; set => SetProperty(ref _isLoading, value); }
+    public string UpdateBannerText { get => _updateBannerText; set => SetProperty(ref _updateBannerText, value); }
+    public bool IsUpdateAvailable { get => _isUpdateAvailable; set => SetProperty(ref _isUpdateAvailable, value); }
+    public bool IsDownloadingUpdate { get => _isDownloadingUpdate; set => SetProperty(ref _isDownloadingUpdate, value); }
 
     public PlotModel? SpendPlot { get => _spendPlot; set => SetProperty(ref _spendPlot, value); }
 
     public ICommand RefreshCommand { get; }
     public ICommand OpenDataBrowserCommand { get; }
+    public ICommand DownloadUpdateCommand { get; }
 
     private List<BalanceSnapshot> _history = new();
 
-    public DashboardViewModel(IPollingService polling, IBalanceRepository balanceRepo, PredictionEngine predictionEngine)
+    public DashboardViewModel(IPollingService polling, IBalanceRepository balanceRepo, PredictionEngine predictionEngine, IUpdateService updateService)
     {
         _polling = polling;
         _balanceRepo = balanceRepo;
         _predictionEngine = predictionEngine;
+        _updateService = updateService;
         RefreshCommand = new RelayCommand(async _ =>
         {
             IsLoading = true;
@@ -56,6 +67,75 @@ public class DashboardViewModel : BaseViewModel
             IsLoading = false;
         });
         OpenDataBrowserCommand = new RelayCommand(_ => OpenDataBrowser());
+        DownloadUpdateCommand = new RelayCommand(async _ => await DownloadAndApplyUpdateAsync());
+
+        RefreshUpdateInfo();
+
+        _updateService.UpdateAvailable += _ =>
+        {
+            Application.Current.Dispatcher.BeginInvoke(() => RefreshUpdateInfo());
+        };
+    }
+
+    public void RefreshUpdateInfo()
+    {
+        var loc = LocalizationService.Instance;
+        if (_updateService.PendingRelease != null)
+        {
+            UpdateBannerText = loc.Format("update_available_menu", _updateService.PendingRelease.TagName);
+            IsUpdateAvailable = true;
+        }
+        else
+        {
+            UpdateBannerText = "";
+            IsUpdateAvailable = false;
+        }
+    }
+
+    private async Task DownloadAndApplyUpdateAsync()
+    {
+        if (_updateService.PendingRelease == null || IsDownloadingUpdate) return;
+        IsDownloadingUpdate = true;
+
+        var loc = LocalizationService.Instance;
+        try
+        {
+            UpdateBannerText = loc.Format("update_downloading", 0);
+
+            var progress = new Progress<double>(p =>
+            {
+                var pct = (int)(p * 100);
+                Application.Current.Dispatcher.BeginInvoke(() =>
+                {
+                    UpdateBannerText = loc.Format("update_downloading", pct);
+                });
+            });
+
+            var scriptPath = await _updateService.DownloadAndApplyAsync(progress, CancellationToken.None);
+
+            UpdateBannerText = loc.Format("update_ready_menu", _updateService.PendingRelease.TagName);
+
+            var psi = new ProcessStartInfo
+            {
+                FileName = "cmd.exe",
+                Arguments = $"/c start \"\" /MIN \"{scriptPath}\"",
+                WindowStyle = ProcessWindowStyle.Hidden,
+                CreateNoWindow = true,
+                UseShellExecute = true
+            };
+            Process.Start(psi);
+
+            Application.Current.Dispatcher.Invoke(() => Application.Current.Shutdown());
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Dashboard update failed", ex);
+            UpdateBannerText = loc.Format("update_failed", ex.Message);
+        }
+        finally
+        {
+            IsDownloadingUpdate = false;
+        }
     }
 
     public async Task LoadHistoryFromDbAsync()
