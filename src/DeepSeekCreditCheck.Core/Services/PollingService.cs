@@ -71,6 +71,16 @@ public class PollingService : IPollingService
             var history = await _balanceRepo.GetAllAsync(limit: 500);
             var prediction = _predictionEngine.Calculate(history, snapshot.TotalBalanceDecimal);
 
+            // Spočítat dnešní spotřebu z historie
+            decimal? todaySpend = null;
+            var todayStart = DateTime.Today.ToUniversalTime();
+            var todayRecs = history.Where(h => h.Timestamp >= todayStart).OrderBy(h => h.Timestamp).ToList();
+            if (todayRecs.Count >= 2)
+            {
+                var spend = SpendCalculator.SumPositiveDeltas(todayRecs);
+                todaySpend = spend;
+            }
+
             var thresholdStr = await _settings.GetAlertThresholdAsync();
             var threshold = decimal.TryParse(thresholdStr, out var t) ? t : 2.00m;
             _alertService.Check(snapshot.TotalBalanceDecimal, threshold);
@@ -79,6 +89,7 @@ public class PollingService : IPollingService
             {
                 Snapshot = snapshot,
                 Prediction = prediction,
+                TodaySpend = todaySpend,
                 Timestamp = DateTime.UtcNow
             });
         }
@@ -100,5 +111,6 @@ public class PollResult
 {
     public Models.BalanceSnapshot? Snapshot { get; init; }
     public PredictionResult? Prediction { get; init; }
+    public decimal? TodaySpend { get; init; }
     public DateTime Timestamp { get; init; }
 }

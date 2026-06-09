@@ -17,6 +17,7 @@ public class DashboardViewModel : BaseViewModel
 
     private string _currentBalance = "—";
     private string _prediction = "—";
+    private string _todaySpend = "—";
     private string _dailySpend = "—";
     private string _avgDailySpend = "—";
     private string _weeklySpend = "—";
@@ -26,6 +27,7 @@ public class DashboardViewModel : BaseViewModel
     private PlotModel? _spendPlot;
 
     public string CurrentBalance { get => _currentBalance; set => SetProperty(ref _currentBalance, value); }
+    public string TodaySpend { get => _todaySpend; set => SetProperty(ref _todaySpend, value); }
     public string Prediction { get => _prediction; set => SetProperty(ref _prediction, value); }
     public string DailySpend { get => _dailySpend; set => SetProperty(ref _dailySpend, value); }
     public string AvgDailySpend { get => _avgDailySpend; set => SetProperty(ref _avgDailySpend, value); }
@@ -87,6 +89,11 @@ public class DashboardViewModel : BaseViewModel
         var bal = result.Snapshot?.TotalBalanceDecimal ?? 0;
         CurrentBalance = $"${bal:F2}";
 
+        // Dnešní spotřeba
+        TodaySpend = result.TodaySpend.HasValue
+            ? $"${result.TodaySpend.Value:F2}"
+            : "—";
+
         // Spočítat vlastní predikci a statistiky z historie
         var prediction = _predictionEngine.Calculate(_history, bal);
         Prediction = prediction.FormattedPrediction;
@@ -115,8 +122,8 @@ public class DashboardViewModel : BaseViewModel
         var weekRecs = _history.Where(h => h.Timestamp >= weekStart).ToList();
         if (weekRecs.Count >= 2)
         {
-            var weekSpend = weekRecs.First().TotalBalanceDecimal - weekRecs.Last().TotalBalanceDecimal;
-            WeeklySpend = weekSpend >= 0 ? $"${weekSpend:F2}" : "—";
+            var weekSpend = SpendCalculator.SumPositiveDeltas(weekRecs);
+            WeeklySpend = weekSpend > 0 ? $"${weekSpend:F2}" : "$0.00";
         }
         else WeeklySpend = "—";
 
@@ -125,8 +132,8 @@ public class DashboardViewModel : BaseViewModel
         var monthRecs = _history.Where(h => h.Timestamp >= monthStart).ToList();
         if (monthRecs.Count >= 2)
         {
-            var monthSpend = monthRecs.First().TotalBalanceDecimal - monthRecs.Last().TotalBalanceDecimal;
-            MonthlySpend = monthSpend >= 0 ? $"${monthSpend:F2}" : "—";
+            var monthSpend = SpendCalculator.SumPositiveDeltas(monthRecs);
+            MonthlySpend = monthSpend > 0 ? $"${monthSpend:F2}" : "$0.00";
         }
         else MonthlySpend = "—";
     }

@@ -78,6 +78,7 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
@@ -100,8 +101,16 @@
                     </TextBlock>
                 </StackPanel>
 
-                <!-- Avg daily spend -->
+                <!-- Today's spend -->
                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
+                    <TextBlock Text="SPOTŘEBA DNES" FontSize="11" Foreground="#888" />
+                    <TextBlock Style="{StaticResource StatValue}" Text="{Binding TodaySpend}"
+                               Foreground="#FFB74D" ToolTip="Spotřeba kreditu za dnešní den (první snapshot dne – poslední)" />
+                    <TextBlock Text="dnešní den" FontSize="10" Foreground="#666" />
+                </StackPanel>
+
+                <!-- Avg daily spend -->
+                <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0">
                     <TextBlock Text="PRŮMĚR/DEN" FontSize="11" Foreground="#888" />
                     <TextBlock Style="{StaticResource StatValue}" Text="{Binding AvgDailySpend}"
                                Foreground="#64B5F6" ToolTip="Průměrná denní spotřeba za kalendářní den (00:00–23:59 UTC)" />
@@ -109,7 +118,7 @@
                 </StackPanel>
 
                 <!-- Weekly spend -->
-                <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0">
+                <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="10,0,0,0">
                     <TextBlock Text="ZA TÝDEN" FontSize="11" Foreground="#888" />
                     <TextBlock Style="{StaticResource StatValue}" Text="{Binding WeeklySpend}"
                                Foreground="#FF8A65" ToolTip="Spotřeba za posledních 7 kalendářních dnů" />
@@ -117,7 +126,7 @@
                 </StackPanel>
 
                 <!-- Monthly spend -->
-                <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="10,0,0,0">
+                <StackPanel Grid.Column="4" VerticalAlignment="Center" Margin="10,0,0,0">
                     <TextBlock Text="ZA MĚSÍC" FontSize="11" Foreground="#888" />
                     <TextBlock Style="{StaticResource StatValue}" Text="{Binding MonthlySpend}"
                                Foreground="#E57373" ToolTip="Spotřeba za posledních 30 kalendářních dnů" />
@@ -125,7 +134,7 @@
                 </StackPanel>
 
                 <!-- Action buttons -->
-                <StackPanel Grid.Column="4" VerticalAlignment="Center" Margin="20,0,0,0">
+                <StackPanel Grid.Column="5" VerticalAlignment="Center" Margin="20,0,0,0">
                     <Button Content="🔄 Obnovit" Command="{Binding RefreshCommand}"
                             Style="{StaticResource ActionBtn}" Margin="0,0,0,6" />
                     <Button Content="📁 Záznamy v DB" Command="{Binding OpenDataBrowserCommand}"
