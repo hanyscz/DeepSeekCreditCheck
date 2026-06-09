@@ -1,4 +1,4 @@
-name: Build and Publish
+name: Build, Publish and Release
 
 on:
   workflow_dispatch:
@@ -6,9 +6,6 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-    strategy:
-      matrix:
-        configuration: [Release]
 
     steps:
     - name: Checkout
@@ -35,21 +32,35 @@ jobs:
       run: dotnet restore
 
     - name: Build
-      run: dotnet build --configuration ${{ matrix.configuration }} --no-restore
+      run: dotnet build --configuration Release --no-restore
 
     - name: Run tests
-      run: dotnet test --configuration ${{ matrix.configuration }} --no-build --verbosity normal
+      run: dotnet test --configuration Release --no-build --verbosity normal
 
     - name: Publish
+      shell: pwsh
       run: |
         dotnet publish src/DeepSeekCreditCheck.UI/DeepSeekCreditCheck.UI.csproj `
-          --configuration ${{ matrix.configuration }} `
+          --configuration Release `
           --runtime win-x64 `
           --self-contained false `
           --output publish/
 
-    - name: Upload build artifacts
+    - name: Create release zip
+      shell: pwsh
+      run: |
+        Compress-Archive -Path publish/* -DestinationPath DeepSeekCreditCheck-v${{ steps.get_version.outputs.version }}.zip
+
+    - name: Upload build artifact
       uses: actions/upload-artifact@v4
       with:
         name: DeepSeekCreditCheck-v${{ steps.get_version.outputs.version }}
         path: publish/
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.get_version.outputs.version }}
+        files: DeepSeekCreditCheck-v${{ steps.get_version.outputs.version }}.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

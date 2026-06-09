@@ -54,11 +54,12 @@
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <!-- Loading overlay -->
-        <Border Grid.Row="0" Grid.RowSpan="2"
+        <Border Grid.Row="0" Grid.RowSpan="3"
                 Background="#80000000"
                 Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
                 CornerRadius="8"
@@ -143,8 +144,27 @@
             </Grid>
         </Border>
 
+        <!-- Update Banner -->
+        <Border Grid.Row="1" Style="{StaticResource CardBorder}" Padding="10,6"
+                Background="#1E3A2F" BorderBrush="#2E7D32"
+                Margin="0,0,0,8"
+                Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVis}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="{Binding UpdateBannerText}"
+                           FontSize="13" Foreground="#A5D6A7" VerticalAlignment="Center" />
+                <Button Grid.Column="1" Content="⬇ Stáhnout"
+                        Command="{Binding DownloadUpdateCommand}"
+                        Background="#2E7D32" Foreground="White" BorderThickness="0"
+                        Padding="12,4" FontSize="12" Cursor="Hand" />
+            </Grid>
+        </Border>
+
         <!-- Spend Chart -->
-        <Border Grid.Row="1" Style="{StaticResource CardBorder}" Padding="0">
+        <Border Grid.Row="2" Style="{StaticResource CardBorder}" Padding="0">
             <oxy:PlotView Model="{Binding SpendPlot}" Background="#161616" />
         </Border>
     </Grid>

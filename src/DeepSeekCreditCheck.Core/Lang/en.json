@@ -35,5 +35,16 @@
   "errors_api": "API unavailable ({0})",
   "errors_generic": "Error: {0}",
   "notification_low_balance": "⚠️ Credit dropped below {0} — currently {1}",
-  "saving_restart": "App will restart after saving."
+  "saving_restart": "App will restart after saving.",
+  "update_available_notify": "Update {0} is available",
+  "tray_check_updates": "Check for updates",
+  "update_available_menu": "Download {0}",
+  "update_downloading": "Downloading... {0}%",
+  "update_ready_menu": "Install {0} (restart)",
+  "update_up_to_date": "You have the latest version",
+  "update_check_failed": "Update check failed: {0}",
+  "update_failed": "Update failed: {0}",
+  "update_retry": "Retry {0}",
+  "update_no_asset": "Release {0} has no downloadable files",
+  "update_success_notify": "✅ Successfully updated to {0}"
 }
