@@ -10,8 +10,8 @@ A lightweight Windows application that runs in the system tray and periodically 
 
 ### Features
 
-- **💰 Balance in tray** — hover tooltip shows current balance, prediction, and last update time
-- **📊 Dashboard** — hourly spend chart with calendar-day aggregation, weekly/monthly spend stats
+- **💰 Balance in tray** — hover tooltip shows current balance, today's spend, prediction, and last update time
+- **📊 Dashboard** — hourly spend chart with calendar-day aggregation, daily/weekly/monthly spend stats
 - **📈 Prediction** — estimates remaining days based on average daily spend per calendar day
 - **⚠️ Custom notification toast** — dark-themed popup in bottom-right corner with fade-in animation
 - **🔒 Secure** — API key encrypted with Windows DPAPI
@@ -68,8 +68,8 @@ Odlehčená Windows aplikace běžící v systémové trayi, která pravidelně 
 
 ### Funkce
 
-- **💰 Zůstatek v trayi** — tooltip při najetí myší ukazuje zůstatek, predikci a čas
-- **📊 Dashboard** — graf hodinové spotřeby, průměr/den, statistiky za týden a měsíc
+- **💰 Zůstatek v trayi** — tooltip při najetí myší ukazuje zůstatek, dnešní spotřebu, predikci a čas
+- **📊 Dashboard** — graf hodinové spotřeby, dnešní spotřeba, průměr/den, statistiky za týden a měsíc
 - **📈 Predikce** — odhad zbývajících dní podle průměrné denní spotřeby z kalendářních dnů
 - **⚠️ Vlastní notifikace** — tmavý toast v pravém dolním rohu s animací
 - **🔒 Bezpečnost** — API klíč šifrovaný Windows DPAPI

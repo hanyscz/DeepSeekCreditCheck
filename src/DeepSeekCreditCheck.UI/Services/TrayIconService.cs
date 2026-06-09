@@ -63,6 +63,13 @@ public class TrayIconService : IDisposable
         };
         menu.Items.Add(balanceItem);
 
+        var todaySpendItem = new System.Windows.Controls.MenuItem
+        {
+            Header = "📉 " + loc["loading"],
+            IsEnabled = false
+        };
+        menu.Items.Add(todaySpendItem);
+
         var predictionItem = new System.Windows.Controls.MenuItem
         {
             Header = "📊 " + loc["loading"],
@@ -109,6 +116,7 @@ public class TrayIconService : IDisposable
         _notifyIcon.Tag = new TrayMenuRefs
         {
             BalanceItem = balanceItem,
+            TodaySpendItem = todaySpendItem,
             PredictionItem = predictionItem,
             ErrorItem = errorItem
         };
@@ -122,8 +130,10 @@ public class TrayIconService : IDisposable
         var bal = result.Snapshot?.TotalBalanceDecimal ?? 0;
         var balStr = $"${bal:F2}";
         var pred = result.Prediction?.FormattedPrediction ?? "—";
+        var todayStr = result.TodaySpend.HasValue ? $"${result.TodaySpend.Value:F2}" : "—";
 
         refs.BalanceItem.Header = loc.Format("tray_balance", balStr);
+        refs.TodaySpendItem.Header = loc.Format("tray_today", todayStr);
         refs.PredictionItem.Header = loc.Format("tray_prediction", pred);
 
         refs.ErrorItem.Visibility = Visibility.Collapsed;
@@ -134,6 +144,7 @@ public class TrayIconService : IDisposable
             _tooltipText.Text = $"{loc["tooltip_title"]}\n" +
                 $"━━━━━━━━━━━━━━━━━━\n" +
                 $"{loc.Format("tooltip_balance", balStr)}\n" +
+                $"{loc.Format("tooltip_today", todayStr)}\n" +
                 $"{loc.Format("tooltip_prediction", pred)}\n" +
                 $"🕐 {DateTime.Now:HH:mm:ss}";
         }
@@ -209,6 +220,7 @@ public class TrayIconService : IDisposable
     private class TrayMenuRefs
     {
         public System.Windows.Controls.MenuItem BalanceItem { get; set; } = null!;
+        public System.Windows.Controls.MenuItem TodaySpendItem { get; set; } = null!;
         public System.Windows.Controls.MenuItem PredictionItem { get; set; } = null!;
         public System.Windows.Controls.MenuItem ErrorItem { get; set; } = null!;
     }
