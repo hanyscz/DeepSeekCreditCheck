@@ -1,5 +1,25 @@
 # Changelog CZ – DeepSeek Credit Checker
 
+## v1.4.0 (2026-06-10)
+
+### ✨ Nové funkce
+
+* **🎨 Zůstatek v tray ikoně** – tray ikona nyní vykresluje aktuální zůstatek jako text s barvou dle stavu: zelená (OK), oranžová (≤ 2× práh), červená (pod prahem), modrá s "$" (neznámý stav). Hodnoty pod $10 s jedním desetinným místem (např. "1.5"), $100+ jako "99+".
+* **🚀 Spuštění při startu Windows** – nový checkbox v Nastavení registruje aplikaci v registru `HKCU\...\Run`. Registr je jediný zdroj pravdy – checkbox vždy odráží skutečný stav.
+* **🔑 Tlačítko Otestovat klíč** – ověření API klíče přímo v Nastavení bez čekání na další poll. Při úspěchu ukáže zůstatek, rozlišuje neplatný klíč (401) od síťové chyby.
+* **💚 Detekce dobití kreditu** – při kladném skoku zůstatku mezi polly se zobrazí pozitivní toast: „Kredit dobit (+$X) — aktuálně $Y“.
+* **🔒 Jediná instance** – druhé spuštění aplikace se tiše ukončí (named mutex), zabraňuje zdvojenému pollingu a duplicitním tray ikonám.
+
+### 🛠️ Technický stack
+
+* **🧩 TrayIconFormatter** – nová čistá logika v Core (stav + text ikony) oddělená od GDI vykreslování kvůli testovatelnosti.
+* **🧩 StartupService (IStartupService)** – správa autostartu přes registry s logováním chyb.
+* **🧩 PollingService** – nový event `RechargeDetected` (`RechargeEventArgs`: Amount, NewBalance); `PollResult` nyní nese `Threshold` pro barvení ikony.
+* **🧩 Životní cyklus ikon** – dynamicky generované 32×32 ikony korektně ničí nespravovaný HICON (`DestroyIcon`) a při výměně disposují předchozí ikonu – žádné GDI handle leaky.
+* **🧪 70 testů** – 16 nových (matice stavů/textů TrayIconFormatter, detekce dobití vč. edge cases první poll a šumová delta, propagace prahu).
+
+---
+
 ## v1.3.0 (2026-06-10)
 
 ### 🔧 Opravy výpočtů spotřeby

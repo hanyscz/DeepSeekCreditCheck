@@ -14,6 +14,10 @@ public class PollingService : IPollingService
 
     public event EventHandler<PollResult>? PollCompleted;
     public event EventHandler<string>? PollFailed;
+    public event EventHandler<RechargeEventArgs>? RechargeDetected;
+
+    /// <summary>Minimální kladná delta zůstatku považovaná za dobití (ochrana proti šumu).</summary>
+    private const decimal RechargeMinDelta = 0.01m;
 
     public PollingService(
         IDeepSeekApiClient apiClient,
@@ -65,8 +69,25 @@ public class PollingService : IPollingService
 
         try
         {
+            // Předchozí snapshot pro detekci dobití (musí se načíst před uložením nového)
+            var previous = await _balanceRepo.GetLatestAsync();
+
             var snapshot = await _apiClient.GetBalanceAsync(apiKey);
             await _balanceRepo.SaveAsync(snapshot);
+
+            // Detekce dobití kreditu — kladný skok zůstatku oproti předchozímu záznamu
+            if (previous != null)
+            {
+                var delta = snapshot.TotalBalanceDecimal - previous.TotalBalanceDecimal;
+                if (delta > RechargeMinDelta)
+                {
+                    RechargeDetected?.Invoke(this, new RechargeEventArgs
+                    {
+                        Amount = delta,
+                        NewBalance = snapshot.TotalBalanceDecimal
+                    });
+                }
+            }
 
             var history = await _balanceRepo.GetAllAsync(limit: 500);
             var prediction = _predictionEngine.Calculate(history, snapshot.TotalBalanceDecimal);
@@ -96,7 +117,8 @@ public class PollingService : IPollingService
                 Snapshot = snapshot,
                 Prediction = prediction,
                 TodaySpend = todaySpend,
-                Timestamp = DateTime.UtcNow
+                Timestamp = DateTime.UtcNow,
+                Threshold = threshold
             });
         }
         catch (HttpRequestException ex)
@@ -119,4 +141,14 @@ public class PollResult
     public PredictionResult? Prediction { get; init; }
     public decimal? TodaySpend { get; init; }
     public DateTime Timestamp { get; init; }
+    public decimal Threshold { get; init; }
+}
+
+public class RechargeEventArgs : EventArgs
+{
+    /// <summary>Výše dobití (kladná delta zůstatku).</summary>
+    public decimal Amount { get; init; }
+
+    /// <summary>Zůstatek po dobití.</summary>
+    public decimal NewBalance { get; init; }
 }

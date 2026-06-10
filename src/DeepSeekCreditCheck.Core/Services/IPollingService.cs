@@ -6,4 +6,5 @@ public interface IPollingService
     Task StopAsync();
     event EventHandler<PollResult>? PollCompleted;
     event EventHandler<string>? PollFailed;
+    event EventHandler<RechargeEventArgs>? RechargeDetected;
 }
