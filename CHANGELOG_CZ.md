@@ -1,5 +1,27 @@
 # Changelog CZ – DeepSeek Credit Checker
 
+## v1.3.0 (2026-06-10)
+
+### 🔧 Opravy výpočtů spotřeby
+
+* **🐛 DateTime Kind mismatch opraven** – timestampy z SQLite ("Unspecified") se nyní převádí na UTC, aby `ToLocalTime()` všude fungoval konzistentně. Odstraňuje nesprávné přiřazení záznamů do kalendářních dnů.
+* **📊 Dnešní spotřeba opravena** – počítá se jako `SumPositiveDeltas` za dnešní lokální kalendářní den. Správně ignoruje dobíjení.
+* **📈 Týdenní/měsíční statistiky opraveny** – agregace po jednotlivých kalendářních dnech (per-day SumPositiveDeltas) místo celoplošného součtu. Eliminuje zkreslení z cross-midnight delt a kolísání timestampů.
+* **🎯 Predikce zpřesněna** – průměrná denní spotřeba se počítá pouze z plných kalendářních dnů (≥12h rozpětí dat). Částečné dny (např. 07.06. s pouhými 5h dat) jsou vyřazeny. Rozsah ~N-M dní se zobrazuje až od 3+ plných dnů.
+
+### ✨ Nové funkce
+
+* **📥 Export CSV** – v okně Prohlížeče dat přibylo tlačítko "📥 Export CSV" pro export historie zůstatků do souboru CSV s oddělovačem `;`.
+
+### 🛠️ Technický stack
+
+* **🧩 BalanceSnapshot** – vlastnost `Timestamp` nyní normalizuje `DateTimeKind.Unspecified` na `DateTimeKind.Utc` při setu.
+* **🧩 Predikce** – `AggregateDailySpend` používá lokální datum, 12h filtr na nekompletní dny, `SumPositiveDeltas` per day.
+* **🧩 Statistiky** – nová metoda `SumSpendByDay` pro správnou per-day agregaci v týdenních/měsíčních výpočtech.
+* **🧪 54 testů** – 2 nové testy predikce (reálná data + range pro 3+ dny).
+
+---
+
 ## v1.2.0 (2026-06-09)
 
 ### ✨ Hlavní funkce

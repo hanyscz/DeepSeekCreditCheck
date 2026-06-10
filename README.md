@@ -54,6 +54,7 @@ Settings window has an **🔔 Test notification** button that shows a sample low
 Open **📁 Záznamy v DB** from the Dashboard to browse all balance history records. You can:
 - View records sorted by time (newest first)
 - Select multiple records (hold Ctrl) and delete them
+- Export all records to a CSV file via the **📥 Export CSV** button
 
 ### Adding a language
 
@@ -114,6 +115,7 @@ V Nastavení je tlačítko **🔔 Test notifikace**, které zobrazí ukázkovou 
 Otevři **📁 Záznamy v DB** z Dashboardu. Můžeš:
 - Prohlížet záznamy seřazené podle času (nejnovější první)
 - Vybrat více záznamů (podrž Ctrl) a smazat je
+- Exportovat všechny záznamy do CSV souboru tlačítkem **📥 Export CSV**
 
 ### Přidání jazyka
 

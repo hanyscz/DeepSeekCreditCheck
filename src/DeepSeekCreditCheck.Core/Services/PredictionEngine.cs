@@ -11,8 +11,9 @@ public class PredictionEngine
 
         var sorted = history.OrderBy(h => h.Timestamp).ToList();
 
-        // Agregovat denní spotřebu po kalendářních dnech (UTC)
-        // Každý den se spočítá rozdíl: první hodnota dne - poslední hodnota dne
+        // Agregovat denní spotřebu po kalendářních dnech (lokální čas)
+        // Každý den se spočítá SumPositiveDeltas (ignoruje dobíjení)
+        // Částečné dny (< 12h rozpětí dat) jsou vyřazeny
         var daySpends = AggregateDailySpend(sorted);
 
         if (daySpends.Count < 1)
@@ -33,7 +34,8 @@ public class PredictionEngine
         decimal? rangeLow = null;
         decimal? rangeHigh = null;
 
-        if (isReliable && dayCount > 1)
+        // Range počítáme až při ≥3 plných dnech — se 2 dny je stdDev nespolehlivý
+        if (isReliable && dayCount >= 3)
         {
             var mean = (double)avgDailySpend;
             var sumOfSquares = daySpends.Sum(d => Math.Pow((double)d.Spend - mean, 2));
@@ -60,28 +62,40 @@ public class PredictionEngine
 
     private static List<DaySpend> AggregateDailySpend(List<BalanceSnapshot> sorted)
     {
-        // Seskupit snapshoty po kalendářních dnech (UTC)
+        // Seskupit snapshoty po kalendářních dnech (lokální čas)
         var groups = sorted
-            .GroupBy(h => h.Timestamp.Date)
+            .GroupBy(h => h.Timestamp.ToLocalTime().Date)
             .OrderBy(g => g.Key)
             .ToList();
 
         var result = new List<DaySpend>();
+        var todayLocal = DateTime.Today; // dnešek (nekompletní) vynecháme
 
-        // Každý den: první snapshot ráno vs poslední snapshot večer = denní spotřeba
         foreach (var group in groups)
         {
-            var ordered = group.OrderBy(h => h.Timestamp).ToList();
-            var firstBalance = ordered.First().TotalBalanceDecimal;
-            var lastBalance = ordered.Last().TotalBalanceDecimal;
-            var spend = firstBalance - lastBalance;
+            // Přeskočit dnešek — ještě není kompletní
+            if (group.Key == todayLocal)
+                continue;
 
+            var ordered = group.OrderBy(h => h.Timestamp).ToList();
+            if (ordered.Count < 2)
+                continue;
+
+            // Vynechat částečné dny: den musí mít alespoň 12 hodin mezi
+            // prvním a posledním snapshotem, aby byl považován za "plný" den.
+            // Toto odfiltruje dny, kdy se začalo měřit až odpoledne/večer.
+            var daySpan = ordered.Last().Timestamp - ordered.First().Timestamp;
+            if (daySpan.TotalHours < 12)
+                continue;
+
+            // Použít SumPositiveDeltas pro ignorování dobíjení
+            var spend = SpendCalculator.SumPositiveDeltas(ordered);
             if (spend > 0)
                 result.Add(new DaySpend { Day = group.Key, Spend = spend });
         }
 
         // Omezit na posledních 90 dní
-        var cutoff = DateTime.UtcNow.Date.AddDays(-90);
+        var cutoff = DateTime.Today.AddDays(-90);
         return result.Where(d => d.Day >= cutoff).TakeLast(90).ToList();
     }
 

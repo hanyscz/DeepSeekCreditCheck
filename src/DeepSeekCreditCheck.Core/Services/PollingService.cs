@@ -72,13 +72,19 @@ public class PollingService : IPollingService
             var prediction = _predictionEngine.Calculate(history, snapshot.TotalBalanceDecimal);
 
             // Spočítat dnešní spotřebu z historie
+            // Používáme lokální kalendářní den pro správné filtrování bez ohledu na DateTime.Kind
             decimal? todaySpend = null;
-            var todayStart = DateTime.Today.ToUniversalTime();
-            var todayRecs = history.Where(h => h.Timestamp >= todayStart).OrderBy(h => h.Timestamp).ToList();
+            var todayLocal = DateTime.Today;
+            var todayRecs = history
+                .Where(h => h.Timestamp.ToLocalTime().Date == todayLocal)
+                .OrderBy(h => h.Timestamp)
+                .ToList();
             if (todayRecs.Count >= 2)
             {
+                // SumPositiveDeltas ignoruje dobíjení (stejná metoda jako u historických dnů)
                 var spend = SpendCalculator.SumPositiveDeltas(todayRecs);
-                todaySpend = spend;
+                if (spend > 0)
+                    todaySpend = spend;
             }
 
             var thresholdStr = await _settings.GetAlertThresholdAsync();

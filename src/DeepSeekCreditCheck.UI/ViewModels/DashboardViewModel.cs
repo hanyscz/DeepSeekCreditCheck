@@ -174,11 +174,13 @@ public class DashboardViewModel : BaseViewModel
             ? $"${result.TodaySpend.Value:F2}"
             : "—";
 
-        // Spočítat vlastní predikci a statistiky z historie
-        var prediction = _predictionEngine.Calculate(_history, bal);
-        Prediction = prediction.FormattedPrediction;
-        AvgDailySpend = prediction.FormattedDailySpend;
-        DailySpend = prediction.FormattedDailySpend;
+        // Použít predikci z PollingService (již správně spočítaná, bez duplicit)
+        if (result.Prediction != null)
+        {
+            Prediction = result.Prediction.FormattedPrediction;
+            AvgDailySpend = result.Prediction.FormattedDailySpend;
+            DailySpend = result.Prediction.FormattedDailySpend;
+        }
         LastUpdated = DateTime.Now.ToString("HH:mm:ss");
 
         UpdateSpendStats();
@@ -195,27 +197,45 @@ public class DashboardViewModel : BaseViewModel
         }
 
         // Používáme kalendářní dny — začátek dnešního dne (midnight local time)
-        var todayStart = DateTime.Today; // local midnight, 00:00:00
+        var todayLocal = DateTime.Today;
 
         // Celková spotřeba za posledních 7 kalendářních dní (včetně dneška)
-        var weekStart = todayStart.AddDays(-7).ToUniversalTime();
-        var weekRecs = _history.Where(h => h.Timestamp >= weekStart).ToList();
-        if (weekRecs.Count >= 2)
-        {
-            var weekSpend = SpendCalculator.SumPositiveDeltas(weekRecs);
-            WeeklySpend = weekSpend > 0 ? $"${weekSpend:F2}" : "$0.00";
-        }
-        else WeeklySpend = "—";
+        var weekStartLocal = todayLocal.AddDays(-6);
+        var weekSpend = SumSpendByDay(_history, weekStartLocal, todayLocal);
+        WeeklySpend = weekSpend >= 0 ? $"${weekSpend:F2}" : "—";
 
         // Celková spotřeba za posledních 30 kalendářních dní
-        var monthStart = todayStart.AddDays(-30).ToUniversalTime();
-        var monthRecs = _history.Where(h => h.Timestamp >= monthStart).ToList();
-        if (monthRecs.Count >= 2)
+        var monthStartLocal = todayLocal.AddDays(-29);
+        var monthSpend = SumSpendByDay(_history, monthStartLocal, todayLocal);
+        MonthlySpend = monthSpend >= 0 ? $"${monthSpend:F2}" : "—";
+    }
+
+    /// <summary>
+    /// Spočítá celkovou spotřebu v rozsahu kalendářních dnů (lokální datum) tak,
+    /// že agreguje SumPositiveDeltas po jednotlivých dnech. Tím se eliminují
+    /// problémy s cross-midnight deltami a kolísáním timestampů.
+    /// </summary>
+    private static decimal SumSpendByDay(List<BalanceSnapshot> history, DateTime startLocal, DateTime endLocal)
+    {
+        // Seskupit záznamy podle kalendářního dne (lokální čas)
+        var byDay = history
+            .Select(h => new { h, localDay = h.Timestamp.ToLocalTime().Date })
+            .Where(x => x.localDay >= startLocal && x.localDay <= endLocal)
+            .GroupBy(x => x.localDay)
+            .ToList();
+
+        decimal total = 0;
+        foreach (var dayGroup in byDay)
         {
-            var monthSpend = SpendCalculator.SumPositiveDeltas(monthRecs);
-            MonthlySpend = monthSpend > 0 ? $"${monthSpend:F2}" : "$0.00";
+            //var dayRecs = dayGroup.Select(x => x.h).OrderBy(h => h.Timestamp).ToList();
+            var dayRecs = dayGroup.Select(x => x.h).ToList();
+            if (dayRecs.Count >= 2)
+            {
+                var daySpend = SpendCalculator.SumPositiveDeltas(dayRecs);
+                total += daySpend;
+            }
         }
-        else MonthlySpend = "—";
+        return total;
     }
 
     private void BuildSpendChart()
