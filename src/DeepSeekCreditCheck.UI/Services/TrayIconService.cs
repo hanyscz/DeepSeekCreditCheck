@@ -262,11 +262,13 @@ public class TrayIconService : IDisposable
     private static extern bool DestroyIcon(IntPtr hIcon);
 
     /// <summary>
-    /// Vykreslí 32×32 ikonu se zůstatkem. Barva pozadí dle <see cref="TrayIconFormatter.GetStatus"/>:
-    /// zelená (OK), oranžová (varování), červená (pod prahem), šedomodrá (neznámý stav — kreslí "$").
+    /// Vykreslí 64×64 ikonu se zůstatkem (pro HiDPI, Windows škáluje dolů dle potřeby).
+    /// Barva pozadí dle <see cref="TrayIconFormatter.GetStatus"/>:
+    /// zelená (OK), oranžová (varování), červená (pod prahem), modrá (neznámý stav — kreslí "$").
     /// </summary>
     private static System.Drawing.Icon CreateBalanceIcon(decimal? balance, decimal threshold)
     {
+        const int size = 64;
         var status = TrayIconFormatter.GetStatus(balance, threshold);
         var text = status == BalanceStatus.Unknown ? "$" : TrayIconFormatter.GetIconText(balance);
 
@@ -278,22 +280,24 @@ public class TrayIconService : IDisposable
             _ => System.Drawing.Color.FromArgb(0, 120, 215),                    // modrá (původní)
         };
 
-        using var bitmap = new System.Drawing.Bitmap(32, 32);
+        using var bitmap = new System.Drawing.Bitmap(size, size);
         using (var g = System.Drawing.Graphics.FromImage(bitmap))
         {
-            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
 
+            // Kulaté pozadí
             using var bgBrush = new System.Drawing.SolidBrush(bgColor);
-            g.FillEllipse(bgBrush, 0, 0, 31, 31);
+            g.FillEllipse(bgBrush, 0, 0, size - 1, size - 1);
 
-            // Velikost písma dle délky textu, aby se vešel do kruhu
+            // Velikost písma — výrazně větší, aby bylo čitelné i po downscale na 16-20 px
             float fontSize = text.Length switch
             {
-                <= 1 => 18f,
-                2 => 14f,
-                3 => 11f,
-                _ => 9f
+                <= 1 => 38f,
+                2 => 30f,
+                3 => 22f,
+                _ => 18f
             };
 
             using var font = new System.Drawing.Font("Segoe UI", fontSize, System.Drawing.FontStyle.Bold,
@@ -304,7 +308,7 @@ public class TrayIconService : IDisposable
                 Alignment = System.Drawing.StringAlignment.Center,
                 LineAlignment = System.Drawing.StringAlignment.Center
             };
-            g.DrawString(text, font, textBrush, new System.Drawing.RectangleF(0, 0, 32, 32), fmt);
+            g.DrawString(text, font, textBrush, new System.Drawing.RectangleF(0, 0, size, size), fmt);
         }
 
         // GetHicon vytváří nespravovaný HICON — po naklonování ho musíme zničit (jinak GDI leak)
