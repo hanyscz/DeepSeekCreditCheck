@@ -16,10 +16,21 @@ public partial class App : Application
     private IServiceProvider _services = null!;
     private TrayIconService _trayIcon = null!;
     private CancellationTokenSource _pollCts = new();
+    private Mutex? _singleInstanceMutex;
 
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        // Jediná instance — druhé spuštění se tiše ukončí
+        _singleInstanceMutex = new Mutex(true, @"Global\DeepSeekCreditCheck_SingleInstance", out bool createdNew);
+        if (!createdNew)
+        {
+            _singleInstanceMutex.Dispose();
+            _singleInstanceMutex = null;
+            Shutdown();
+            return;
+        }
 
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>
         {
@@ -83,6 +94,7 @@ public partial class App : Application
         services.AddSingleton<AlertService>();
         services.AddSingleton<IPollingService, PollingService>();
         services.AddSingleton<IUpdateService, UpdateService>();
+        services.AddSingleton<IStartupService, StartupService>();
 
         // ViewModels
         services.AddSingleton<DashboardViewModel>();
@@ -121,6 +133,12 @@ public partial class App : Application
             Dispatcher.BeginInvoke(() => _trayIcon.SetError(message));
         };
 
+        polling.RechargeDetected += (_, args) =>
+        {
+            Dispatcher.BeginInvoke(() => _trayIcon.ShowNotification(
+                loc.Format("notification_recharge", $"${args.Amount:F2}", $"${args.NewBalance:F2}")));
+        };
+
         var alertService = _services.GetRequiredService<AlertService>();
         alertService.AlertTriggered += (_, args) =>
         {
@@ -145,9 +163,14 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
-        _pollCts.Cancel();
-        _pollCts.Dispose();
-        _trayIcon.Dispose();
+        if (_singleInstanceMutex != null)
+        {
+            _pollCts.Cancel();
+            _pollCts.Dispose();
+            _trayIcon?.Dispose();
+            _singleInstanceMutex.ReleaseMutex();
+            _singleInstanceMutex.Dispose();
+        }
         base.OnExit(e);
     }
 

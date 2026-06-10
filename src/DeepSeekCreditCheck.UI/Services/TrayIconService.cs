@@ -167,6 +167,9 @@ public class TrayIconService : IDisposable
 
         refs.ErrorItem.Visibility = Visibility.Collapsed;
 
+        // Dynamická ikona se zůstatkem a barvou dle prahu
+        UpdateIcon(result.Snapshot?.TotalBalanceDecimal, result.Threshold);
+
         // Custom tooltip — 2x větší
         if (_tooltipText != null)
         {
@@ -192,7 +195,23 @@ public class TrayIconService : IDisposable
         {
             refs.ErrorItem.Visibility = Visibility.Visible;
             refs.ErrorItem.Header = $"⚠️ {message}";
+
+            // Šedá ikona — zůstatek neznámý
+            UpdateIcon(null, 0);
         }
+    }
+
+    /// <summary>
+    /// Vymění tray ikonu za nově vykreslenou se zůstatkem; starou bezpečně uvolní (GDI handle).
+    /// </summary>
+    private void UpdateIcon(decimal? balance, decimal threshold)
+    {
+        if (_notifyIcon == null) return;
+
+        var newIcon = CreateBalanceIcon(balance, threshold);
+        var oldIcon = _notifyIcon.Icon;
+        _notifyIcon.Icon = newIcon;
+        oldIcon?.Dispose();
     }
 
     public void ShowNotification(string message, string? actionText = null, Action? action = null)
@@ -236,14 +255,69 @@ public class TrayIconService : IDisposable
         }
         catch { }
 
-        using var bitmap = new System.Drawing.Bitmap(16, 16);
-        using var g = System.Drawing.Graphics.FromImage(bitmap);
-        g.Clear(System.Drawing.Color.FromArgb(0, 120, 215));
-        using var font = new System.Drawing.Font("Segoe UI", 10, System.Drawing.FontStyle.Bold);
-        using var brush = new System.Drawing.SolidBrush(System.Drawing.Color.White);
-        g.DrawString("$", font, brush, 3, -1);
-        using var temp = System.Drawing.Icon.FromHandle(bitmap.GetHicon());
-        return (System.Drawing.Icon)temp.Clone();
+        return CreateBalanceIcon(null, 0);
+    }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true)]
+    private static extern bool DestroyIcon(IntPtr hIcon);
+
+    /// <summary>
+    /// Vykreslí 32×32 ikonu se zůstatkem. Barva pozadí dle <see cref="TrayIconFormatter.GetStatus"/>:
+    /// zelená (OK), oranžová (varování), červená (pod prahem), šedomodrá (neznámý stav — kreslí "$").
+    /// </summary>
+    private static System.Drawing.Icon CreateBalanceIcon(decimal? balance, decimal threshold)
+    {
+        var status = TrayIconFormatter.GetStatus(balance, threshold);
+        var text = status == BalanceStatus.Unknown ? "$" : TrayIconFormatter.GetIconText(balance);
+
+        var bgColor = status switch
+        {
+            BalanceStatus.Ok => System.Drawing.Color.FromArgb(34, 139, 34),    // zelená
+            BalanceStatus.Warning => System.Drawing.Color.FromArgb(214, 124, 28), // oranžová
+            BalanceStatus.Critical => System.Drawing.Color.FromArgb(200, 40, 40), // červená
+            _ => System.Drawing.Color.FromArgb(0, 120, 215),                    // modrá (původní)
+        };
+
+        using var bitmap = new System.Drawing.Bitmap(32, 32);
+        using (var g = System.Drawing.Graphics.FromImage(bitmap))
+        {
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
+
+            using var bgBrush = new System.Drawing.SolidBrush(bgColor);
+            g.FillEllipse(bgBrush, 0, 0, 31, 31);
+
+            // Velikost písma dle délky textu, aby se vešel do kruhu
+            float fontSize = text.Length switch
+            {
+                <= 1 => 18f,
+                2 => 14f,
+                3 => 11f,
+                _ => 9f
+            };
+
+            using var font = new System.Drawing.Font("Segoe UI", fontSize, System.Drawing.FontStyle.Bold,
+                System.Drawing.GraphicsUnit.Pixel);
+            using var textBrush = new System.Drawing.SolidBrush(System.Drawing.Color.White);
+            using var fmt = new System.Drawing.StringFormat
+            {
+                Alignment = System.Drawing.StringAlignment.Center,
+                LineAlignment = System.Drawing.StringAlignment.Center
+            };
+            g.DrawString(text, font, textBrush, new System.Drawing.RectangleF(0, 0, 32, 32), fmt);
+        }
+
+        // GetHicon vytváří nespravovaný HICON — po naklonování ho musíme zničit (jinak GDI leak)
+        IntPtr hIcon = bitmap.GetHicon();
+        try
+        {
+            using var temp = System.Drawing.Icon.FromHandle(hIcon);
+            return (System.Drawing.Icon)temp.Clone();
+        }
+        finally
+        {
+            DestroyIcon(hIcon);
+        }
     }
 
     public async Task CheckForUpdatesOnStartupAsync()

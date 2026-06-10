@@ -1,16 +1,18 @@
 # DeepSeek Credit Checker
 
-**Monitor your DeepSeek API credit balance from the Windows system tray.**
+**Monitor your DeepSeek API credit balance from the Windows system tray.**  
+*v1.4.0 — released 2026-06-10*
 
 ---
 
 🇬🇧 **English**
 
-A lightweight Windows application that runs in the system tray and periodically checks your DeepSeek API account balance. Shows a static tray icon, displays your balance and prediction on hover, and alerts you when balance drops below a configurable threshold.
+A lightweight Windows application that runs in the system tray and periodically checks your DeepSeek API account balance. Shows your balance directly on the tray icon with a color indicator, displays details on hover, predicts remaining credit days, and alerts you when balance drops below a configurable threshold.
 
 ### Features
 
-- **💰 Balance in tray** — hover tooltip shows current balance, today's spend, prediction, and last update time
+- **🎨 Balance on tray icon** — the icon dynamically shows your current balance as a number with status colors: green (OK), orange (approaching threshold), red (critical), blue (awaiting key)
+- **💰 Balance in hover** — tooltip shows current balance, today's spend, prediction, and last update time
 - **📊 Dashboard** — hourly spend chart with calendar-day aggregation, daily/weekly/monthly spend stats
 - **📈 Prediction** — estimates remaining days based on average daily spend per calendar day
 - **⚠️ Custom notification toast** — dark-themed popup in bottom-right corner with fade-in animation
@@ -20,6 +22,9 @@ A lightweight Windows application that runs in the system tray and periodically 
 - **📝 Logging** — errors logged to file; configurable log path for multi-PC sync
 - **🗄️ Configurable DB path** — share database across PCs via network drive or cloud sync
 - **🔄 Auto-update** — checks for new releases on startup and every 4 hours; one-click download and install from GitHub Releases
+- **🚀 Start with Windows** — optional autostart via a checkbox in Settings
+- **💚 Recharge detection** — when you top up your credit a positive toast confirms the new balance
+- **🔑 Test API key** — validate your key immediately with one click in Settings
 - **🌙 Dark theme** — all windows with modern dark design
 
 ### How to use
@@ -44,10 +49,19 @@ Open **⚙️ Settings** from the tray menu:
 | Language | UI language — add your own in `Lang/*.json` |
 | Log path | Custom log file location (leave empty for default) |
 | DB path | Custom database location for sharing between PCs |
+| Start with Windows | Register the app for automatic startup |
 
 ### Test notification
 
 Settings window has an **🔔 Test notification** button that shows a sample low-balance alert in the custom toast popup.
+
+### Test API key
+
+Settings window has an **🔑 Otestovat klíč** button that immediately validates your API key. It shows the current balance on success, distinguishes an invalid key (HTTP 401) from a network error — no need to wait for the next poll cycle.
+
+### Single instance
+
+Only one instance of the app can run at a time. If you try to start it again, the second launch exits silently — preventing duplicate polling and tray icons.
 
 ### Data browser
 
@@ -67,10 +81,11 @@ Open **📁 Záznamy v DB** from the Dashboard to browse all balance history rec
 
 🇨🇿 **Česky**
 
-Odlehčená Windows aplikace běžící v systémové trayi, která pravidelně kontroluje zůstatek na DeepSeek API účtu. Zobrazuje informace v tooltipu při najetí myší, předpovídá na jak dlouho kredit vydrží a upozorní při poklesu pod nastavenou mez.
+Odlehčená Windows aplikace běžící v systémové trayi, která pravidelně kontroluje zůstatek na DeepSeek API účtu. Zobrazuje zůstatek přímo na tray ikoně s barevným indikátorem, podrobnosti v tooltipu při najetí myší, předpovídá na jak dlouho kredit vydrží a upozorní při poklesu pod nastavenou mez.
 
 ### Funkce
 
+- **🎨 Zůstatek na ikoně** — ikona dynamicky zobrazuje aktuální zůstatek jako číslo s barvou: zelená (OK), oranžová (blíží se prahu), červená (pod prahem), modrá (čeká na klíč)
 - **💰 Zůstatek v trayi** — tooltip při najetí myší ukazuje zůstatek, dnešní spotřebu, predikci a čas
 - **📊 Dashboard** — graf hodinové spotřeby, dnešní spotřeba, průměr/den, statistiky za týden a měsíc
 - **📈 Predikce** — odhad zbývajících dní podle průměrné denní spotřeby z kalendářních dnů
@@ -81,6 +96,9 @@ Odlehčená Windows aplikace běžící v systémové trayi, která pravidelně 
 - **📝 Logování** — chyby se zapisují do souboru; nastavitelná cesta pro synchronizaci mezi PC
 - **🗄️ Sdílení databáze** — vlastní cesta k DB pro sdílení mezi počítači
 - **🔄 Auto-update** — kontrola nových verzí při startu a každé 4 hodiny; stažení a instalace na jedno kliknutí z GitHub Releases
+- **🚀 Spuštění při startu Windows** — volitelný autostart přes checkbox v Nastavení
+- **💚 Detekce dobití** — při dobití kreditu se zobrazí pozitivní toast s novým zůstatkem
+- **🔑 Otestovat klíč** — okamžité ověření API klíče tlačítkem v Nastavení
 - **🌙 Tmavý režim** — všechna okna v moderním dark designu
 
 ### Použití
@@ -105,10 +123,19 @@ Otevři **⚙️ Nastavení** z tray menu:
 | Jazyk | Jazyk UI — vlastní přidáš do `Lang/*.json` |
 | Cesta k logu | Vlastní umístění log souboru (nech prázdné pro výchozí) |
 | Cesta k databázi | Vlastní umístění DB pro sdílení mezi PC |
+| Spuštění při startu | Zaregistruje aplikaci pro automatický start Windows |
 
 ### Test notifikace
 
 V Nastavení je tlačítko **🔔 Test notifikace**, které zobrazí ukázkovou nízkorozpočtovou výstrahu v custom toast okně.
+
+### Otestovat klíč
+
+V Nastavení je tlačítko **🔑 Otestovat klíč**, které okamžitě ověří platnost API klíče. Při úspěchu zobrazí aktuální zůstatek, rozlišuje neplatný klíč (HTTP 401) od síťové chyby — není nutné čekat na další plánovanou kontrolu.
+
+### Jediná instance
+
+Aplikaci lze spustit pouze jednou. Při druhém pokusu o spuštění se nová instance tiše ukončí — zabraňuje duplicitnímu pollingu a vícenásobným tray ikonám.
 
 ### Prohlížeč dat
 

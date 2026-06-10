@@ -1,5 +1,25 @@
 # Changelog – DeepSeek Credit Checker
 
+## v1.4.0 (2026-06-10)
+
+### ✨ New Features
+
+* **🎨 Balance in tray icon** – the tray icon now renders the current balance as text with a status color: green (OK), orange (≤ 2× threshold), red (below threshold), blue with "$" (unknown). Values under $10 show one decimal (e.g. "1.5"), $100+ shows "99+".
+* **🚀 Start with Windows** – new checkbox in Settings registers the app in the `HKCU\...\Run` registry key. The registry is the single source of truth – the checkbox always reflects the actual state.
+* **🔑 Test API key button** – validate the API key directly in Settings without waiting for the next poll. Shows balance on success, distinguishes invalid key (401) from network errors.
+* **💚 Recharge detection** – when the balance jumps up between polls, a positive toast appears: "Credit recharged (+$X) — currently $Y".
+* **🔒 Single instance** – a second launch of the app exits silently (named mutex), preventing duplicate polling and tray icons.
+
+### 🛠️ Tech Stack
+
+* **🧩 TrayIconFormatter** – new pure logic class in Core (status + icon text) separated from GDI rendering for unit testability.
+* **🧩 StartupService (IStartupService)** – registry-based autostart management with error logging.
+* **🧩 PollingService** – new `RechargeDetected` event (`RechargeEventArgs`: Amount, NewBalance); `PollResult` now carries `Threshold` for icon coloring.
+* **🧩 Icon lifecycle** – dynamically generated 32×32 icons properly destroy the unmanaged HICON (`DestroyIcon`) and dispose the previous icon on swap – no GDI handle leaks.
+* **🧪 70 tests** – 16 new (TrayIconFormatter status/text matrix, recharge detection incl. first-poll and noise-delta edge cases, threshold propagation).
+
+---
+
 ## v1.3.0 (2026-06-10)
 
 ### 🔧 Spend Calculation Fixes

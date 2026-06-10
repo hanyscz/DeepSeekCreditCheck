@@ -61,6 +61,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -117,11 +118,22 @@
                        Foreground="#777" FontSize="11" Margin="0,2,0,0" />
         </StackPanel>
 
+        <!-- Autostart -->
+        <StackPanel Grid.Row="6" Margin="0,0,0,12">
+            <CheckBox IsChecked="{Binding StartWithWindows}"
+                      Content="🚀 Spustit při startu Windows"
+                      Foreground="#DDD" FontSize="13" />
+        </StackPanel>
+
         <!-- Buttons -->
-        <StackPanel Grid.Row="6" Orientation="Horizontal" Margin="0,10,0,10">
+        <StackPanel Grid.Row="7" Orientation="Horizontal" Margin="0,10,0,10">
             <Button Content="💾 Uložit" Command="{Binding SaveCommand}"
                     Width="100" Height="32" Margin="0,0,8,0"
                     Background="#0078D7" Foreground="White" BorderThickness="0"
+                    Cursor="Hand" />
+            <Button Content="🔑 Otestovat klíč" Command="{Binding TestKeyCommand}"
+                    Width="130" Height="32" Margin="0,0,8,0"
+                    Background="#2E7D32" Foreground="White" BorderThickness="0"
                     Cursor="Hand" />
             <Button Content="🔔 Test notifikace" Command="{Binding TestNotificationCommand}"
                     Width="130" Height="32" Margin="0,0,10,0"
@@ -131,10 +143,10 @@
                        FontSize="13" Foreground="#81C784" />
         </StackPanel>
 
-        <TextBlock Grid.Row="7"
+        <TextBlock Grid.Row="8"
                    Text="Po uložení se aplikace restartuje s novým nastavením."
                    Foreground="#777" FontSize="11" VerticalAlignment="Bottom" />
-        <TextBlock Grid.Row="8" VerticalAlignment="Bottom"
+        <TextBlock Grid.Row="9" VerticalAlignment="Bottom"
                    Text="{Binding AppVersion, StringFormat='🔹 {0}'}"
                    Foreground="#555" FontSize="11" Margin="0,0,0,1" />
     </Grid>
