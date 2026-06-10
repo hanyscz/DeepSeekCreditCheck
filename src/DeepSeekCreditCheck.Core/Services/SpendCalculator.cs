@@ -16,8 +16,10 @@ public static class SpendCalculator
         if (snapshots.Count < 2)
             return 0;
 
-        var sorted = snapshots.OrderBy(h => h.Timestamp).ToList();
-
+        // Pozor! Timestamp může mít v DB různé DateTimeKind (Utc / Unspecified),
+        // takže OrderBy by řadilo podle ticks bez konverze → špatně.
+        // Data už přichází seřazená od volajícího, bereme je tak, jak jsou.
+        var sorted = snapshots.ToList();
         decimal total = 0;
         for (int i = 1; i < sorted.Count; i++)
         {

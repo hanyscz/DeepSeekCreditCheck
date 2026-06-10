@@ -1,5 +1,27 @@
 # Changelog – DeepSeek Credit Checker
 
+## v1.3.0 (2026-06-10)
+
+### 🔧 Spend Calculation Fixes
+
+* **🐛 DateTime Kind mismatch fixed** – SQLite timestamps ("Unspecified") now auto-convert to UTC so `ToLocalTime()` works consistently. Eliminates incorrect assignment of records to calendar days.
+* **📊 Today's spend fixed** – calculated as `SumPositiveDeltas` for today's local calendar day. Correctly ignores top-ups within the day.
+* **📈 Weekly/monthly stats fixed** – per-day aggregation (SumPositiveDeltas per calendar day) instead of a flat sum over the period. Eliminates distortion from cross-midnight deltas and timestamp jitter.
+* **🎯 Prediction refined** – average daily spend is computed only from complete calendar days (≥12h data span). Partial days (e.g. Jun 07 with only 5h of data) are excluded. Range (~N-M days) is only shown when 3+ full days are available.
+
+### ✨ New Features
+
+* **📥 CSV Export** – a "📥 Export CSV" button in the Data Browser window to export balance history to a semicolon-delimited CSV file.
+
+### 🛠️ Tech Stack
+
+* **🧩 BalanceSnapshot** – `Timestamp` setter now normalizes `DateTimeKind.Unspecified` to `DateTimeKind.Utc`.
+* **🧩 PredictionEngine** – `AggregateDailySpend` uses local date filtering, 12h threshold for full-day eligibility, and `SumPositiveDeltas` per day.
+* **🧩 DashboardViewModel** – new `SumSpendByDay` helper for correct per-day aggregation in weekly/monthly stats.
+* **🧪 54 tests** – 2 new prediction tests (real-world data + range for 3+ full days).
+
+---
+
 ## v1.2.0 (2026-06-09)
 
 ### ✨ Core Features

@@ -91,7 +91,7 @@
                     <TextBlock FontSize="13" Foreground="#999" Margin="0,0,0,2">
                         <Run Text="Predikce:" />
                         <Run Text="{Binding Prediction}" FontWeight="SemiBold" Foreground="#81C784"
-                             ToolTip="Počet dní do vyčerpání kreditu při průměrné denní spotřebě" />
+                             ToolTip="Počet dní do vyčerpání kreditu. Vypočteno jako zůstatek / průměrná denní spotřeba z dokončených dnů." />
                     </TextBlock>
                     <TextBlock FontSize="10" Foreground="#666">
                         <Run Text="průměr za kalendářní den" />
@@ -106,7 +106,7 @@
                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
                     <TextBlock Text="SPOTŘEBA DNES" FontSize="11" Foreground="#888" />
                     <TextBlock Style="{StaticResource StatValue}" Text="{Binding TodaySpend}"
-                               Foreground="#FFB74D" ToolTip="Spotřeba kreditu za dnešní den (první snapshot dne – poslední)" />
+                               Foreground="#FFB74D" ToolTip="Spotřeba kreditu za dnešní kalendářní den (první minus poslední hodnota dne)" />
                     <TextBlock Text="dnešní den" FontSize="10" Foreground="#666" />
                 </StackPanel>
 
@@ -114,7 +114,7 @@
                 <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0">
                     <TextBlock Text="PRŮMĚR/DEN" FontSize="11" Foreground="#888" />
                     <TextBlock Style="{StaticResource StatValue}" Text="{Binding AvgDailySpend}"
-                               Foreground="#64B5F6" ToolTip="Průměrná denní spotřeba za kalendářní den (00:00–23:59 UTC)" />
+                               Foreground="#64B5F6" ToolTip="Průměrná denní spotřeba z dokončených kalendářních dnů (bez dneška). Ignoruje dobíjení." />
                     <TextBlock Text="z kalendářních dnů" FontSize="10" Foreground="#666" />
                 </StackPanel>
 

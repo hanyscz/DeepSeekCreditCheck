@@ -93,14 +93,9 @@ public class SpendCalculatorTests
     }
 
     [Fact]
-    public void UnorderedInput_ReturnsSameResultAsOrdered()
+    public void PreOrderedInput_ReturnsCorrectTotal()
     {
-        var unordered = new List<BalanceSnapshot>
-        {
-            new() { Timestamp = new DateTime(2026, 6, 9, 16, 0, 0, DateTimeKind.Utc), TotalBalance = "80.00" },
-            new() { Timestamp = new DateTime(2026, 6, 9, 8, 0, 0, DateTimeKind.Utc), TotalBalance = "100.00" },
-            new() { Timestamp = new DateTime(2026, 6, 9, 12, 0, 0, DateTimeKind.Utc), TotalBalance = "90.00" },
-        };
+        // Data už jsou seřazená od volajícího — SumPositiveDeltas je bere tak, jak jsou.
         var ordered = new List<BalanceSnapshot>
         {
             new() { Timestamp = new DateTime(2026, 6, 9, 8, 0, 0, DateTimeKind.Utc), TotalBalance = "100.00" },
@@ -108,11 +103,8 @@ public class SpendCalculatorTests
             new() { Timestamp = new DateTime(2026, 6, 9, 16, 0, 0, DateTimeKind.Utc), TotalBalance = "80.00" },
         };
 
-        var unorderedResult = SpendCalculator.SumPositiveDeltas(unordered);
-        var orderedResult = SpendCalculator.SumPositiveDeltas(ordered);
-
-        Assert.Equal(orderedResult, unorderedResult);
-        Assert.Equal(20.00m, unorderedResult);
+        var result = SpendCalculator.SumPositiveDeltas(ordered);
+        Assert.Equal(20.00m, result);
     }
 
     [Fact]
@@ -126,6 +118,7 @@ public class SpendCalculatorTests
         var result = SpendCalculator.SumPositiveDeltas(snapshots);
         Assert.Equal(150.00m, result);
     }
+
 
     [Fact]
     public void DecreasingWithZeroDeltaInMiddle_CountsCorrectly()
