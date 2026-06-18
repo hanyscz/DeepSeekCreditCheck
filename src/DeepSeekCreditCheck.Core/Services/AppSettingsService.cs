@@ -71,4 +71,24 @@ public class AppSettingsService : IAppSettingsService
 
     public async Task SetDbPathAsync(string path)
         => await SetAsync("DbPath", path);
+
+    public async Task<string?> GetSessionTokenAsync()
+    {
+        var encrypted = await GetAsync("SessionToken");
+        if (string.IsNullOrEmpty(encrypted)) return null;
+        try { return DataProtection.Unprotect(encrypted); }
+        catch { return null; }
+    }
+
+    public async Task SetSessionTokenAsync(string? token)
+    {
+        if (string.IsNullOrEmpty(token))
+        {
+            using var conn = _db.CreateConnection();
+            await conn.ExecuteAsync("DELETE FROM AppSettings WHERE Key = 'SessionToken'");
+            return;
+        }
+        var encrypted = DataProtection.Protect(token);
+        await SetAsync("SessionToken", encrypted);
+    }
 }

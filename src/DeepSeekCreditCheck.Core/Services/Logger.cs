@@ -22,7 +22,7 @@ public static class Logger
 
     public static void Error(string message, Exception? ex = null)
     {
-        var text = ex != null ? $"{message} ({ex.GetType().Name}: {ex.Message})" : message;
+        var text = ex != null ? $"{message} ({ex.ToString()})" : message;
         WriteLine("ERROR", text);
     }
 

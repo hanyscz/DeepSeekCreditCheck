@@ -55,5 +55,15 @@
   "update_failed": "Update failed: {0}",
   "update_retry": "Retry {0}",
   "update_no_asset": "Release {0} has no downloadable files",
-  "update_success_notify": "✅ Successfully updated to {0}"
+  "update_success_notify": "✅ Successfully updated to {0}",
+  "platform_title": "DeepSeek Platform (Tokens)",
+  "platform_connect_btn": "🔑 Connect to Platform",
+  "platform_disconnect_btn": "Disconnect",
+  "platform_tokens_label": "TOKENS CONSUMED",
+  "platform_cost_label": "COST (PLATFORM)",
+  "platform_not_connected": "Do you want to track detailed token usage and exact costs?",
+  "platform_tooltip_tokens": "Detailed token breakdown for this month:\n• Cache Hit: {0}\n• Cache Miss: {1}\n• Response: {2}",
+  "platform_tooltip_tokens_v2": "Pro: Input: {0} | Cache: {1} | Output: {2}\nFlash: Input: {3} | Cache: {4} | Output: {5}\nTotal: Input: {6} | Cache: {7} | Output: {8}",
+  "platform_loading": "Loading...",
+  "platform_login_title": "DeepSeek Platform Login"
 }

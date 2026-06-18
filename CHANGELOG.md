@@ -1,5 +1,21 @@
 # Changelog – DeepSeek Credit Checker
 
+## v1.5.0 (2026-06-18)
+
+### ✨ New Features
+
+* **🔑 DeepSeek Platform login and token usage** – integrated detailed tracking of session token usage directly from the DeepSeek Platform (`platform.deepseek.com`) inside the dashboard, utilizing system WebView2 to securely capture cookies/tokens.
+* **📊 Detailed model statistics table** – replaced simple totals with a comprehensive grid showing detailed breakdown (Input Miss, Cache Hit, Output, Total, and Costs in USD rounded to 2 decimal places) for `Pro` (and general) models and `Flash` models separately, plus a `Celkem` (Total) row.
+* **📏 Dynamic dashboard layout adjustments** – resized the platform card height (to 130px) and adjusted grid row spacing to fit the detailed model statistics cleanly and premium.
+
+### 🛠️ Tech Stack
+
+* **🧩 DeepSeekPlatformClient (IDeepSeekPlatformClient)** – new client utilizing its own isolated `HttpClient` (independent of public API endpoints) to fetch `/api/v0/users/get_user_summary`, `/api/v0/usage/amount`, and `/api/v0/usage/cost`.
+* **🧩 Array-aware JSON node resolver** – extended `GetSafeNode` to support index parsing of array nodes (e.g. `"0"`), preventing double-counting bugs caused by recursive parsing of daily (`days`) and total (`total`) entries from the API responses.
+* **🧪 80 unit tests** – 10 unit tests verifying platform client API interaction, usage amount/cost parsing logic, and array-index routing.
+
+---
+
 ## v1.4.0 (2026-06-10)
 
 ### ✨ New Features
