@@ -115,7 +115,10 @@ public class DashboardViewModel : BaseViewModel
     public ICommand DownloadUpdateCommand { get; }
     public ICommand LoginPlatformCommand { get; }
     public ICommand LogoutPlatformCommand { get; }
+    public ICommand PreviousMonthCommand { get; }
+    public ICommand NextMonthCommand { get; }
 
+    private DateTime _platformSelectedMonth = DateTime.Today;
     private List<BalanceSnapshot> _history = new();
 
     public DashboardViewModel(IPollingService polling, IBalanceRepository balanceRepo, PredictionEngine predictionEngine, IUpdateService updateService, IDeepSeekPlatformClient platformClient, IAppSettingsService settings)
@@ -138,6 +141,8 @@ public class DashboardViewModel : BaseViewModel
         DownloadUpdateCommand = new RelayCommand(async _ => await DownloadAndApplyUpdateAsync());
         LoginPlatformCommand = new RelayCommand(async _ => await LoginPlatformAsync());
         LogoutPlatformCommand = new RelayCommand(async _ => await LogoutPlatformAsync());
+        PreviousMonthCommand = new RelayCommand(async _ => await GoToPreviousMonthAsync());
+        NextMonthCommand = new RelayCommand(async _ => await GoToNextMonthAsync(), _ => CanGoToNextMonth());
 
         RefreshUpdateInfo();
 
@@ -416,6 +421,7 @@ public class DashboardViewModel : BaseViewModel
         if (loginWindow.ShowDialog() == true && !string.IsNullOrEmpty(loginWindow.CapturedToken))
         {
             IsLoading = true;
+            _platformSelectedMonth = DateTime.Today; // reset to current month on fresh login
             await _settings.SetSessionTokenAsync(loginWindow.CapturedToken);
             await LoadPlatformStatsAsync();
             IsLoading = false;
@@ -425,9 +431,36 @@ public class DashboardViewModel : BaseViewModel
     public async Task LogoutPlatformAsync()
     {
         IsLoading = true;
+        _platformSelectedMonth = DateTime.Today; // reset to current month
         await _settings.SetSessionTokenAsync(null);
         await LoadPlatformStatsAsync();
         IsLoading = false;
+    }
+
+    private async Task GoToPreviousMonthAsync()
+    {
+        IsLoading = true;
+        _platformSelectedMonth = _platformSelectedMonth.AddMonths(-1);
+        await LoadPlatformStatsAsync();
+        IsLoading = false;
+    }
+
+    private async Task GoToNextMonthAsync()
+    {
+        if (CanGoToNextMonth())
+        {
+            IsLoading = true;
+            _platformSelectedMonth = _platformSelectedMonth.AddMonths(1);
+            await LoadPlatformStatsAsync();
+            IsLoading = false;
+        }
+    }
+
+    private bool CanGoToNextMonth()
+    {
+        var today = DateTime.Today;
+        return _platformSelectedMonth.Year < today.Year ||
+               (_platformSelectedMonth.Year == today.Year && _platformSelectedMonth.Month < today.Month);
     }
 
     public async Task LoadPlatformStatsAsync()
@@ -435,6 +468,7 @@ public class DashboardViewModel : BaseViewModel
         var token = await _settings.GetSessionTokenAsync();
         if (string.IsNullOrEmpty(token))
         {
+            _platformSelectedMonth = DateTime.Today; // reset to current month
             IsPlatformConnected = false;
             PlatformTotalTokens = "—";
             PlatformCost = "—";
@@ -466,8 +500,8 @@ public class DashboardViewModel : BaseViewModel
 
         try
         {
-            var year = DateTime.Today.Year;
-            var month = DateTime.Today.Month;
+            var year = _platformSelectedMonth.Year;
+            var month = _platformSelectedMonth.Month;
             PlatformHeading = $"{year}-{month:D2}";
 
             var amountJson = await _platformClient.GetUsageAmountAsync(token, year, month);
