@@ -229,6 +229,7 @@ public class TrayIconService : IDisposable
             var vm = _services.GetRequiredService<DashboardViewModel>();
             vm.RefreshUpdateInfo();
             _dashboardWindow = new DashboardWindow(vm);
+            Application.Current.MainWindow = _dashboardWindow;
             _dashboardWindow.Show();
         }
         else

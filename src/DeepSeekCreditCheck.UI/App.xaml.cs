@@ -85,6 +85,7 @@ public partial class App : Application
 
         // Repositories
         services.AddSingleton<IBalanceRepository, BalanceRepository>();
+        services.AddSingleton<IUsageRepository, UsageRepository>();
 
         // Services
         services.AddSingleton<IAppSettingsService, AppSettingsService>();

@@ -1,5 +1,26 @@
 # Changelog CZ – DeepSeek Credit Checker
 
+## v1.7.0 (2026-06-18)
+
+### ✨ Nové funkce
+
+* **📊 Podrobné statistiky spotřeby a nákladů (Export ZIP / CSV)** – Přidáno nové tlačítko "📊 Podrobné statistiky", které otevírá samostatný detailní panel. Umožňuje uživateli na jedno kliknutí stáhnout oficiální detailní export z platformy (ZIP archiv s CSV soubory pro spotřebu a náklady).
+* **💾 Lokální SQLite Caching** – Parsery načtou stažené CSV soubory a uloží je do lokální SQLite databáze. Tím se vytvoří stálá cache, takže historické měsíce lze prohlížet offline a bez opakovaného stahování. Při opětovném stažení se stará data daného měsíce bezpečně přepíší.
+* **🔑 Rozdělení API klíčů podle modelů** – Seskupuje a rozděluje spotřebu pro stejný API klíč, pokud je použit napříč různými modely (např. Pro a Flash). V tabulkách i grafech se tak zobrazují jako samostatné položky.
+* **📊 Sloupcový graf API klíčů a formátování** – Nahrazení původního koláčového grafu API klíčů přehledným vodorovným sloupcovým grafem seřazeným podle nákladů (kdo vede). Všechny číselné hodnoty v tabulkách statistik jsou nyní zarovnány doprava pro lepší čitelnost a veškeré USD náklady jsou zaokrouhlovány na 2 desetinná místa.
+* **📈 Interaktivní grafy (OxyPlot)** – Vizualizace denního vývoje nákladů rozdělených podle API klíčů a meziměsíční srovnání celkových nákladů pomocí moderních tmavě laděných grafů.
+* **🖥️ Detailní WPF Dashboard** – Zbrusu nové okno `DetailedStatsWindow` s širším rozvržením, navigací měsíců pomocí šipek (◀ / ▶) s blokováním do budoucna, detailním zobrazením velkých čísel s oddělovači tisíců a kompletní meziměsíční srovnávací tabulkou s rozpadem tokenů.
+
+### 🛠️ Technický stack
+
+* **🧩 SQLite Repozitář** – Vytvořena tabulka `MonthlyUsageDetails` a indexy pro rychlé dotazování. Implementováno úložiště `UsageRepository` pro asynchronní operace ukládání a čtení detailních statistik.
+* **🧩 ZIP & CSV In-Memory Parser** – Třída `UsageCsvParser` zpracovává ZIP archivy kompletně v paměti a bezpečně parsuje CSV řádky i v přítomnosti uvozovek a různých číselných formátů.
+* **🧩 Vylepšení vzhledu a formátování** – Stylování tabulek pomocí WPF `CellTemplate` s `TextBlock` `HorizontalAlignment="Right"` pro zarovnání čísel doprava a úprava vlastností modelů pro formátování nákladů s přesností na 2 desetinná místa (`F2`).
+* **🧩 OxyPlot 2.0+ Stabilizace** – Oprava chyb sestavení vyvolaných odstraněním `ColumnSeries` (nahrazeno `BarSeries` s transposed osami) a odstraněním vlastností legend přímo v `PlotModel` (nahrazeno kolekcí `Legends`).
+* **🧪 Unit testy** – Přidány testy ověřující správnost parsování CSV a ukládání/načítání dat z repozitáře.
+
+---
+
 ## v1.6.0 (2026-06-18)
 
 ### ✨ Nové funkce

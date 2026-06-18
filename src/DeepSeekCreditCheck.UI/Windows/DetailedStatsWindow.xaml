@@ -1,0 +1,480 @@
+<Window x:Class="DeepSeekCreditCheck.UI.Windows.DetailedStatsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:oxy="http://oxyplot.org/wpf"
+        Title="DeepSeek Kredit — Podrobné statistiky platformy"
+        Width="1200" Height="800"
+        MinWidth="1200" MinHeight="800"
+        WindowStartupLocation="CenterOwner"
+        Background="#1A1A1A"
+        Foreground="#E0E0E0"
+        TextOptions.TextFormattingMode="Display">
+    
+    <Window.Resources>
+        <!-- Převodník boolean na Visibility -->
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        
+        <!-- Styl pro hlavní rámeček karet -->
+        <Style x:Key="CardBorder" TargetType="Border">
+            <Setter Property="Background" Value="#252525" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="BorderBrush" Value="#3A3A3A" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+        <!-- Styl pro akční tlačítka -->
+        <Style x:Key="ActionBtn" TargetType="Button">
+            <Setter Property="Background" Value="#3A3A3A" />
+            <Setter Property="Foreground" Value="#E0E0E0" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="#555" />
+            <Setter Property="Padding" Value="14,8" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="6"
+                                Padding="{TemplateBinding Padding}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#4A4A4A" />
+                    <Setter Property="BorderBrush" Value="#666" />
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#2C2C2C" />
+                    <Setter Property="Foreground" Value="#777" />
+                    <Setter Property="BorderBrush" Value="#333" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Styl pro TabControl -->
+        <Style TargetType="TabControl">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+
+        <!-- Styl pro TabItem -->
+        <Style TargetType="TabItem">
+            <Setter Property="HeaderTemplate">
+                <Setter.Value>
+                    <DataTemplate>
+                        <ContentPresenter Content="{TemplateBinding Content}" Margin="12,6" />
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="Border" BorderThickness="0,0,0,3" BorderBrush="Transparent" SnapsToDevicePixels="true">
+                            <ContentPresenter x:Name="ContentSite" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                              ContentSource="Header" RecognizesAccessKey="True" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="TextElement.Foreground" Value="#4FC3F7" />
+                                <Setter TargetName="Border" Property="BorderBrush" Value="#4FC3F7" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="False">
+                                <Setter Property="TextElement.Foreground" Value="#888888" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="TextElement.Foreground" Value="#B3E5FC" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <!-- Styl pro tmavý ListView -->
+        <Style TargetType="ListView">
+            <Setter Property="Background" Value="#202020" />
+            <Setter Property="Foreground" Value="#E0E0E0" />
+            <Setter Property="BorderBrush" Value="#3A3A3A" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="Background" Value="Transparent" />
+                        <Setter Property="Foreground" Value="#E0E0E0" />
+                        <Setter Property="BorderBrush" Value="#2E2E2E" />
+                        <Setter Property="BorderThickness" Value="0,0,0,1" />
+                        <Setter Property="Padding" Value="8,6" />
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#2A2A2A" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#0D47A1" />
+                                <Setter Property="Foreground" Value="White" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Styl pro hlavičky sloupců v ListView GridView -->
+        <Style TargetType="GridViewColumnHeader">
+            <Setter Property="Background" Value="#2A2A2A" />
+            <Setter Property="Foreground" Value="#888" />
+            <Setter Property="BorderBrush" Value="#3A3A3A" />
+            <Setter Property="BorderThickness" Value="0,0,0,2" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="GridViewColumnHeader">
+                        <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Styl pro šipky navigace -->
+        <Style x:Key="ArrowBtn" TargetType="Button">
+            <Setter Property="Background" Value="#333333" />
+            <Setter Property="Foreground" Value="#CCCCCC" />
+            <Setter Property="BorderBrush" Value="#444444" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#444444" />
+                                <Setter TargetName="border" Property="BorderBrush" Value="#555555" />
+                                <Setter Property="Foreground" Value="#FFFFFF" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#222222" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Background" Value="#1D1D1D" />
+                                <Setter TargetName="border" Property="BorderBrush" Value="#2A2A2A" />
+                                <Setter Property="Foreground" Value="#555555" />
+                                <Setter Property="Cursor" Value="Arrow" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" /> <!-- Záhlaví -->
+            <RowDefinition Height="*" />    <!-- Hlavní obsah -->
+        </Grid.RowDefinitions>
+
+        <!-- Loading overlay -->
+        <Border Grid.Row="0" Grid.RowSpan="2"
+                Background="#90000000"
+                Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
+                CornerRadius="8"
+                Panel.ZIndex="100">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="🔄" FontSize="48" HorizontalAlignment="Center" RenderTransformOrigin="0.5,0.5">
+                    <TextBlock.RenderTransform>
+                        <RotateTransform x:Name="noTransform" Angle="0" />
+                    </TextBlock.RenderTransform>
+                    <TextBlock.Triggers>
+                        <EventTrigger RoutedEvent="Loaded">
+                            <BeginStoryboard>
+                                <Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="noTransform" Storyboard.TargetProperty="Angle"
+                                                     From="0" To="360" Duration="0:0:2" RepeatBehavior="Forever" />
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </TextBlock.Triggers>
+                </TextBlock>
+                <TextBlock Text="Zpracování dat..." FontSize="16" Foreground="White"
+                           HorizontalAlignment="Center" Margin="0,12,0,0" />
+            </StackPanel>
+        </Border>
+
+        <!-- Horní panel (Záhlaví) -->
+        <Grid Grid.Row="0" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                <TextBlock Text="DEEPSEEK PLATFORMA" FontSize="11" Foreground="#888" FontWeight="Bold" />
+                <TextBlock Text="Podrobné statistiky využití API" FontSize="22" FontWeight="Bold" Foreground="#4FC3F7" Margin="0,2,0,4" />
+                <TextBlock Text="{Binding LastUpdatedText}" FontSize="12" Foreground="#81C784" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="Měsíc:" VerticalAlignment="Center" Foreground="#E0E0E0" FontSize="13" Margin="0,0,8,0" />
+                <Button Content="◀" Command="{Binding PreviousMonthCommand}" Style="{StaticResource ArrowBtn}" ToolTip="Předchozí měsíc" />
+                <Border Background="#252525" BorderBrush="#3A3A3A" BorderThickness="1" CornerRadius="4" Width="95" Height="28" Margin="6,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding SelectedMonth}" Foreground="White" FontWeight="SemiBold" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <Button Content="▶" Command="{Binding NextMonthCommand}" Style="{StaticResource ArrowBtn}" ToolTip="Následující měsíc" />
+                
+                <Button Content="🔄 Aktualizovat data" 
+                        Command="{Binding DownloadStatsCommand}" 
+                        Style="{StaticResource ActionBtn}" Height="30" FontSize="12" Padding="12,0" Margin="12,0,0,0" />
+            </StackPanel>
+        </Grid>
+
+        <!-- Hlavní obsah -->
+        <Grid Grid.Row="1">
+            <!-- Stav: Bez lokálních dat -->
+            <Border Style="{StaticResource CardBorder}" Padding="24"
+                    Visibility="{Binding NoLocalData, Converter={StaticResource BoolToVis}}">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="📊" FontSize="64" HorizontalAlignment="Center" Margin="0,0,0,16" />
+                    <TextBlock Text="Pro vybraný měsíc nejsou stažena žádná podrobná data." 
+                               FontSize="16" Foreground="#B0BEC5" HorizontalAlignment="Center" Margin="0,0,0,4" />
+                    <TextBlock Text="Stažení ZIP souboru z platformy DeepSeek zabere pouze okamžik." 
+                               FontSize="12" Foreground="#777" HorizontalAlignment="Center" Margin="0,0,0,24" />
+                    <Button Content="📥 Stáhnout a analyzovat data" 
+                            Command="{Binding DownloadStatsCommand}" 
+                            Style="{StaticResource ActionBtn}" Background="#0D47A1" BorderBrush="#1565C0" HorizontalAlignment="Center" />
+                </StackPanel>
+            </Border>
+
+            <!-- Stav: Máme lokální data -->
+            <TabControl Visibility="{Binding HasLocalData, Converter={StaticResource BoolToVis}}">
+                
+                <!-- ZÁLOŽKA: API KLÍČE -->
+                <TabItem Header="🔑 API klíče">
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" /> <!-- Graf -->
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Graf -->
+                        <Border Grid.Column="0" Grid.Row="1" Style="{StaticResource CardBorder}" Margin="0,12,0,0" Padding="2">
+                            <oxy:PlotView Model="{Binding ApiKeyChartModel}" />
+                        </Border>
+
+                        <!-- Tabulka -->
+                        <ListView Grid.Column="0" Grid.Row="0" ItemsSource="{Binding ApiKeyUsageList}">
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Header="Nástroj (Klíč)" DisplayMemberBinding="{Binding ApiKeyName}" Width="140" />
+                                    <GridViewColumn Header="Model" DisplayMemberBinding="{Binding Model}" Width="140" />
+                                    <GridViewColumn Header="Maska" DisplayMemberBinding="{Binding ApiKeyMasked}" Width="90" />
+                                    <GridViewColumn Header="Volání" Width="70">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding RequestCountText}" HorizontalAlignment="Right" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Cache Hit" Width="90">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding CacheHitTokensText}" HorizontalAlignment="Right" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Input Miss" Width="90">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding CacheMissTokensText}" HorizontalAlignment="Right" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Output" Width="90">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding OutputTokensText}" HorizontalAlignment="Right" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Cache %" Width="60">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding CacheRatioPercent}" HorizontalAlignment="Right" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Náklady" Width="90">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding CostText}" HorizontalAlignment="Right" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                    </Grid>
+                </TabItem>
+
+                <!-- ZÁLOŽKA: MODELY -->
+                <TabItem Header="🤖 Modely">
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="320" /> <!-- Graf -->
+                            <ColumnDefinition Width="*" />   <!-- Tabulka -->
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Graf -->
+                        <Border Grid.Column="0" Style="{StaticResource CardBorder}" Margin="0,0,12,0" Padding="8">
+                            <oxy:PlotView Model="{Binding ModelPieModel}" />
+                        </Border>
+
+                        <!-- Tabulka -->
+                        <ListView Grid.Column="1" ItemsSource="{Binding ModelUsageList}">
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Header="Model" DisplayMemberBinding="{Binding Model}" Width="150" />
+                                    <GridViewColumn Header="Požadavky" Width="90">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding RequestCountText}" HorizontalAlignment="Right" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Cache Hit" Width="110">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding CacheHitTokensText}" HorizontalAlignment="Right" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Input Miss" Width="110">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding CacheMissTokensText}" HorizontalAlignment="Right" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Output" Width="110">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding OutputTokensText}" HorizontalAlignment="Right" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Náklady" Width="110">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding CostText}" HorizontalAlignment="Right" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                    </Grid>
+                </TabItem>
+
+                <!-- ZÁLOŽKA: DENNÍ VÝVOJ -->
+                <TabItem Header="📈 Denní vývoj">
+                    <Border Style="{StaticResource CardBorder}" Margin="0,12,0,0" Padding="12">
+                        <oxy:PlotView Model="{Binding DailyTrendModel}" />
+                    </Border>
+                </TabItem>
+
+                <!-- ZÁLOŽKA: SROVNÁNÍ MĚSÍCŮ -->
+                <TabItem Header="📊 Srovnání měsíců">
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />   <!-- Tabulka -->
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Graf -->
+                        <Border Grid.Column="0" Grid.Row="1" Style="{StaticResource CardBorder}" Margin="0,12,0,0" Padding="12">
+                            <oxy:PlotView Model="{Binding MonthlyComparisonModel}">
+                            </oxy:PlotView>
+                        </Border>
+
+                        <!-- Tabulka porovnání měsíců -->
+                        <ListView Grid.Column="0" Grid.Row="0" ItemsSource="{Binding MonthlyComparisonList}">
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Header="Měsíc" DisplayMemberBinding="{Binding Month}" Width="75" />
+                                    <GridViewColumn Header="Volání" Width="70">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding RequestCountText}" HorizontalAlignment="Right" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Cache Hit" Width="95">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding CacheHitTokensText}" HorizontalAlignment="Right" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Input Miss" Width="95">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding CacheMissTokensText}" HorizontalAlignment="Right" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Output" Width="95">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding OutputTokensText}" HorizontalAlignment="Right" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Celkem" Width="105">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding TotalTokensText}" HorizontalAlignment="Right" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Náklady" Width="85">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding CostText}" HorizontalAlignment="Right" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                    </Grid>
+                </TabItem>
+            </TabControl>
+        </Grid>
+    </Grid>
+</Window>
