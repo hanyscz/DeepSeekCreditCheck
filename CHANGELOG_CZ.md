@@ -1,5 +1,15 @@
 # Changelog CZ – DeepSeek Credit Checker
 
+## v1.6.0 (2026-06-18)
+
+### ✨ Nové funkce
+
+* **📅 Měsíční navigace pro statistiky platformy** – Pod nadpis měsíce v kartě spotřeby platformy DeepSeek byla přidána navigační tlačítka pro posun zpět (`◀`) a vpřed (`▶`), která uživatelům umožňují prohlížet spotřebu tokenů za předchozí měsíce.
+* **🔒 Ochrana před budoucností** – Tlačítko pro posun vpřed se automaticky zakáže při zobrazení aktuálního měsíce, aby se zabránilo navigaci do budoucích měsíců.
+* **⚡ Integrace s CommandManager** – Třída `RelayCommand` byla upravena tak, aby směrovala událost `CanExecuteChanged` přes WPF `CommandManager.RequerySuggested`. Tím se vyřešilo varování při kompilaci a tlačítka se v UI aktivují/deaktivují v reálném čase.
+
+---
+
 ## v1.5.0 (2026-06-18)
 
 ### ✨ Nové funkce

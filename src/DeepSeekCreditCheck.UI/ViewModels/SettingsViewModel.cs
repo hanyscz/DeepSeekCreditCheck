@@ -169,7 +169,11 @@ public class RelayCommand : ICommand
         _canExecute = canExecute;
     }
 
-    public event EventHandler? CanExecuteChanged;
+    public event EventHandler? CanExecuteChanged
+    {
+        add => CommandManager.RequerySuggested += value;
+        remove => CommandManager.RequerySuggested -= value;
+    }
     public bool CanExecute(object? param) => _canExecute?.Invoke(param) ?? true;
     public void Execute(object? param) => _execute(param);
 }

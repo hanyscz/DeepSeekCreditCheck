@@ -1,5 +1,15 @@
 # Changelog – DeepSeek Credit Checker
 
+## v1.6.0 (2026-06-18)
+
+### ✨ New Features
+
+* **📅 Monthly Navigation for Platform Stats** – Added previous (`◀`) and next (`▶`) monthly navigation buttons under the month heading in the DeepSeek Platform token usage card, allowing users to browse token consumption data from prior months.
+* **🔒 Future Protection** – Next button is automatically disabled when viewing the current month to prevent future date navigation.
+* **⚡ CommandManager Integration** – Refactored `RelayCommand` to route `CanExecuteChanged` through WPF `CommandManager.RequerySuggested` for real-time button state updates and resolved build warnings.
+
+---
+
 ## v1.5.0 (2026-06-18)
 
 ### ✨ New Features
