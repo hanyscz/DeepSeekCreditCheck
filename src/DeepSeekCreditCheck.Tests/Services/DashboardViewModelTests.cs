@@ -20,6 +20,7 @@ public class DashboardViewModelTests
     private readonly Mock<IUpdateService> _updateServiceMock;
     private readonly Mock<IDeepSeekPlatformClient> _platformClientMock;
     private readonly Mock<IAppSettingsService> _settingsMock;
+    private readonly Mock<IUsageRepository> _usageRepoMock;
 
     public DashboardViewModelTests()
     {
@@ -29,6 +30,7 @@ public class DashboardViewModelTests
         _updateServiceMock = new Mock<IUpdateService>();
         _platformClientMock = new Mock<IDeepSeekPlatformClient>();
         _settingsMock = new Mock<IAppSettingsService>();
+        _usageRepoMock = new Mock<IUsageRepository>();
         
         // Default settings setups
         _settingsMock.Setup(s => s.GetSessionTokenAsync()).ReturnsAsync("mock-session-token");
@@ -52,7 +54,8 @@ public class DashboardViewModelTests
             _predictionEngineMock.Object,
             _updateServiceMock.Object,
             _platformClientMock.Object,
-            _settingsMock.Object
+            _settingsMock.Object,
+            _usageRepoMock.Object
         );
 
         // Act
@@ -86,7 +89,8 @@ public class DashboardViewModelTests
             _predictionEngineMock.Object,
             _updateServiceMock.Object,
             _platformClientMock.Object,
-            _settingsMock.Object
+            _settingsMock.Object,
+            _usageRepoMock.Object
         );
 
         // Act & Assert
@@ -111,7 +115,8 @@ public class DashboardViewModelTests
             _predictionEngineMock.Object,
             _updateServiceMock.Object,
             _platformClientMock.Object,
-            _settingsMock.Object
+            _settingsMock.Object,
+            _usageRepoMock.Object
         );
 
         // Navigate back first

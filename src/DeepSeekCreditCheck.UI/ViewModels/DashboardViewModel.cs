@@ -117,11 +117,13 @@ public class DashboardViewModel : BaseViewModel
     public ICommand LogoutPlatformCommand { get; }
     public ICommand PreviousMonthCommand { get; }
     public ICommand NextMonthCommand { get; }
+    public ICommand OpenDetailedStatsCommand { get; }
 
+    private readonly IUsageRepository _usageRepo;
     private DateTime _platformSelectedMonth = DateTime.Today;
     private List<BalanceSnapshot> _history = new();
 
-    public DashboardViewModel(IPollingService polling, IBalanceRepository balanceRepo, PredictionEngine predictionEngine, IUpdateService updateService, IDeepSeekPlatformClient platformClient, IAppSettingsService settings)
+    public DashboardViewModel(IPollingService polling, IBalanceRepository balanceRepo, PredictionEngine predictionEngine, IUpdateService updateService, IDeepSeekPlatformClient platformClient, IAppSettingsService settings, IUsageRepository usageRepo)
     {
         _polling = polling;
         _balanceRepo = balanceRepo;
@@ -129,6 +131,7 @@ public class DashboardViewModel : BaseViewModel
         _updateService = updateService;
         _platformClient = platformClient;
         _settings = settings;
+        _usageRepo = usageRepo;
         RefreshCommand = new RelayCommand(async _ =>
         {
             IsLoading = true;
@@ -143,6 +146,7 @@ public class DashboardViewModel : BaseViewModel
         LogoutPlatformCommand = new RelayCommand(async _ => await LogoutPlatformAsync());
         PreviousMonthCommand = new RelayCommand(async _ => await GoToPreviousMonthAsync());
         NextMonthCommand = new RelayCommand(async _ => await GoToNextMonthAsync(), _ => CanGoToNextMonth());
+        OpenDetailedStatsCommand = new RelayCommand(_ => OpenDetailedStats());
 
         RefreshUpdateInfo();
 
@@ -227,6 +231,35 @@ public class DashboardViewModel : BaseViewModel
     private void OpenDataBrowser()
     {
         var window = new Windows.ViewDataWindow(_balanceRepo);
+        window.ShowDialog();
+    }
+
+    private Window? GetWindowOwner()
+    {
+        if (Application.Current == null)
+        {
+            return null;
+        }
+        var activeDashboard = Application.Current.Windows.OfType<Windows.DashboardWindow>().FirstOrDefault();
+        if (activeDashboard != null && activeDashboard.IsLoaded)
+        {
+            return activeDashboard;
+        }
+        var mainWin = Application.Current.MainWindow;
+        if (mainWin != null && mainWin.IsLoaded)
+        {
+            return mainWin;
+        }
+        return null;
+    }
+
+    private void OpenDetailedStats()
+    {
+        var vm = new DetailedStatsViewModel(_usageRepo, _platformClient, _settings);
+        var window = new Windows.DetailedStatsWindow(vm)
+        {
+            Owner = GetWindowOwner()
+        };
         window.ShowDialog();
     }
 
@@ -416,7 +449,7 @@ public class DashboardViewModel : BaseViewModel
     {
         var loginWindow = new Windows.LoginWindow
         {
-            Owner = Application.Current.MainWindow
+            Owner = GetWindowOwner()
         };
         if (loginWindow.ShowDialog() == true && !string.IsNullOrEmpty(loginWindow.CapturedToken))
         {

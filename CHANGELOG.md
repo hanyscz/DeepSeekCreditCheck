@@ -1,5 +1,26 @@
 # Changelog – DeepSeek Credit Checker
 
+## v1.7.0 (2026-06-18)
+
+### ✨ New Features
+
+* **📊 Detailed Usage & Cost Statistics (ZIP / CSV Export)** – Added a new "📊 Podrobné statistiky" (Detailed Statistics) button on the dashboard to open a dedicated panel. Users can download the official detailed platform export (ZIP archive containing CSV files for cost and consumption) with a single click.
+* **💾 Local SQLite Caching** – Parsed CSV data is cached in a local SQLite database. This creates a persistent offline store, allowing users to browse historical months without redownloading. Re-downloading a month safely overwrites old entries for that period.
+* **🔑 Model-specific API Key Breakdown** – Groups and separates consumption for the same API key if used across different models (e.g. Pro and Flash), showing them as separate entries in both charts and tables.
+* **📊 API Key Bar Chart & Formatting** – Replaced the API key pie chart with a horizontal bar chart sorted by costs to easily spot which key/model generates the most usage. All numeric values in statistical tables are now right-aligned for better readability, and all USD costs are rounded to exactly 2 decimal places.
+* **📈 Interactive Charts (OxyPlot)** – Visualizes daily cost trends grouped by API keys and provides month-over-month total cost comparisons using premium, dark-themed charts.
+* **🖥️ Detailed WPF Dashboard** – Introduces a brand new `DetailedStatsWindow` with a wider layout, monthly navigation via arrow buttons (◀ / ▶) with future-blocking logic, large numbers formatted with thousand separators, and a complete month-over-month comparison table with detailed token breakdown.
+
+### 🛠️ Tech Stack
+
+* **🧩 SQLite Repository** – Added the `MonthlyUsageDetails` table and indexes for fast querying. Implemented `UsageRepository` to handle async database queries.
+* **🧩 In-Memory ZIP & CSV Parser** – Created `UsageCsvParser` to process the export ZIP archive fully in memory and robustly split CSV columns (even with quoted cells).
+* **🧩 Layout & Formatting improvements** – Styled data grids using WPF `CellTemplate` with `TextBlock` `HorizontalAlignment="Right"` to align numeric content right, and updated viewmodel models to format costs with `F2` precision.
+* **🧩 OxyPlot 2.0+ Stabilization** – Fixed build failures caused by the removal of `ColumnSeries` (replaced with transposed `BarSeries` axes mapping) and removal of legend properties from `PlotModel` (replaced with the `Legends` collection).
+* **🧪 Unit Tests** – Added unit tests verifying CSV parsing accuracy and repository read/write operations.
+
+---
+
 ## v1.6.0 (2026-06-18)
 
 ### ✨ New Features

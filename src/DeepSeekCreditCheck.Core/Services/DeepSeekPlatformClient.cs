@@ -129,6 +129,40 @@ namespace DeepSeekCreditCheck.Core.Services
             return await GetJsonAsync("/api/v0/usage/cost", sessionToken, queryParams);
         }
 
+        /// <summary>
+        /// Stáhne ZIP s podrobnými CSV výkazy spotřeby a nákladů.
+        /// Volá: GET /api/v0/usage/export?month=X&year=Y
+        /// </summary>
+        public async Task<byte[]> GetUsageExportZipAsync(string sessionToken, int year, int month)
+        {
+            if (string.IsNullOrWhiteSpace(sessionToken))
+            {
+                throw new ArgumentException("Session token nesmí být prázdný.", nameof(sessionToken));
+            }
+ 
+            var uriBuilder = new UriBuilder($"{BaseUrl}/api/v0/usage/export");
+            var query = HttpUtility.ParseQueryString(uriBuilder.Query);
+            query["year"] = year.ToString();
+            query["month"] = month.ToString();
+            uriBuilder.Query = query.ToString();
+ 
+            using var request = new HttpRequestMessage(HttpMethod.Get, uriBuilder.Uri);
+            var tokenValue = sessionToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) 
+                ? sessionToken.Substring(7) 
+                : sessionToken;
+            
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokenValue.Trim());
+ 
+            var response = await _httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException($"Chyba při volání export API ({response.StatusCode}): {errorContent}");
+            }
+ 
+            return await response.Content.ReadAsByteArrayAsync();
+        }
+
         public void Dispose()
         {
             if (_disposeClient)

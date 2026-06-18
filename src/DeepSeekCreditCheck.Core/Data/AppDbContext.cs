@@ -31,7 +31,21 @@ public class AppDbContext
             Value TEXT NOT NULL
         );
 
-        CREATE INDEX IF NOT EXISTS idx_balance_timestamp ON BalanceSnapshots(Timestamp);";
+        CREATE TABLE IF NOT EXISTS MonthlyUsageDetails (
+            Id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            Year            INTEGER NOT NULL,
+            Month           INTEGER NOT NULL,
+            UtcDate         TEXT    NOT NULL,
+            Model           TEXT    NOT NULL,
+            ApiKeyName      TEXT    NOT NULL,
+            ApiKeyMasked    TEXT    NOT NULL,
+            Type            TEXT    NOT NULL,
+            Price           REAL,
+            Amount          INTEGER NOT NULL
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_balance_timestamp ON BalanceSnapshots(Timestamp);
+        CREATE INDEX IF NOT EXISTS idx_monthly_usage_ym ON MonthlyUsageDetails(Year, Month);";
 
         await connection.ExecuteAsync(sql);
     }
