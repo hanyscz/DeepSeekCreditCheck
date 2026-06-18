@@ -16,4 +16,6 @@ public interface IAppSettingsService
     Task SetLogPathAsync(string path);
     Task<string?> GetDbPathAsync();
     Task SetDbPathAsync(string path);
+    Task<string?> GetSessionTokenAsync();
+    Task SetSessionTokenAsync(string? token);
 }

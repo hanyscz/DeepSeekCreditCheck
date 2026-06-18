@@ -16,5 +16,15 @@ public partial class DashboardWindow : Window
             e.Cancel = true;
             Hide();
         };
+        IsVisibleChanged += async (s, e) =>
+        {
+            if ((bool)e.NewValue)
+            {
+                if (DataContext is DashboardViewModel vm)
+                {
+                    await vm.LoadPlatformStatsAsync();
+                }
+            }
+        };
     }
 }

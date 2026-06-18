@@ -1,5 +1,21 @@
 # Changelog CZ – DeepSeek Credit Checker
 
+## v1.5.0 (2026-06-18)
+
+### ✨ Nové funkce
+
+* **🔑 Přihlášení a spotřeba na platformě DeepSeek** – integrované podrobné sledování spotřeby tokenů přímo z platformy DeepSeek (`platform.deepseek.com`) na dashboardu pomocí systémového WebView2 pro bezpečné získání cookies/tokenů.
+* **📊 Detailní tabulka statistik modelů** – nahrazení jednoduchých souhrnů přehlednou tabulkou s podrobným rozpisem (Input Miss, Cache Hit, Output, Celkem a náklady v USD zaokrouhlené na 2 desetinná místa) pro modely `Pro` (a obecné) a `Flash` samostatně, plus řádek `Celkem`.
+* **📏 Dynamické úpravy rozvržení dashboardu** – upravená výška karty platformy (na 130px) a rozestupy řádků tabulky, aby se podrobné statistiky modelů vešly čistě a prémiově.
+
+### 🛠️ Technický stack
+
+* **🧩 DeepSeekPlatformClient (IDeepSeekPlatformClient)** – nový klient využívající vlastní izolovaný `HttpClient` (nezávislý na veřejných API endpointech) pro získání `/api/v0/users/get_user_summary`, `/api/v0/usage/amount` a `/api/v0/usage/cost`.
+* **🧩 Parsování polí v JSON** – rozšíření metody `GetSafeNode` o podporu indexů prvků pole (např. `"0"`), což předchází chybám s dvojitým započítáváním nákladů způsobeným rekurzivním parsováním denních (`days`) a celkových (`total`) položek z odpovědí API.
+* **🧪 80 jednotkových testů** – 10 nových jednotkových testů ověřujících komunikaci klienta s API platformy, logiku parsování spotřeby/cen a směrování indexů polí.
+
+---
+
 ## v1.4.0 (2026-06-10)
 
 ### ✨ Nové funkce

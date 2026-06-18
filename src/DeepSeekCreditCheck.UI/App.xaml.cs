@@ -90,6 +90,7 @@ public partial class App : Application
         services.AddSingleton<IAppSettingsService, AppSettingsService>();
         services.AddSingleton<HttpClient>();
         services.AddSingleton<IDeepSeekApiClient, DeepSeekApiClient>();
+        services.AddSingleton<IDeepSeekPlatformClient, DeepSeekPlatformClient>();
         services.AddSingleton<PredictionEngine>();
         services.AddSingleton<AlertService>();
         services.AddSingleton<IPollingService, PollingService>();

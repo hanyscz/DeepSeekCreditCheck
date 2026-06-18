@@ -1,7 +1,7 @@
 # DeepSeek Credit Checker
 
 **Monitor your DeepSeek API credit balance from the Windows system tray.**  
-*v1.4.0 — released 2026-06-10*
+*v1.5.0 — released 2026-06-18*
 
 ---
 
@@ -24,7 +24,7 @@ A lightweight Windows application that runs in the system tray and periodically 
 - **🔄 Auto-update** — checks for new releases on startup and every 4 hours; one-click download and install from GitHub Releases
 - **🚀 Start with Windows** — optional autostart via a checkbox in Settings
 - **💚 Recharge detection** — when you top up your credit a positive toast confirms the new balance
-- **🔑 Test API key** — validate your key immediately with one click in Settings
+- **🔑 DeepSeek Platform integration** — securely log in to the DeepSeek Platform via WebView2 to track detailed monthly token usage (Input Miss, Cache Hit, Output, Total) and exact costs rounded to 2 decimal places in USD split by Pro and Flash models directly on the dashboard.
 - **🌙 Dark theme** — all windows with modern dark design
 
 ### How to use
@@ -98,7 +98,7 @@ Odlehčená Windows aplikace běžící v systémové trayi, která pravidelně 
 - **🔄 Auto-update** — kontrola nových verzí při startu a každé 4 hodiny; stažení a instalace na jedno kliknutí z GitHub Releases
 - **🚀 Spuštění při startu Windows** — volitelný autostart přes checkbox v Nastavení
 - **💚 Detekce dobití** — při dobití kreditu se zobrazí pozitivní toast s novým zůstatkem
-- **🔑 Otestovat klíč** — okamžité ověření API klíče tlačítkem v Nastavení
+- **🔑 Integrace DeepSeek Platformy** — bezpečné přihlášení k platformě pomocí WebView2 a zobrazení podrobných měsíčních statistik tokenů (Input Miss, Cache Hit, Output, Celkem) a přesných nákladů v USD zaokrouhlených na 2 desetinná místa, rozdělených podle modelů Pro a Flash přímo na dashboardu.
 - **🌙 Tmavý režim** — všechna okna v moderním dark designu
 
 ### Použití

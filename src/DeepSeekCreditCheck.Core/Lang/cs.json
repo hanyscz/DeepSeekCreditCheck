@@ -55,5 +55,15 @@
   "update_failed": "Aktualizace selhala: {0}",
   "update_retry": "Zkusit znovu {0}",
   "update_no_asset": "Verze {0} neobsahuje soubory ke stažení",
-  "update_success_notify": "✅ Aktualizace na {0} proběhla úspěšně"
+  "update_success_notify": "✅ Aktualizace na {0} proběhla úspěšně",
+  "platform_title": "DeepSeek Platforma (Tokeny)",
+  "platform_connect_btn": "🔑 Propojit s platformou",
+  "platform_disconnect_btn": "Odpojit",
+  "platform_tokens_label": "SPOTŘEBA TOKENŮ",
+  "platform_cost_label": "NÁKLADY (PLATFORMA)",
+  "platform_not_connected": "Chcete sledovat detailní spotřebu tokenů a přesné náklady?",
+  "platform_tooltip_tokens": "Detailní rozpad tokenů za tento měsíc:\n• Cache Hit: {0}\n• Cache Miss: {1}\n• Výstupní (Response): {2}",
+  "platform_tooltip_tokens_v2": "Pro: Input: {0} | Cache: {1} | Output: {2}\nFlash: Input: {3} | Cache: {4} | Output: {5}\nCelkem: Input: {6} | Cache: {7} | Output: {8}",
+  "platform_loading": "Načítám...",
+  "platform_login_title": "Přihlášení k DeepSeek Platformě"
 }
