@@ -169,7 +169,11 @@ Requires .NET 8 SDK and Windows (DPAPI dependency).
 
 <p align="center">
   <img src="screenshots/tray.png" alt="Tray icon" width="200" />
-  <img src="screenshots/popup.png" alt="Notification toast" width="380" />
+  <img src="screenshots/popup.png" alt="Notification toast" width="200" />
   <br/>
-  <img src="screenshots/dashboard.png" alt="Dashboard" width="800" />
+  <img src="screenshots/dashboard.png" alt="Dashboard" width="400" />
+  <img src="screenshots/stats_01.png" alt="Dashboard" width="400" />
+  <img src="screenshots/stats_02.png" alt="Dashboard" width="400" />
+  <img src="screenshots/stats_03.png" alt="Dashboard" width="400" />
+  <img src="screenshots/stats_04.png" alt="Dashboard" width="400" />
 </p>
