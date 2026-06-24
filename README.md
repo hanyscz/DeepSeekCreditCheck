@@ -1,7 +1,7 @@
 # DeepSeek Credit Checker
 
 **Monitor your DeepSeek API credit balance from the Windows system tray.**  
-*v1.7.0 — released 2026-06-18*
+*v1.8.0 — released 2026-06-24*
 
 ---
 
@@ -24,7 +24,7 @@ A lightweight Windows application that runs in the system tray and periodically 
 - **🔄 Auto-update** — checks for new releases on startup and every 4 hours; one-click download and install from GitHub Releases
 - **🚀 Start with Windows** — optional autostart via a checkbox in Settings
 - **💚 Recharge detection** — when you top up your credit a positive toast confirms the new balance
-- **🔑 DeepSeek Platform integration** — securely log in to the DeepSeek Platform via WebView2 to track detailed monthly token usage (Input Miss, Cache Hit, Output, Total) and exact costs rounded to 2 decimal places in USD split by Pro and Flash models directly on the dashboard. Navigation arrows allow you to view historical usage data for previous months.
+- **🔑 DeepSeek Platform integration** — securely log in to the DeepSeek Platform via WebView2 to track detailed monthly and daily token usage (Input Miss, Cache Hit, Output, Total) and exact costs rounded to 2 decimal places in USD split by Pro and Flash models directly on the dashboard. Navigation arrows allow you to view historical usage data for previous months, with a dedicated daily usage block visible for the current month.
 - **📊 Detailed Statistics Dashboard** — download the official ZIP export containing CSV files on-demand, parse and store details locally in SQLite, and visualize daily cost trends and monthly comparisons via interactive OxyPlot charts in a dedicated window. The API Key view features a horizontal bar chart sorted by cost and groups same-key usage by model.
 - **🌙 Dark theme** — all windows with modern dark design
 
@@ -99,7 +99,7 @@ Odlehčená Windows aplikace běžící v systémové trayi, která pravidelně 
 - **🔄 Auto-update** — kontrola nových verzí při startu a každé 4 hodiny; stažení a instalace na jedno kliknutí z GitHub Releases
 - **🚀 Spuštění při startu Windows** — volitelný autostart přes checkbox v Nastavení
 - **💚 Detekce dobití** — při dobití kreditu se zobrazí pozitivní toast s novým zůstatkem
-- **🔑 Integrace DeepSeek Platformy** — bezpečné přihlášení k platformě pomocí WebView2 a zobrazení podrobných měsíčních statistik tokenů (Input Miss, Cache Hit, Output, Celkem) a přesných nákladů v USD zaokrouhlených na 2 desetinná místa, rozdělených podle modelů Pro a Flash přímo na dashboardu. Navigační šipky umožňují prohlížet historii spotřeby za předchozí měsíce.
+- **🔑 Integrace DeepSeek Platformy** — bezpečné přihlášení k platformě pomocí WebView2 a zobrazení podrobných měsíčních i denních statistik tokenů (Input Miss, Cache Hit, Output, Celkem) a přesných nákladů v USD zaokrouhlených na 2 desetinná místa, rozdělených podle modelů Pro a Flash přímo na dashboardu. Navigační šipky umožňují prohlížet historii spotřeby za předchozí měsíce a pro aktuální měsíc je zobrazen samostatný blok s denní spotřebou.
 - **📊 Panel podrobných statistik** — stažení oficiálního ZIP exportu s CSV soubory na jedno kliknutí, jejich uložení do lokální SQLite databáze (stálá cache) a přehledná vizualizace denního trendu nákladů a meziměsíčního porovnání pomocí interaktivních grafů OxyPlot v samostatném okně. Přehled API klíčů obsahuje sloupcový graf seřazený podle nákladů a seskupuje stejné klíče samostatně podle použitého modelu.
 - **🌙 Tmavý režim** — všechna okna v moderním dark designu
 
