@@ -1,5 +1,18 @@
 # Changelog CZ – DeepSeek Credit Checker
 
+## v1.8.0 (2026-06-24)
+
+### ✨ Nové funkce
+
+* **📅 Denní statistiky spotřeby modelů** – Na hlavní Dashboard WPF aplikace byl přidán nový přehledný blok „Dnešní spotřeba“. Zobrazuje detailní tokeny (Input Miss, Cache Hit, Output, Celkem) a náklady (USD) rozdělené podle modelů (Pro, Flash, Celkem) pro aktuální kalendářní den. Zobrazuje se dynamicky pouze při prohlížení aktuálního měsíce.
+
+### 🛠️ Technický stack
+
+* **🧩 Zpracování denních dat v paměti** – Využívá již stahované denní rozpisy statistik (`days` pole v JSON odpovědích billing API DeepSeek) bez nutnosti provádět další síťové požadavky.
+* **🧪 Testy ViewModelu** – Přidány nové jednotkové testy ověřující správné parsování denních statistik v `DashboardViewModel` a jejich dynamické zobrazení/skrytí v závislosti na vybraném měsíci.
+
+---
+
 ## v1.7.0 (2026-06-18)
 
 ### ✨ Nové funkce

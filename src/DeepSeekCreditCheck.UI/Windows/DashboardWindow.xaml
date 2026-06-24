@@ -93,11 +93,13 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <!-- Loading overlay -->
-        <Border Grid.Row="0" Grid.RowSpan="3"
+        <Border Grid.Row="0" Grid.RowSpan="5"
                 Background="#80000000"
                 Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
                 CornerRadius="8"
@@ -283,8 +285,84 @@
             </Grid>
         </Border>
 
+        <!-- Platform Section - Today -->
+        <Border Grid.Row="2" Style="{StaticResource CardBorder}" Padding="16,14" MinHeight="110" Margin="0,0,0,12"
+                Visibility="{Binding IsPlatformTodayVisible, Converter={StaticResource BoolToVis}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.5*" />
+                    <ColumnDefinition Width="6.5*" />
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Text="DEEPSEEK PLATFORMA — DNES" FontSize="11" Foreground="#888" FontWeight="Bold" />
+                    <TextBlock Text="Dnešní spotřeba" FontSize="15" FontWeight="Bold" Foreground="#81C784" Margin="0,2,0,4" />
+                    <TextBlock FontSize="12" Foreground="#888">
+                        <Run Text="Den:" />
+                        <Run Text="{Binding PlatformTodayDateText}" FontWeight="SemiBold" Foreground="#4FC3F7" />
+                    </TextBlock>
+                </StackPanel>
+
+                <!-- Tabulka s detailní dnešní spotřebou a cenou -->
+                <Grid Grid.Column="1" Margin="20,0,20,0" VerticalAlignment="Center">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="15" /> <!-- Hlavička -->
+                        <RowDefinition Height="19" /> <!-- Pro -->
+                        <RowDefinition Height="19" /> <!-- Flash -->
+                        <RowDefinition Height="19" /> <!-- Celkem -->
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="55" /> <!-- Model name -->
+                        <ColumnDefinition Width="*" />  <!-- Input -->
+                        <ColumnDefinition Width="*" />  <!-- Cache -->
+                        <ColumnDefinition Width="*" />  <!-- Output -->
+                        <ColumnDefinition Width="1.2*" />  <!-- Total tokens -->
+                        <ColumnDefinition Width="1.2*" />  <!-- Price -->
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Hlavičkový řádek (Řádek 0) -->
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Model" FontSize="10" Foreground="#888" FontWeight="Bold" />
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="Input (Miss)" FontSize="10" Foreground="#888" FontWeight="Bold" TextAlignment="Right" />
+                    <TextBlock Grid.Row="0" Grid.Column="2" Text="Cache (Hit)" FontSize="10" Foreground="#888" FontWeight="Bold" TextAlignment="Right" />
+                    <TextBlock Grid.Row="0" Grid.Column="3" Text="Output" FontSize="10" Foreground="#888" FontWeight="Bold" TextAlignment="Right" />
+                    <TextBlock Grid.Row="0" Grid.Column="4" Text="Celkem" FontSize="10" Foreground="#888" FontWeight="Bold" TextAlignment="Right" />
+                    <TextBlock Grid.Row="0" Grid.Column="5" Text="Cena (USD)" FontSize="10" Foreground="#888" FontWeight="Bold" TextAlignment="Right" />
+
+                    <!-- Oddělovač pod hlavičkou -->
+                    <Border Grid.Row="0" Grid.ColumnSpan="6" BorderBrush="#3A3A3A" BorderThickness="0,0,0,1" VerticalAlignment="Bottom" Height="2" />
+
+                    <!-- Pro Řádek (Řádek 1) -->
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Pro" FontSize="11" Foreground="#E0E0E0" VerticalAlignment="Center" Margin="0,3" />
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding PlatformTodayProInput}" FontSize="11" Foreground="#B0BEC5" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
+                    <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding PlatformTodayProCache}" FontSize="11" Foreground="#90A4AE" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
+                    <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding PlatformTodayProOutput}" FontSize="11" Foreground="#B0BEC5" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
+                    <TextBlock Grid.Row="1" Grid.Column="4" Text="{Binding PlatformTodayProTotal}" FontSize="11" Foreground="#81C784" FontWeight="SemiBold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
+                    <TextBlock Grid.Row="1" Grid.Column="5" Text="{Binding PlatformTodayProCost}" FontSize="11" Foreground="#FFB74D" FontWeight="SemiBold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
+
+                    <!-- Flash Řádek (Řádek 2) -->
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Flash" FontSize="11" Foreground="#E0E0E0" VerticalAlignment="Center" Margin="0,3" />
+                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding PlatformTodayFlashInput}" FontSize="11" Foreground="#B0BEC5" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
+                    <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding PlatformTodayFlashCache}" FontSize="11" Foreground="#90A4AE" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
+                    <TextBlock Grid.Row="2" Grid.Column="3" Text="{Binding PlatformTodayFlashOutput}" FontSize="11" Foreground="#B0BEC5" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
+                    <TextBlock Grid.Row="2" Grid.Column="4" Text="{Binding PlatformTodayFlashTotal}" FontSize="11" Foreground="#81C784" FontWeight="SemiBold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
+                    <TextBlock Grid.Row="2" Grid.Column="5" Text="{Binding PlatformTodayFlashCost}" FontSize="11" Foreground="#FFB74D" FontWeight="SemiBold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
+
+                    <!-- Oddělovač nad Celkem -->
+                    <Border Grid.Row="2" Grid.ColumnSpan="6" BorderBrush="#444" BorderThickness="0,0,0,1" VerticalAlignment="Bottom" Height="2" />
+
+                    <!-- Celkem Řádek (Řádek 3) -->
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Celkem" FontSize="11" Foreground="White" FontWeight="Bold" VerticalAlignment="Center" Margin="0,3" />
+                    <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding PlatformTodayTotalInput}" FontSize="11" Foreground="White" FontWeight="Bold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
+                    <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding PlatformTodayTotalCache}" FontSize="11" Foreground="#A5D6A7" FontWeight="Bold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
+                    <TextBlock Grid.Row="3" Grid.Column="3" Text="{Binding PlatformTodayTotalOutput}" FontSize="11" Foreground="White" FontWeight="Bold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
+                    <TextBlock Grid.Row="3" Grid.Column="4" Text="{Binding PlatformTodayTotalTotal}" FontSize="12" Foreground="#81C784" FontWeight="Bold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
+                    <TextBlock Grid.Row="3" Grid.Column="5" Text="{Binding PlatformTodayTotalCost}" FontSize="12" Foreground="#FFB74D" FontWeight="Bold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
+                </Grid>
+            </Grid>
+        </Border>
+
         <!-- Update Banner -->
-        <Border Grid.Row="2" Style="{StaticResource CardBorder}" Padding="10,6"
+        <Border Grid.Row="3" Style="{StaticResource CardBorder}" Padding="10,6"
                 Background="#1E3A2F" BorderBrush="#2E7D32"
                 Margin="0,0,0,8"
                 Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVis}}">
@@ -303,7 +381,7 @@
         </Border>
 
         <!-- Spend Chart -->
-        <Border Grid.Row="3" Style="{StaticResource CardBorder}" Padding="0">
+        <Border Grid.Row="4" Style="{StaticResource CardBorder}" Padding="0">
             <oxy:PlotView Model="{Binding SpendPlot}" Background="#161616" />
         </Border>
     </Grid>

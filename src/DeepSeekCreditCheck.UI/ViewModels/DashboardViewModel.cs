@@ -59,6 +59,27 @@ public class DashboardViewModel : BaseViewModel
     private string _platformTotalTotal = "—";
     private string _platformTotalCost = "—";
 
+    private string _platformTodayDateText = "—";
+    private bool _isPlatformTodayVisible = false;
+
+    private string _platformTodayProInput = "—";
+    private string _platformTodayProCache = "—";
+    private string _platformTodayProOutput = "—";
+    private string _platformTodayProTotal = "—";
+    private string _platformTodayProCost = "—";
+
+    private string _platformTodayFlashInput = "—";
+    private string _platformTodayFlashCache = "—";
+    private string _platformTodayFlashOutput = "—";
+    private string _platformTodayFlashTotal = "—";
+    private string _platformTodayFlashCost = "—";
+
+    private string _platformTodayTotalInput = "—";
+    private string _platformTodayTotalCache = "—";
+    private string _platformTodayTotalOutput = "—";
+    private string _platformTodayTotalTotal = "—";
+    private string _platformTodayTotalCost = "—";
+
     public string CurrentBalance { get => _currentBalance; set => SetProperty(ref _currentBalance, value); }
     public string TodaySpend { get => _todaySpend; set => SetProperty(ref _todaySpend, value); }
     public string Prediction { get => _prediction; set => SetProperty(ref _prediction, value); }
@@ -107,6 +128,27 @@ public class DashboardViewModel : BaseViewModel
     public string PlatformTotalOutput { get => _platformTotalOutput; set => SetProperty(ref _platformTotalOutput, value); }
     public string PlatformTotalTotal { get => _platformTotalTotal; set => SetProperty(ref _platformTotalTotal, value); }
     public string PlatformTotalCost { get => _platformTotalCost; set => SetProperty(ref _platformTotalCost, value); }
+
+    public string PlatformTodayDateText { get => _platformTodayDateText; set => SetProperty(ref _platformTodayDateText, value); }
+    public bool IsPlatformTodayVisible { get => _isPlatformTodayVisible; set => SetProperty(ref _isPlatformTodayVisible, value); }
+
+    public string PlatformTodayProInput { get => _platformTodayProInput; set => SetProperty(ref _platformTodayProInput, value); }
+    public string PlatformTodayProCache { get => _platformTodayProCache; set => SetProperty(ref _platformTodayProCache, value); }
+    public string PlatformTodayProOutput { get => _platformTodayProOutput; set => SetProperty(ref _platformTodayProOutput, value); }
+    public string PlatformTodayProTotal { get => _platformTodayProTotal; set => SetProperty(ref _platformTodayProTotal, value); }
+    public string PlatformTodayProCost { get => _platformTodayProCost; set => SetProperty(ref _platformTodayProCost, value); }
+
+    public string PlatformTodayFlashInput { get => _platformTodayFlashInput; set => SetProperty(ref _platformTodayFlashInput, value); }
+    public string PlatformTodayFlashCache { get => _platformTodayFlashCache; set => SetProperty(ref _platformTodayFlashCache, value); }
+    public string PlatformTodayFlashOutput { get => _platformTodayFlashOutput; set => SetProperty(ref _platformTodayFlashOutput, value); }
+    public string PlatformTodayFlashTotal { get => _platformTodayFlashTotal; set => SetProperty(ref _platformTodayFlashTotal, value); }
+    public string PlatformTodayFlashCost { get => _platformTodayFlashCost; set => SetProperty(ref _platformTodayFlashCost, value); }
+
+    public string PlatformTodayTotalInput { get => _platformTodayTotalInput; set => SetProperty(ref _platformTodayTotalInput, value); }
+    public string PlatformTodayTotalCache { get => _platformTodayTotalCache; set => SetProperty(ref _platformTodayTotalCache, value); }
+    public string PlatformTodayTotalOutput { get => _platformTodayTotalOutput; set => SetProperty(ref _platformTodayTotalOutput, value); }
+    public string PlatformTodayTotalTotal { get => _platformTodayTotalTotal; set => SetProperty(ref _platformTodayTotalTotal, value); }
+    public string PlatformTodayTotalCost { get => _platformTodayTotalCost; set => SetProperty(ref _platformTodayTotalCost, value); }
 
     public PlotModel? SpendPlot { get => _spendPlot; set => SetProperty(ref _spendPlot, value); }
 
@@ -526,6 +568,24 @@ public class DashboardViewModel : BaseViewModel
             PlatformTotalOutput = "—";
             PlatformTotalTotal = "—";
             PlatformTotalCost = "—";
+
+            IsPlatformTodayVisible = false;
+            PlatformTodayDateText = "—";
+            PlatformTodayProInput = "—";
+            PlatformTodayProCache = "—";
+            PlatformTodayProOutput = "—";
+            PlatformTodayProTotal = "—";
+            PlatformTodayProCost = "—";
+            PlatformTodayFlashInput = "—";
+            PlatformTodayFlashCache = "—";
+            PlatformTodayFlashOutput = "—";
+            PlatformTodayFlashTotal = "—";
+            PlatformTodayFlashCost = "—";
+            PlatformTodayTotalInput = "—";
+            PlatformTodayTotalCache = "—";
+            PlatformTodayTotalOutput = "—";
+            PlatformTodayTotalTotal = "—";
+            PlatformTodayTotalCost = "—";
             return;
         }
 
@@ -663,6 +723,129 @@ public class DashboardViewModel : BaseViewModel
             PlatformTotalTokens = totalTokens > 0 ? $"{totalTokens:N0}" : "0";
             PlatformCost = $"${totalCost:F2}";
 
+            // --- ZPRACOVÁNÍ DNES (AKTUÁLNÍ DEN) ---
+            var isCurrentMonthSelected = year == DateTime.Today.Year && month == DateTime.Today.Month;
+            if (isCurrentMonthSelected)
+            {
+                IsPlatformTodayVisible = true;
+                var todayStr = DateTime.Today.ToString("yyyy-MM-dd");
+                PlatformTodayDateText = todayStr;
+
+                // 1. Zpracování spotřeby tokenů pro dnešek
+                var amountDaysNode = GetSafeNode(amountJson, "data", "biz_data", "days")
+                                  ?? GetSafeNode(amountJson, "data", "days")
+                                  ?? GetSafeNode(amountJson, "days");
+
+                long todayProCacheHit = 0, todayProCacheMiss = 0, todayProResponse = 0;
+                long todayFlashCacheHit = 0, todayFlashCacheMiss = 0, todayFlashResponse = 0;
+
+                if (amountDaysNode is JsonArray daysArr)
+                {
+                    var todayNode = daysArr.FirstOrDefault(x => x?["date"]?.ToString() == todayStr);
+                    if (todayNode != null)
+                    {
+                        var todayData = todayNode["data"] ?? todayNode["usage_amount"];
+                        if (todayData is JsonArray todayDataArr)
+                        {
+                            foreach (var item in todayDataArr)
+                            {
+                                if (item is JsonObject modelObj)
+                                {
+                                    var modelName = modelObj["model"]?.ToString() ?? "";
+                                    var usageNode = modelObj["usage"];
+                                    var (hit, miss, resp) = ParseUsageAmount(usageNode);
+
+                                    if (modelName.Contains("flash", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        todayFlashCacheHit += hit;
+                                        todayFlashCacheMiss += miss;
+                                        todayFlashResponse += resp;
+                                    }
+                                    else
+                                    {
+                                        todayProCacheHit += hit;
+                                        todayProCacheMiss += miss;
+                                        todayProResponse += resp;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                long todayTotalCacheHit = todayProCacheHit + todayFlashCacheHit;
+                long todayTotalCacheMiss = todayProCacheMiss + todayFlashCacheMiss;
+                long todayTotalResponse = todayProResponse + todayFlashResponse;
+                long todayTotalTokens = todayTotalCacheHit + todayTotalCacheMiss + todayTotalResponse;
+
+                // 2. Zpracování nákladů pro dnešek
+                var costDaysNode = GetSafeNode(costJson, "data", "biz_data", "0", "days")
+                                ?? GetSafeNode(costJson, "data", "biz_data", "days")
+                                ?? GetSafeNode(costJson, "data", "days")
+                                ?? GetSafeNode(costJson, "days");
+
+                decimal todayProCost = 0;
+                decimal todayFlashCost = 0;
+
+                if (costDaysNode is JsonArray costDaysArr)
+                {
+                    var todayCostNode = costDaysArr.FirstOrDefault(x => x?["date"]?.ToString() == todayStr);
+                    if (todayCostNode != null)
+                    {
+                        var todayCostData = todayCostNode["data"] ?? todayCostNode["usage_cost"];
+                        if (todayCostData is JsonArray todayCostDataArr)
+                        {
+                            foreach (var item in todayCostDataArr)
+                            {
+                                if (item is JsonObject modelObj)
+                                {
+                                    var modelName = modelObj["model"]?.ToString() ?? "";
+                                    var usageNode = modelObj["usage"];
+                                    var costVal = ParseUsageCost(usageNode);
+
+                                    if (modelName.Contains("flash", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        todayFlashCost += costVal;
+                                    }
+                                    else
+                                    {
+                                        todayProCost += costVal;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                decimal todayTotalCost = todayProCost + todayFlashCost;
+
+                // 3. Nastavení dnešních UI vlastností
+                PlatformTodayProInput = $"{todayProCacheMiss:N0}";
+                PlatformTodayProCache = $"{todayProCacheHit:N0}";
+                PlatformTodayProOutput = $"{todayProResponse:N0}";
+                long todayProTotal = todayProCacheMiss + todayProCacheHit + todayProResponse;
+                PlatformTodayProTotal = $"{todayProTotal:N0}";
+                PlatformTodayProCost = $"${todayProCost:F2}";
+
+                PlatformTodayFlashInput = $"{todayFlashCacheMiss:N0}";
+                PlatformTodayFlashCache = $"{todayFlashCacheHit:N0}";
+                PlatformTodayFlashOutput = $"{todayFlashResponse:N0}";
+                long todayFlashTotal = todayFlashCacheMiss + todayFlashCacheHit + todayFlashResponse;
+                PlatformTodayFlashTotal = $"{todayFlashTotal:N0}";
+                PlatformTodayFlashCost = $"${todayFlashCost:F2}";
+
+                PlatformTodayTotalInput = $"{todayTotalCacheMiss:N0}";
+                PlatformTodayTotalCache = $"{todayTotalCacheHit:N0}";
+                PlatformTodayTotalOutput = $"{todayTotalResponse:N0}";
+                PlatformTodayTotalTotal = $"{todayTotalTokens:N0}";
+                PlatformTodayTotalCost = $"${todayTotalCost:F2}";
+            }
+            else
+            {
+                IsPlatformTodayVisible = false;
+                PlatformTodayDateText = "—";
+            }
+
             var loc = LocalizationService.Instance;
             PlatformCacheRatio = loc.Format("platform_tooltip_tokens_v2", 
                 $"{proCacheMiss:N0}", $"{proCacheHit:N0}", $"{proResponse:N0}",
@@ -693,6 +876,24 @@ public class DashboardViewModel : BaseViewModel
             PlatformTotalOutput = "error";
             PlatformTotalTotal = "error";
             PlatformTotalCost = "error";
+
+            IsPlatformTodayVisible = false;
+            PlatformTodayDateText = "error";
+            PlatformTodayProInput = "error";
+            PlatformTodayProCache = "error";
+            PlatformTodayProOutput = "error";
+            PlatformTodayProTotal = "error";
+            PlatformTodayProCost = "error";
+            PlatformTodayFlashInput = "error";
+            PlatformTodayFlashCache = "error";
+            PlatformTodayFlashOutput = "error";
+            PlatformTodayFlashTotal = "error";
+            PlatformTodayFlashCost = "error";
+            PlatformTodayTotalInput = "error";
+            PlatformTodayTotalCache = "error";
+            PlatformTodayTotalOutput = "error";
+            PlatformTodayTotalTotal = "error";
+            PlatformTodayTotalCost = "error";
         }
     }
 

@@ -1,5 +1,18 @@
 # Changelog – DeepSeek Credit Checker
 
+## v1.8.0 (2026-06-24)
+
+### ✨ New Features
+
+* **📅 Daily Model Usage Statistics** – Added a new "Today's spend" section to the main WPF Dashboard. Displays a detailed breakdown of tokens (Input Miss, Cache Hit, Output, Total) and costs (USD) split by model (Pro, Flash, Total) for the current calendar day. Automatically shows only when viewing the current month.
+
+### 🛠️ Tech Stack
+
+* **🧩 In-Memory Today Stats Extraction** – Reads daily stats from the existing billing API response (`days` node in amount/cost JSONs) without making additional network requests.
+* **🧪 ViewModel Tests** – Added unit tests verifying the parsing of daily stats in `DashboardViewModel` and their dynamic visibility logic based on the selected month.
+
+---
+
 ## v1.7.0 (2026-06-18)
 
 ### ✨ New Features
