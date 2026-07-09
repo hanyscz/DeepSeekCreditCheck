@@ -27,6 +27,7 @@ A lightweight Windows application that runs in the system tray and periodically 
 - **🔑 DeepSeek Platform integration** — securely log in to the DeepSeek Platform via WebView2 to track detailed monthly and daily token usage (Input Miss, Cache Hit, Output, Total) and exact costs rounded to 2 decimal places in USD split by Pro and Flash models directly on the dashboard. Navigation arrows allow you to view historical usage data for previous months, with a dedicated daily usage block visible for the current month.
 - **📊 Detailed Statistics Dashboard** — download the official ZIP export containing CSV files on-demand, parse and store details locally in SQLite, and visualize daily cost trends and monthly comparisons via interactive OxyPlot charts in a dedicated window. The API Key view features a horizontal bar chart sorted by cost and groups same-key usage by model.
 - **🌙 Dark theme** — all windows with modern dark design
+- **🏡 Home Assistant Integration** — monitor your DeepSeek balance and detailed usage directly in Home Assistant (custom component included)
 
 ### How to use
 
@@ -78,6 +79,22 @@ Open **📁 Záznamy v DB** from the Dashboard to browse all balance history rec
 3. Set the `"lang_name"` key to the display name (e.g. `"Français"`)
 4. The new language appears automatically in Settings → Language
 
+### 🏡 Home Assistant Integration
+
+This repository includes a custom Home Assistant integration to monitor your DeepSeek balance and usage.
+
+#### Features in Home Assistant:
+- **Balance sensors** (USD/CNY) — total balance, topped-up balance, and promotional granted balance (via API Key).
+- **Usage & cost sensors** — monthly and daily API cost, monthly and daily token counts with breakdown by Pro and Flash models in attributes (via Session Token).
+
+#### Quick Setup:
+1. Copy the `custom_components/deepseek_credit` folder into your Home Assistant `<config_dir>/custom_components/` directory.
+2. Restart Home Assistant.
+3. In Home Assistant, go to **Settings** -> **Devices & Services** -> **Add Integration** and search for **DeepSeek Credit Checker**.
+4. Enter your **API Key** and/or **Session Token** (obtained from browser DevTools under `platform.deepseek.com` Network tab).
+
+*(For details and custom repository installation via HACS, see the integration files in [custom_components/deepseek_credit](custom_components/deepseek_credit/)).*
+
 ---
 
 🇨🇿 **Česky**
@@ -102,6 +119,7 @@ Odlehčená Windows aplikace běžící v systémové trayi, která pravidelně 
 - **🔑 Integrace DeepSeek Platformy** — bezpečné přihlášení k platformě pomocí WebView2 a zobrazení podrobných měsíčních i denních statistik tokenů (Input Miss, Cache Hit, Output, Celkem) a přesných nákladů v USD zaokrouhlených na 2 desetinná místa, rozdělených podle modelů Pro a Flash přímo na dashboardu. Navigační šipky umožňují prohlížet historii spotřeby za předchozí měsíce a pro aktuální měsíc je zobrazen samostatný blok s denní spotřebou.
 - **📊 Panel podrobných statistik** — stažení oficiálního ZIP exportu s CSV soubory na jedno kliknutí, jejich uložení do lokální SQLite databáze (stálá cache) a přehledná vizualizace denního trendu nákladů a meziměsíčního porovnání pomocí interaktivních grafů OxyPlot v samostatném okně. Přehled API klíčů obsahuje sloupcový graf seřazený podle nákladů a seskupuje stejné klíče samostatně podle použitého modelu.
 - **🌙 Tmavý režim** — všechna okna v moderním dark designu
+- **🏡 Home Assistant Integrace** — monitorujte svůj DeepSeek zůstatek a detailní spotřebu přímo v Home Assistantovi (vlastní komponenta je součástí projektu)
 
 ### Použití
 
@@ -152,6 +170,22 @@ Otevři **📁 Záznamy v DB** z Dashboardu. Můžeš:
 2. Přelož hodnoty uvnitř
 3. Nastav klíč `"lang_name"` na zobrazovaný název (např. `"Deutsch"`)
 4. Nový jazyk se automaticky objeví v Nastavení → Jazyk
+
+### 🏡 Home Assistant Integrace
+
+Tento repozitář obsahuje také vlastní integraci do Home Assistanta pro sledování vašeho zůstatku a spotřeby DeepSeek.
+
+#### Funkce v Home Assistantovi:
+- **Senzory zůstatku** (USD/CNY) — celkový zůstatek, dobitý zůstatek a dárkový (promo) zůstatek (vyžaduje API klíč).
+- **Senzory spotřeby a nákladů** — měsíční a denní náklady za volání API, celkový měsíční a denní počet tokenů s rozpadem na modely Pro a Flash v atributech (vyžaduje Session Token).
+
+#### Rychlý návod:
+1. Zkopírujte složku `custom_components/deepseek_credit` do složky `<config_dir>/custom_components/` ve vaší instalaci Home Assistanta.
+2. Restartujte Home Assistanta.
+3. Přejděte do **Nastavení** -> **Zařízení a služby** -> **Přidat integraci** a vyhledejte **DeepSeek Credit Checker**.
+4. Zadejte svůj **API klíč** a/nebo **Session Token** (který získáte v prohlížeči v záložce Network při přihlášení na `platform.deepseek.com`).
+
+*(Podrobnější návod a popis instalace jako vlastní repozitář v HACS naleznete přímo ve složce [custom_components/deepseek_credit](custom_components/deepseek_credit/)).*
 
 ---
 

@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "DeepSeek Credit Checker",
+        "description": "Enter your DeepSeek API Key and/or Session Token. You must enter at least one.",
+        "data": {
+          "api_key": "API Key (api.deepseek.com)",
+          "session_token": "Session Token (platform.deepseek.com)"
+        }
+      }
+    },
+    "error": {
+      "missing_credentials": "You must provide either an API Key or a Session Token.",
+      "invalid_api_key": "Invalid API Key.",
+      "invalid_session_token": "Invalid Session Token.",
+      "cannot_connect": "Failed to connect to DeepSeek servers."
+    },
+    "abort": {
+      "already_configured": "DeepSeek Credit Checker is already configured."
+    }
+  }
+}

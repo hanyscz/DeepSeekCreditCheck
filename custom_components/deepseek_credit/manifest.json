@@ -1,0 +1,12 @@
+{
+  "domain": "deepseek_credit",
+  "name": "DeepSeek Credit Checker",
+  "codeowners": ["@hanyscz"],
+  "config_flow": true,
+  "documentation": "https://github.com/hanyscz/DeepSeekCreditCheck",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/hanyscz/DeepSeekCreditCheck/issues",
+  "requirements": [],
+  "version": "1.0.0"
+}

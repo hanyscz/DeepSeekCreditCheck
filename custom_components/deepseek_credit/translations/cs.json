@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "DeepSeek Credit Checker",
+        "description": "Zadejte svůj DeepSeek API klíč a/nebo Session Token. Musíte zadat alespoň jeden z nich.",
+        "data": {
+          "api_key": "API klíč (api.deepseek.com)",
+          "session_token": "Session Token (platform.deepseek.com)"
+        }
+      }
+    },
+    "error": {
+      "missing_credentials": "Musíte zadat buď API klíč nebo Session Token.",
+      "invalid_api_key": "Neplatný API klíč.",
+      "invalid_session_token": "Neplatný Session Token.",
+      "cannot_connect": "Nepodařilo se připojit k serverům DeepSeek."
+    },
+    "abort": {
+      "already_configured": "DeepSeek Credit Checker je již nakonfigurován."
+    }
+  }
+}
