@@ -65,5 +65,19 @@
   "platform_tooltip_tokens": "Detailní rozpad tokenů za tento měsíc:\n• Cache Hit: {0}\n• Cache Miss: {1}\n• Výstupní (Response): {2}",
   "platform_tooltip_tokens_v2": "Pro: Input: {0} | Cache: {1} | Output: {2}\nFlash: Input: {3} | Cache: {4} | Output: {5}\nCelkem: Input: {6} | Cache: {7} | Output: {8}",
   "platform_loading": "Načítám...",
-  "platform_login_title": "Přihlášení k DeepSeek Platformě"
+  "platform_login_title": "Přihlášení k DeepSeek Platformě",
+  "tooltip_tariff_peak": "🔥 Špička: plná cena (konec v {0})",
+  "tooltip_tariff_offpeak": "⚡ Mimo špičku: sleva 50 % (do {0})",
+  "tray_tariff_peak": "🔥 Špička (konec v {0})",
+  "tray_tariff_offpeak": "⚡ Mimo špičku (-50 %, do {0})",
+  "dashboard_tariff_peak_title": "ŠPIČKA (Plná cena)",
+  "dashboard_tariff_offpeak_title": "MIMO ŠPIČKU (Sleva 50 %)",
+  "dashboard_tariff_peak_time": "Konec v {0} ({1})",
+  "dashboard_tariff_offpeak_time": "Další špička v {0} ({1})",
+  "dashboard_tariff_tooltip": "DeepSeek API tarif:\n• Špička (PEAK): 01:00-04:00 a 06:00-10:00 UTC (03:00-06:00 a 08:00-12:00 CEST) — plná cena.\n• Mimo špičku (OFF-PEAK): všechny ostatní hodiny — sleva 50 % na všechny tokeny.",
+  "tray_changelog": "📋 Historie změn",
+  "dashboard_changelog_btn": "📋 Historie změn",
+  "changelog_title": "📋 Historie změn — DeepSeek Credit Checker",
+  "changelog_update_banner": "🎉 Aplikace byla úspěšně aktualizována na verzi {0}!",
+  "changelog_close_btn": "Zavřít"
 }

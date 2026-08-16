@@ -91,15 +91,16 @@
 
     <Grid Margin="16">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" /> <!-- 0: Zůstatek a statistiky -->
+            <RowDefinition Height="Auto" /> <!-- 1: Tarifní stav (Špička / Mimo špičku) -->
+            <RowDefinition Height="Auto" /> <!-- 2: DeepSeek Platforma (Měsíc) -->
+            <RowDefinition Height="Auto" /> <!-- 3: DeepSeek Platforma (Dnes) -->
+            <RowDefinition Height="Auto" /> <!-- 4: Update Banner -->
+            <RowDefinition Height="*" />    <!-- 5: Spend Chart -->
         </Grid.RowDefinitions>
 
         <!-- Loading overlay -->
-        <Border Grid.Row="0" Grid.RowSpan="5"
+        <Border Grid.Row="0" Grid.RowSpan="6"
                 Background="#80000000"
                 Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
                 CornerRadius="8"
@@ -175,17 +176,48 @@
                 </StackPanel>
 
                 <!-- Action buttons -->
-                <StackPanel Grid.Column="5" VerticalAlignment="Center" Margin="20,0,0,0">
+                <StackPanel Grid.Column="5" VerticalAlignment="Center" Margin="16,0,0,0">
                     <Button Content="🔄 Obnovit" Command="{Binding RefreshCommand}"
-                            Style="{StaticResource ActionBtn}" Margin="0,0,0,6" />
+                            Style="{StaticResource ActionBtn}" Margin="0,0,0,5" />
                     <Button Content="📁 Záznamy v DB" Command="{Binding OpenDataBrowserCommand}"
-                            Style="{StaticResource ActionBtn}" Background="#2E7D32" />
+                            Style="{StaticResource ActionBtn}" Background="#2E7D32" Margin="0,0,0,5" />
+                    <Button Content="📋 Historie změn" Command="{Binding OpenChangelogCommand}"
+                            Style="{StaticResource ActionBtn}" Background="#0288D1" BorderBrush="#0277BD" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Tariff Status Row (Between Balance and Platform) -->
+        <Border Grid.Row="1" Background="{Binding TariffBadgeBackground}"
+                BorderBrush="{Binding TariffBadgeBorder}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="16,10"
+                Margin="0,0,0,12"
+                ToolTip="{Binding TariffBadgeTooltip}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding TariffBadgeIcon}" FontSize="15" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding TariffBadgeTitle}" FontWeight="Bold" FontSize="13" 
+                               Foreground="{Binding TariffBadgeForeground}" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding TariffBadgeTimeInfo}" FontSize="13" 
+                               Foreground="#FFFFFF" FontWeight="SemiBold"
+                               VerticalAlignment="Center" Margin="0,0,12,0" />
+                    <TextBlock Text="ℹ️ Nápověda" FontSize="11" Foreground="#999" VerticalAlignment="Center" />
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- Platform Section -->
-        <Border Grid.Row="1" Style="{StaticResource CardBorder}" Padding="16,14" MinHeight="130" Margin="0,0,0,12">
+        <Border Grid.Row="2" Style="{StaticResource CardBorder}" Padding="16,14" MinHeight="130" Margin="0,0,0,12">
             <Grid>
                 <!-- Grid pro nepřihlášený stav -->
                 <Grid Visibility="{Binding IsPlatformDisconnected, Converter={StaticResource BoolToVis}}">
@@ -286,7 +318,7 @@
         </Border>
 
         <!-- Platform Section - Today -->
-        <Border Grid.Row="2" Style="{StaticResource CardBorder}" Padding="16,14" MinHeight="110" Margin="0,0,0,12"
+        <Border Grid.Row="3" Style="{StaticResource CardBorder}" Padding="16,14" MinHeight="110" Margin="0,0,0,12"
                 Visibility="{Binding IsPlatformTodayVisible, Converter={StaticResource BoolToVis}}">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -362,7 +394,7 @@
         </Border>
 
         <!-- Update Banner -->
-        <Border Grid.Row="3" Style="{StaticResource CardBorder}" Padding="10,6"
+        <Border Grid.Row="4" Style="{StaticResource CardBorder}" Padding="10,6"
                 Background="#1E3A2F" BorderBrush="#2E7D32"
                 Margin="0,0,0,8"
                 Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVis}}">
@@ -381,7 +413,7 @@
         </Border>
 
         <!-- Spend Chart -->
-        <Border Grid.Row="4" Style="{StaticResource CardBorder}" Padding="0">
+        <Border Grid.Row="5" Style="{StaticResource CardBorder}" Padding="0">
             <oxy:PlotView Model="{Binding SpendPlot}" Background="#161616" />
         </Border>
     </Grid>

@@ -18,10 +18,15 @@ public class TrayIconService : IDisposable
     private TaskbarIcon? _notifyIcon;
     private TextBlock? _tooltipText;
     private DashboardWindow? _dashboardWindow;
+    private ChangelogWindow? _changelogWindow;
     private MenuItem? _updateCheckItem;
     private MenuItem? _updateActionItem;
     private bool _isUpdating;
     private CancellationTokenSource? _periodicTimerCts;
+    private System.Windows.Threading.DispatcherTimer? _tariffTimer;
+    private PollResult? _lastResult;
+    private decimal? _lastBalance;
+    private decimal _lastThreshold;
 
     public TrayIconService(IServiceProvider services)
     {
@@ -83,6 +88,13 @@ public class TrayIconService : IDisposable
         };
         menu.Items.Add(predictionItem);
 
+        var tariffItem = new System.Windows.Controls.MenuItem
+        {
+            Header = "🕒 " + loc["loading"],
+            IsEnabled = false
+        };
+        menu.Items.Add(tariffItem);
+
         menu.Items.Add(new System.Windows.Controls.Separator());
 
         var errorItem = new System.Windows.Controls.MenuItem
@@ -96,6 +108,10 @@ public class TrayIconService : IDisposable
         var dashboardItem = new System.Windows.Controls.MenuItem { Header = loc["tray_dashboard"] };
         dashboardItem.Click += (_, _) => OpenDashboard();
         menu.Items.Add(dashboardItem);
+
+        var changelogItem = new System.Windows.Controls.MenuItem { Header = loc["tray_changelog"] };
+        changelogItem.Click += (_, _) => OpenChangelog();
+        menu.Items.Add(changelogItem);
 
         var settingsItem = new System.Windows.Controls.MenuItem { Header = loc["tray_settings"] };
         settingsItem.Click += (_, _) => OpenSettings();
@@ -147,13 +163,49 @@ public class TrayIconService : IDisposable
             BalanceItem = balanceItem,
             TodaySpendItem = todaySpendItem,
             PredictionItem = predictionItem,
+            TariffItem = tariffItem,
             ErrorItem = errorItem
         };
+
+        _tariffTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(30)
+        };
+        _tariffTimer.Tick += (_, _) => RefreshTariffAndIcon();
+        _tariffTimer.Start();
+    }
+
+    private void RefreshTariffAndIcon()
+    {
+        if (_notifyIcon == null) return;
+        UpdateIcon(_lastBalance, _lastThreshold);
+
+        if (_lastResult != null)
+        {
+            UpdateTooltip(_lastResult);
+        }
+        else if (_tooltipText != null)
+        {
+            var loc = LocalizationService.Instance;
+            var tariffInfo = TariffService.GetTariffInfo();
+            var tariffLine = tariffInfo.IsPeak
+                ? loc.Format("tooltip_tariff_peak", tariffInfo.FormattedLocalTime)
+                : loc.Format("tooltip_tariff_offpeak", tariffInfo.FormattedLocalTime);
+
+            _tooltipText.Text = $"{loc["tooltip_title"]}\n" +
+                $"━━━━━━━━━━━━━━━━━━\n" +
+                $"{tariffLine}\n" +
+                $"🕐 {DateTime.Now:HH:mm:ss}";
+        }
     }
 
     public void UpdateTooltip(PollResult result)
     {
         if (_notifyIcon?.Tag is not TrayMenuRefs refs) return;
+
+        _lastResult = result;
+        _lastBalance = result.Snapshot?.TotalBalanceDecimal;
+        _lastThreshold = result.Threshold;
 
         var loc = LocalizationService.Instance;
         var bal = result.Snapshot?.TotalBalanceDecimal ?? 0;
@@ -161,23 +213,33 @@ public class TrayIconService : IDisposable
         var pred = result.Prediction?.FormattedPrediction ?? "—";
         var todayStr = result.TodaySpend.HasValue ? $"${result.TodaySpend.Value:F2}" : "—";
 
+        var tariffInfo = TariffService.GetTariffInfo();
+
         refs.BalanceItem.Header = loc.Format("tray_balance", balStr);
         refs.TodaySpendItem.Header = loc.Format("tray_today", todayStr);
         refs.PredictionItem.Header = loc.Format("tray_prediction", pred);
+        refs.TariffItem.Header = tariffInfo.IsPeak
+            ? loc.Format("tray_tariff_peak", tariffInfo.FormattedLocalTime)
+            : loc.Format("tray_tariff_offpeak", tariffInfo.FormattedLocalTime);
 
         refs.ErrorItem.Visibility = Visibility.Collapsed;
 
-        // Dynamická ikona se zůstatkem a barvou dle prahu
+        // Dynamická ikona se zůstatkem a barvou dle prahu + odznáček tarifu
         UpdateIcon(result.Snapshot?.TotalBalanceDecimal, result.Threshold);
 
-        // Custom tooltip — 2x větší
+        // Custom tooltip — 2x větší s informací o tarifu a času konce
         if (_tooltipText != null)
         {
+            var tariffLine = tariffInfo.IsPeak
+                ? loc.Format("tooltip_tariff_peak", tariffInfo.FormattedLocalTime)
+                : loc.Format("tooltip_tariff_offpeak", tariffInfo.FormattedLocalTime);
+
             _tooltipText.Text = $"{loc["tooltip_title"]}\n" +
                 $"━━━━━━━━━━━━━━━━━━\n" +
                 $"{loc.Format("tooltip_balance", balStr)}\n" +
                 $"{loc.Format("tooltip_today", todayStr)}\n" +
                 $"{loc.Format("tooltip_prediction", pred)}\n" +
+                $"{tariffLine}\n" +
                 $"🕐 {DateTime.Now:HH:mm:ss}";
         }
     }
@@ -245,6 +307,30 @@ public class TrayIconService : IDisposable
         window.ShowDialog();
     }
 
+    public void OpenChangelog(string? updatedVersion = null)
+    {
+        if (_changelogWindow == null || !_changelogWindow.IsLoaded)
+        {
+            var changelogService = _services.GetService<IChangelogService>();
+            var loc = LocalizationService.Instance;
+            _changelogWindow = new ChangelogWindow(changelogService, loc);
+            if (!string.IsNullOrEmpty(updatedVersion))
+            {
+                _changelogWindow.SetUpdateSuccessVersion(updatedVersion);
+            }
+            _changelogWindow.Show();
+        }
+        else
+        {
+            if (!string.IsNullOrEmpty(updatedVersion))
+            {
+                _changelogWindow.SetUpdateSuccessVersion(updatedVersion);
+            }
+            _changelogWindow.Show();
+            _changelogWindow.Activate();
+        }
+    }
+
     private static System.Drawing.Icon CreateAppIcon()
     {
         try
@@ -288,11 +374,11 @@ public class TrayIconService : IDisposable
             g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
 
-            // Kulaté pozadí
+            // Kulaté pozadí hlavního kruhu — plná velikost plátna (100% velikost v tray liště)
             using var bgBrush = new System.Drawing.SolidBrush(bgColor);
             g.FillEllipse(bgBrush, 0, 0, size - 1, size - 1);
 
-            // Velikost písma — výrazně větší, aby bylo čitelné i po downscale na 16-20 px
+            // Velikost písma — maximální pro čitelnost po downscale
             float fontSize = text.Length switch
             {
                 <= 1 => 38f,
@@ -310,6 +396,23 @@ public class TrayIconService : IDisposable
                 LineAlignment = System.Drawing.StringAlignment.Center
             };
             g.DrawString(text, font, textBrush, new System.Drawing.RectangleF(0, 0, size, size), fmt);
+
+            // Odznáček stavu tarifu (Peak: červená, Off-Peak: zelená) v pravém horním rohu plátna
+            var tariffInfo = TariffService.GetTariffInfo();
+            var badgeColor = tariffInfo.IsPeak
+                ? System.Drawing.Color.FromArgb(255, 45, 85)   // jasně červená (Peak)
+                : System.Drawing.Color.FromArgb(0, 220, 100);   // jasně zelená (Off-Peak)
+
+            // Odznáček 22×22 px v pravém horním rohu (42, 0)
+            var badgeRect = new System.Drawing.RectangleF(42, 0, 22, 22);
+            using (var outlinePen = new System.Drawing.Pen(System.Drawing.Color.FromArgb(26, 26, 26), 3f))
+            {
+                g.DrawEllipse(outlinePen, badgeRect);
+            }
+            using (var badgeBrush = new System.Drawing.SolidBrush(badgeColor))
+            {
+                g.FillEllipse(badgeBrush, badgeRect);
+            }
         }
 
         // GetHicon vytváří nespravovaný HICON — po naklonování ho musíme zničit (jinak GDI leak)
@@ -495,6 +598,7 @@ public class TrayIconService : IDisposable
 
     public void Dispose()
     {
+        _tariffTimer?.Stop();
         _periodicTimerCts?.Cancel();
         _periodicTimerCts?.Dispose();
         _notifyIcon?.Dispose();
@@ -505,6 +609,7 @@ public class TrayIconService : IDisposable
         public System.Windows.Controls.MenuItem BalanceItem { get; set; } = null!;
         public System.Windows.Controls.MenuItem TodaySpendItem { get; set; } = null!;
         public System.Windows.Controls.MenuItem PredictionItem { get; set; } = null!;
+        public System.Windows.Controls.MenuItem TariffItem { get; set; } = null!;
         public System.Windows.Controls.MenuItem ErrorItem { get; set; } = null!;
     }
 }

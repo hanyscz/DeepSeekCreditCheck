@@ -150,6 +150,22 @@ public class DashboardViewModel : BaseViewModel
     public string PlatformTodayTotalTotal { get => _platformTodayTotalTotal; set => SetProperty(ref _platformTodayTotalTotal, value); }
     public string PlatformTodayTotalCost { get => _platformTodayTotalCost; set => SetProperty(ref _platformTodayTotalCost, value); }
 
+    private string _tariffBadgeIcon = "⚡";
+    private string _tariffBadgeTitle = "—";
+    private string _tariffBadgeTimeInfo = "—";
+    private string _tariffBadgeBackground = "#16301C";
+    private string _tariffBadgeBorder = "#2E7D32";
+    private string _tariffBadgeForeground = "#81C784";
+    private string _tariffBadgeTooltip = "—";
+
+    public string TariffBadgeIcon { get => _tariffBadgeIcon; set => SetProperty(ref _tariffBadgeIcon, value); }
+    public string TariffBadgeTitle { get => _tariffBadgeTitle; set => SetProperty(ref _tariffBadgeTitle, value); }
+    public string TariffBadgeTimeInfo { get => _tariffBadgeTimeInfo; set => SetProperty(ref _tariffBadgeTimeInfo, value); }
+    public string TariffBadgeBackground { get => _tariffBadgeBackground; set => SetProperty(ref _tariffBadgeBackground, value); }
+    public string TariffBadgeBorder { get => _tariffBadgeBorder; set => SetProperty(ref _tariffBadgeBorder, value); }
+    public string TariffBadgeForeground { get => _tariffBadgeForeground; set => SetProperty(ref _tariffBadgeForeground, value); }
+    public string TariffBadgeTooltip { get => _tariffBadgeTooltip; set => SetProperty(ref _tariffBadgeTooltip, value); }
+
     public PlotModel? SpendPlot { get => _spendPlot; set => SetProperty(ref _spendPlot, value); }
 
     public ICommand RefreshCommand { get; }
@@ -160,6 +176,7 @@ public class DashboardViewModel : BaseViewModel
     public ICommand PreviousMonthCommand { get; }
     public ICommand NextMonthCommand { get; }
     public ICommand OpenDetailedStatsCommand { get; }
+    public ICommand OpenChangelogCommand { get; }
 
     private readonly IUsageRepository _usageRepo;
     private DateTime _platformSelectedMonth = DateTime.Today;
@@ -177,12 +194,14 @@ public class DashboardViewModel : BaseViewModel
         RefreshCommand = new RelayCommand(async _ =>
         {
             IsLoading = true;
+            UpdateTariffInfo();
             if (_polling is PollingService ps)
                 await ps.PollOnceAsync(CancellationToken.None);
             await LoadPlatformStatsAsync();
             IsLoading = false;
         });
         OpenDataBrowserCommand = new RelayCommand(_ => OpenDataBrowser());
+        OpenChangelogCommand = new RelayCommand(_ => OpenChangelog());
         DownloadUpdateCommand = new RelayCommand(async _ => await DownloadAndApplyUpdateAsync());
         LoginPlatformCommand = new RelayCommand(async _ => await LoginPlatformAsync());
         LogoutPlatformCommand = new RelayCommand(async _ => await LogoutPlatformAsync());
@@ -191,11 +210,39 @@ public class DashboardViewModel : BaseViewModel
         OpenDetailedStatsCommand = new RelayCommand(_ => OpenDetailedStats());
 
         RefreshUpdateInfo();
+        UpdateTariffInfo();
 
         _updateService.UpdateAvailable += _ =>
         {
             Application.Current.Dispatcher.BeginInvoke(() => RefreshUpdateInfo());
         };
+    }
+
+    public void UpdateTariffInfo()
+    {
+        var loc = LocalizationService.Instance;
+        var info = TariffService.GetTariffInfo();
+
+        if (info.IsPeak)
+        {
+            TariffBadgeIcon = "🔥";
+            TariffBadgeTitle = loc["dashboard_tariff_peak_title"];
+            TariffBadgeTimeInfo = loc.Format("dashboard_tariff_peak_time", info.FormattedLocalTime, info.FormattedRemaining);
+            TariffBadgeBackground = "#381818";
+            TariffBadgeBorder = "#D32F2F";
+            TariffBadgeForeground = "#FF8A80";
+        }
+        else
+        {
+            TariffBadgeIcon = "⚡";
+            TariffBadgeTitle = loc["dashboard_tariff_offpeak_title"];
+            TariffBadgeTimeInfo = loc.Format("dashboard_tariff_offpeak_time", info.FormattedLocalTime, info.FormattedRemaining);
+            TariffBadgeBackground = "#16301C";
+            TariffBadgeBorder = "#2E7D32";
+            TariffBadgeForeground = "#81C784";
+        }
+
+        TariffBadgeTooltip = loc["dashboard_tariff_tooltip"];
     }
 
     public void RefreshUpdateInfo()
@@ -276,6 +323,15 @@ public class DashboardViewModel : BaseViewModel
         window.ShowDialog();
     }
 
+    private void OpenChangelog()
+    {
+        var window = new Windows.ChangelogWindow
+        {
+            Owner = GetWindowOwner()
+        };
+        window.ShowDialog();
+    }
+
     private Window? GetWindowOwner()
     {
         if (Application.Current == null)
@@ -335,6 +391,7 @@ public class DashboardViewModel : BaseViewModel
 
         UpdateSpendStats();
         BuildSpendChart();
+        UpdateTariffInfo();
     }
 
     private void UpdateSpendStats()

@@ -65,5 +65,19 @@
   "platform_tooltip_tokens": "Detailed token breakdown for this month:\n• Cache Hit: {0}\n• Cache Miss: {1}\n• Response: {2}",
   "platform_tooltip_tokens_v2": "Pro: Input: {0} | Cache: {1} | Output: {2}\nFlash: Input: {3} | Cache: {4} | Output: {5}\nTotal: Input: {6} | Cache: {7} | Output: {8}",
   "platform_loading": "Loading...",
-  "platform_login_title": "DeepSeek Platform Login"
+  "platform_login_title": "DeepSeek Platform Login",
+  "tooltip_tariff_peak": "🔥 Peak hours: full price (ends at {0})",
+  "tooltip_tariff_offpeak": "⚡ Off-peak: 50% discount (until {0})",
+  "tray_tariff_peak": "🔥 Peak (ends at {0})",
+  "tray_tariff_offpeak": "⚡ Off-peak (-50%, until {0})",
+  "dashboard_tariff_peak_title": "PEAK (Full price)",
+  "dashboard_tariff_offpeak_title": "OFF-PEAK (50% Off)",
+  "dashboard_tariff_peak_time": "Ends at {0} ({1})",
+  "dashboard_tariff_offpeak_time": "Next peak at {0} ({1})",
+  "dashboard_tariff_tooltip": "DeepSeek API pricing:\n• Peak hours: 01:00-04:00 and 06:00-10:00 UTC — standard pricing.\n• Off-peak: all other hours — 50% discount on all input and output tokens.",
+  "tray_changelog": "📋 Changelog",
+  "dashboard_changelog_btn": "📋 Changelog",
+  "changelog_title": "📋 Changelog — DeepSeek Credit Checker",
+  "changelog_update_banner": "🎉 Successfully updated to version {0}!",
+  "changelog_close_btn": "Close"
 }
