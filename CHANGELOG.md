@@ -1,5 +1,27 @@
 # Changelog – DeepSeek Credit Checker
 
+## v1.9.0 (2026-08-16)
+
+### ✨ New Features
+
+* **🔥 DeepSeek Peak / Off-Peak Tariff Tracking** – Full support for DeepSeek's new dynamic billing model (Peak hours: 01:00–04:00 and 06:00–10:00 UTC at standard rates; Off-Peak hours: 50% discount on all input & output tokens).
+  * **Tray Icon Indicator Badge** – Prominent top-right corner badge dot: 🔴 Red (Peak hours) / 🟢 Green (Off-Peak discount).
+  * **Tooltip & Context Menu** – Displays current tariff status and countdown to next rate transition.
+  * **Dashboard Banner** – Dedicated full-width status card on the main dashboard with icons (`🔥` / `⚡`), exact transition time, and detailed help tooltip.
+  * **Real-time Transition Timer** – Background 30-second timer updates tariff state smoothly without extra API calls.
+* **📋 In-App Changelog Window** – Brand new `ChangelogWindow` to view release notes and feature history inside the application.
+  * **Dashboard Button** – Added `📋 Historie změn` button to the top stats card.
+  * **Tray Menu Item** – Added Changelog action item to the tray context menu.
+  * **Automatic Post-Update Popup** – Displays the changelog with a highlighted `🎉 Successfully updated to version {version}!` banner upon app restart after updating.
+  * **Bilingual & Embedded Fallback** – Automatically loads Czech or English notes from disk or embedded resources.
+
+### 🛠️ Tech Stack
+
+* **🧩 TariffService & ChangelogService** – Decoupled services for UTC schedule evaluation and Markdown-to-FlowDocument parsing.
+* **🧪 116 Unit Tests** – Expanded test suite verifying peak/off-peak boundary cases, countdown transitions, and changelog version parsing.
+
+---
+
 ## v1.8.0 (2026-06-24)
 
 ### ✨ New Features

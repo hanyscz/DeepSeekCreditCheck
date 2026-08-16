@@ -1,5 +1,27 @@
 # Changelog CZ – DeepSeek Credit Checker
 
+## v1.9.0 (2026-08-16)
+
+### ✨ Nové funkce
+
+* **🔥 Sledování tarifních špiček DeepSeek (Peak / Off-Peak)** – Implementována kompletní podpora pro nový model zpoplatnění DeepSeek API (špička 01:00–04:00 a 06:00–10:00 UTC / 03:00–06:00 a 08:00–12:00 CEST za plnou cenu, mimo špičku 50% sleva na všechny tokeny).
+  * **Tray ikona s odznáčkem** – V pravém horním rohu ikony se zobrazuje výrazný odznáček: 🔴 červená (ve špičce) / 🟢 zelená (mimo špičku).
+  * **Tooltip & kontextové menu** – Zobrazují aktuální tarif a čas ukončení/zahájení špičky s přesným odpočtem.
+  * **Karta na Dashboardu** – Samostatný plnohodnotný stavový blok mezi zůstatkem a platformou s barevným odlišením, ikonami (`🔥` / `⚡`), časovými informacemi a nápovědou.
+  * **Plynulé přechody** – Interní 30sekundový časovač automaticky aktualizuje tarif i bez nutnosti volat API dotaz.
+* **📋 Okno historie změn (Changelog)** – Zbrusu nové okno `ChangelogWindow` pro pohodlné procházení novinek a úprav přímo v aplikaci.
+  * **Tlačítko na Dashboardu** – Tlačítko `📋 Historie změn` v horní kartě zůstatku.
+  * **Položka v Tray menu** – Nová položka v menu po kliknutí pravým tlačítkem.
+  * **Automatické zobrazení po aktualizaci** – Po startu aktualizované verze se automaticky otevře okno se zvýrazněným uvítacím bannerem `🎉 Aplikace byla úspěšně aktualizována na verzi {verze}!`.
+  * **Lokalizace a spolehlivost** – Automatické načtení češtiny/angličtiny s podporou vestavěných zdrojů (embedded resources).
+
+### 🛠️ Technický stack
+
+* **🧩 Služby TariffService & ChangelogService** – Modulární oddělení logiky výpočtu UTC časů tarifu a asynchronního načítání/parsování formátovaného Markdownu do WPF FlowDocumentu.
+* **🧪 116 jednotkových testů** – Rozšířené testy pokrývající hraniční časy špiček, odpočty přechodů i parsování verzí changelogu.
+
+---
+
 ## v1.8.0 (2026-06-24)
 
 ### ✨ Nové funkce

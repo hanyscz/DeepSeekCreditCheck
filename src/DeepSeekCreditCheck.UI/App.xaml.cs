@@ -97,6 +97,7 @@ public partial class App : Application
         services.AddSingleton<IPollingService, PollingService>();
         services.AddSingleton<IUpdateService, UpdateService>();
         services.AddSingleton<IStartupService, StartupService>();
+        services.AddSingleton<IChangelogService, ChangelogService>();
 
         // ViewModels
         services.AddSingleton<DashboardViewModel>();
@@ -151,11 +152,12 @@ public partial class App : Application
         {
             await polling.StartAsync(_pollCts.Token);
 
-            // Notifikace o úspěšné aktualizaci — s dostatečným odstupem, spolehlivé i po startu z batch skriptu
+            // Notifikace a zobrazení okna změn po úspěšné aktualizaci
             if (updateSuccessVersion != null)
             {
-                await Task.Delay(TimeSpan.FromSeconds(3));
+                await Task.Delay(TimeSpan.FromSeconds(2));
                 _trayIcon.ShowNotification(loc.Format("update_success_notify", updateSuccessVersion));
+                _trayIcon.OpenChangelog(updateSuccessVersion);
             }
 
             await Task.Delay(TimeSpan.FromSeconds(5));
