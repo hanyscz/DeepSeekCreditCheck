@@ -29,8 +29,8 @@ public class UsageRepository : IUsageRepository
             if (details != null && details.Count > 0)
             {
                 await conn.ExecuteAsync(
-                    @"INSERT INTO MonthlyUsageDetails (Year, Month, UtcDate, Model, ApiKeyName, ApiKeyMasked, Type, Price, Amount)
-                      VALUES (@Year, @Month, @UtcDate, @Model, @ApiKeyName, @ApiKeyMasked, @Type, @Price, @Amount)",
+                    @"INSERT INTO MonthlyUsageDetails (Year, Month, UtcDate, StartTimeIso, IsPeak, Model, ApiKeyName, ApiKeyMasked, Type, Price, Amount)
+                      VALUES (@Year, @Month, @UtcDate, @StartTimeIso, @IsPeak, @Model, @ApiKeyName, @ApiKeyMasked, @Type, @Price, @Amount)",
                     details,
                     transaction);
             }
@@ -49,8 +49,18 @@ public class UsageRepository : IUsageRepository
         using var conn = _db.CreateConnection();
         conn.Open();
         var results = await conn.QueryAsync<UsageDetailSnapshot>(
-            "SELECT * FROM MonthlyUsageDetails WHERE Year = @year AND Month = @month ORDER BY UtcDate, ApiKeyName, Model",
+            "SELECT * FROM MonthlyUsageDetails WHERE Year = @year AND Month = @month ORDER BY UtcDate, StartTimeIso, ApiKeyName, Model",
             new { year, month });
+        return results.AsList();
+    }
+
+    public async Task<IReadOnlyList<UsageDetailSnapshot>> GetUsageDetailsForDayAsync(int year, int month, string dateStr)
+    {
+        using var conn = _db.CreateConnection();
+        conn.Open();
+        var results = await conn.QueryAsync<UsageDetailSnapshot>(
+            "SELECT * FROM MonthlyUsageDetails WHERE Year = @year AND Month = @month AND UtcDate = @dateStr ORDER BY StartTimeIso, ApiKeyName, Model",
+            new { year, month, dateStr });
         return results.AsList();
     }
 

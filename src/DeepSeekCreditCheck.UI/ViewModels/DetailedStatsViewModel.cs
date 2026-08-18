@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -33,10 +34,21 @@ public class DetailedStatsViewModel : BaseViewModel
     private PlotModel? _modelPieModel;
     private PlotModel? _dailyTrendModel;
     private PlotModel? _monthlyComparisonModel;
+    private PlotModel? _tariffPieModel;
+    private PlotModel? _hourlyDistributionModel;
 
     private List<ApiKeyUsageItem> _apiKeyUsageList = new();
     private List<ModelUsageItem> _modelUsageList = new();
     private List<MonthlyComparisonItem> _monthlyComparisonList = new();
+    private List<TariffUsageItem> _tariffUsageList = new();
+
+    private string _peakTokensText = "0";
+    private string _peakCostText = "$ 0.00";
+    private string _peakRatioText = "0.0 %";
+    private string _offPeakTokensText = "0";
+    private string _offPeakCostText = "$ 0.00";
+    private string _offPeakRatioText = "0.0 %";
+    private string _savingsCostText = "$ 0.00";
 
     public string SelectedMonth
     {
@@ -86,12 +98,24 @@ public class DetailedStatsViewModel : BaseViewModel
     public PlotModel? ModelPieModel { get => _modelPieModel; set => SetProperty(ref _modelPieModel, value); }
     public PlotModel? DailyTrendModel { get => _dailyTrendModel; set => SetProperty(ref _dailyTrendModel, value); }
     public PlotModel? MonthlyComparisonModel { get => _monthlyComparisonModel; set => SetProperty(ref _monthlyComparisonModel, value); }
+    public PlotModel? TariffPieModel { get => _tariffPieModel; set => SetProperty(ref _tariffPieModel, value); }
+    public PlotModel? HourlyDistributionModel { get => _hourlyDistributionModel; set => SetProperty(ref _hourlyDistributionModel, value); }
 
     public List<ApiKeyUsageItem> ApiKeyUsageList { get => _apiKeyUsageList; set => SetProperty(ref _apiKeyUsageList, value); }
     public List<ModelUsageItem> ModelUsageList { get => _modelUsageList; set => SetProperty(ref _modelUsageList, value); }
     public List<MonthlyComparisonItem> MonthlyComparisonList { get => _monthlyComparisonList; set => SetProperty(ref _monthlyComparisonList, value); }
+    public List<TariffUsageItem> TariffUsageList { get => _tariffUsageList; set => SetProperty(ref _tariffUsageList, value); }
+
+    public string PeakTokensText { get => _peakTokensText; set => SetProperty(ref _peakTokensText, value); }
+    public string PeakCostText { get => _peakCostText; set => SetProperty(ref _peakCostText, value); }
+    public string PeakRatioText { get => _peakRatioText; set => SetProperty(ref _peakRatioText, value); }
+    public string OffPeakTokensText { get => _offPeakTokensText; set => SetProperty(ref _offPeakTokensText, value); }
+    public string OffPeakCostText { get => _offPeakCostText; set => SetProperty(ref _offPeakCostText, value); }
+    public string OffPeakRatioText { get => _offPeakRatioText; set => SetProperty(ref _offPeakRatioText, value); }
+    public string SavingsCostText { get => _savingsCostText; set => SetProperty(ref _savingsCostText, value); }
 
     public ICommand DownloadStatsCommand { get; }
+    public ICommand ImportFileCommand { get; }
     public ICommand PreviousMonthCommand { get; }
     public ICommand NextMonthCommand { get; }
 
@@ -102,6 +126,7 @@ public class DetailedStatsViewModel : BaseViewModel
         _settings = settings;
 
         DownloadStatsCommand = new RelayCommand(async _ => await DownloadStatsAsync());
+        ImportFileCommand = new RelayCommand(async _ => await ImportFileAsync());
         PreviousMonthCommand = new RelayCommand(_ => GoToPreviousMonth());
         NextMonthCommand = new RelayCommand(_ => GoToNextMonth(), _ => CanGoToNextMonth());
 
@@ -216,10 +241,20 @@ public class DetailedStatsViewModel : BaseViewModel
     {
         ApiKeyUsageList = new List<ApiKeyUsageItem>();
         ModelUsageList = new List<ModelUsageItem>();
+        TariffUsageList = new List<TariffUsageItem>();
         ApiKeyChartModel = null;
         ModelPieModel = null;
         DailyTrendModel = null;
         MonthlyComparisonModel = null;
+        TariffPieModel = null;
+        HourlyDistributionModel = null;
+        PeakTokensText = "0";
+        PeakCostText = "$ 0.00";
+        PeakRatioText = "0.0 %";
+        OffPeakTokensText = "0";
+        OffPeakCostText = "$ 0.00";
+        OffPeakRatioText = "0.0 %";
+        SavingsCostText = "$ 0.00";
     }
 
     private async Task DownloadStatsAsync()
@@ -261,7 +296,97 @@ public class DetailedStatsViewModel : BaseViewModel
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Chyba při stahování dat z platformy: {ex.Message}", "Chyba stahování", MessageBoxButton.OK, MessageBoxImage.Error);
+            Logger.Error("Chyba při stahování podrobných statistik z platformy", ex);
+            var msg = string.IsNullOrWhiteSpace(ex.Message) ? ex.ToString() : ex.Message;
+            MessageBox.Show($"Chyba při stahování dat z platformy:\n{msg}", "Chyba stahování", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task ImportFileAsync()
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Vyberte soubor statistik DeepSeek (ZIP nebo CSV)",
+            Filter = "Soubory statistik (*.zip;*.csv)|*.zip;*.csv|ZIP archivy (*.zip)|*.zip|CSV soubory (*.csv)|*.csv|Všechny soubory (*.*)|*.*",
+            Multiselect = false
+        };
+
+        if (dialog.ShowDialog() != true) return;
+
+        var filePath = dialog.FileName;
+        if (!File.Exists(filePath)) return;
+
+        IsLoading = true;
+        try
+        {
+            List<UsageDetailSnapshot> details;
+            var ext = Path.GetExtension(filePath).ToLowerInvariant();
+
+            int targetYear = 0;
+            int targetMonth = 0;
+            if (!string.IsNullOrEmpty(SelectedMonth))
+            {
+                var parts = SelectedMonth.Split('-');
+                if (parts.Length == 2 && int.TryParse(parts[0], out var y) && int.TryParse(parts[1], out var m))
+                {
+                    targetYear = y;
+                    targetMonth = m;
+                }
+            }
+
+            if (ext == ".zip")
+            {
+                var zipBytes = await File.ReadAllBytesAsync(filePath);
+                details = UsageCsvParser.ParseZip(zipBytes, targetYear, targetMonth);
+            }
+            else if (ext == ".csv")
+            {
+                var csvText = await File.ReadAllTextAsync(filePath, System.Text.Encoding.UTF8);
+                details = UsageCsvParser.ParseCsv(csvText, targetYear, targetMonth);
+            }
+            else
+            {
+                throw new InvalidOperationException("Nepodporovaný formát souboru. Vyberte soubor .zip nebo .csv.");
+            }
+
+            if (details.Count == 0)
+            {
+                MessageBox.Show("V souboru nebyly nalezeny žádné platné záznamy k importu.", "Prázdný soubor", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Zjištění roku a měsíce
+            var first = details.FirstOrDefault(d => d.Year > 0 && d.Month > 0);
+            int yearToSave = first?.Year ?? (targetYear > 0 ? targetYear : DateTime.Today.Year);
+            int monthToSave = first?.Month ?? (targetMonth > 0 ? targetMonth : DateTime.Today.Month);
+
+            // Nastavit rok a měsíc pro všechny záznamy
+            foreach (var d in details)
+            {
+                if (d.Year <= 0) d.Year = yearToSave;
+                if (d.Month <= 0) d.Month = monthToSave;
+            }
+
+            await _usageRepo.SaveUsageDetailsAsync(yearToSave, monthToSave, details);
+
+            var updateKey = $"PlatformUsageUpdated_{yearToSave}_{monthToSave:D2}";
+            await _settings.SetAsync(updateKey, DateTime.UtcNow.ToString("o"));
+
+            await RefreshAvailableMonthsAsync();
+            SelectedMonth = $"{yearToSave}-{monthToSave:D2}";
+            await LoadLocalDataAsync();
+
+            MessageBox.Show($"Úspěšně importováno {details.Count} záznamů pro období {yearToSave}-{monthToSave:D2}.", "Import dokončen", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Chyba při ručním importu souboru statistik", ex);
+            var msg = string.IsNullOrWhiteSpace(ex.Message) ? ex.ToString() : ex.Message;
+            MessageBox.Show($"Chyba při importu souboru:\n{msg}", "Chyba importu", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {
@@ -398,6 +523,197 @@ public class DetailedStatsViewModel : BaseViewModel
 
         // 6. Meziměsíční porovnání
         _ = BuildMonthlyComparisonChartAsync();
+
+        // 7. Analýza tarifu (Peak vs Off-Peak)
+        BuildTariffAnalytics(details, year, month);
+    }
+
+    private void BuildTariffAnalytics(IReadOnlyList<UsageDetailSnapshot> details, int year, int month)
+    {
+        long peakTokens = 0;
+        long offPeakTokens = 0;
+        double peakCost = 0;
+        double offPeakCost = 0;
+        double savings = 0;
+
+        foreach (var r in details)
+        {
+            bool isRowPeak = TariffService.DetermineIsPeak(r.Model, r.Type, r.Price, r.StartTimeIso);
+
+            if (r.Type != "request_count")
+            {
+                if (isRowPeak)
+                {
+                    peakTokens += r.Amount;
+                    if (r.Price.HasValue)
+                    {
+                        peakCost += r.Price.Value * r.Amount;
+                    }
+                }
+                else
+                {
+                    offPeakTokens += r.Amount;
+                    if (r.Price.HasValue)
+                    {
+                        var cost = r.Price.Value * r.Amount;
+                        offPeakCost += cost;
+                        // Sleva 50% znamená, že ušetřená částka = zaplacená částka
+                        savings += cost;
+                    }
+                }
+            }
+        }
+
+        long totalTariffTokens = peakTokens + offPeakTokens;
+        double peakRatio = totalTariffTokens > 0 ? (double)peakTokens / totalTariffTokens : 0;
+        double offPeakRatio = totalTariffTokens > 0 ? (double)offPeakTokens / totalTariffTokens : 0;
+
+        PeakTokensText = peakTokens.ToString("N0");
+        PeakCostText = $"$ {peakCost:F2}";
+        PeakRatioText = $"{peakRatio * 100:F1} %";
+
+        OffPeakTokensText = offPeakTokens.ToString("N0");
+        OffPeakCostText = $"$ {offPeakCost:F2}";
+        OffPeakRatioText = $"{offPeakRatio * 100:F1} %";
+
+        SavingsCostText = $"$ {savings:F2}";
+
+        // 1. Koláčový graf nákladů Peak vs Off-Peak
+        var tariffPie = CreateDarkPlotModel("Podíl nákladů podle tarifu");
+        var pieSeries = new PieSeries
+        {
+            StrokeThickness = 1.0,
+            InsideLabelPosition = 0.5,
+            AngleSpan = 360,
+            StartAngle = 0,
+            InsideLabelFormat = "{1}: {2:F1}%"
+        };
+        if (peakCost > 0 || offPeakCost > 0)
+        {
+            if (peakCost > 0)
+            {
+                pieSeries.Slices.Add(new PieSlice("Špička (Peak)", peakCost) { Fill = OxyColor.Parse("#FF7043") });
+            }
+            if (offPeakCost > 0)
+            {
+                pieSeries.Slices.Add(new PieSlice("Mimo špičku (Off-Peak)", offPeakCost) { Fill = OxyColor.Parse("#66BB6A") });
+            }
+            tariffPie.Series.Add(pieSeries);
+        }
+        TariffPieModel = tariffPie;
+
+        // 2. Denní vývoj nákladů podle tarifu (dny v měsíci)
+        var daysInMonth = DateTime.DaysInMonth(year, month);
+        var tariffTrendPlot = CreateDarkPlotModel("Denní vývoj nákladů: Špička vs. Mimo špičku (USD)");
+        var catAxis = new CategoryAxis
+        {
+            Position = AxisPosition.Bottom,
+            TextColor = OxyColor.Parse("#E0E0E0"),
+            TicklineColor = OxyColor.Parse("#444444"),
+            MajorGridlineStyle = LineStyle.Dot,
+            MajorGridlineColor = OxyColor.Parse("#2A2A2A")
+        };
+        for (int d = 1; d <= daysInMonth; d++)
+        {
+            catAxis.Labels.Add(d.ToString());
+        }
+        tariffTrendPlot.Axes.Add(catAxis);
+
+        var valAxis = new LinearAxis
+        {
+            Position = AxisPosition.Left,
+            TextColor = OxyColor.Parse("#E0E0E0"),
+            TicklineColor = OxyColor.Parse("#444444"),
+            MajorGridlineStyle = LineStyle.Dot,
+            MajorGridlineColor = OxyColor.Parse("#2A2A2A"),
+            StringFormat = "$0.00",
+            Minimum = 0
+        };
+        tariffTrendPlot.Axes.Add(valAxis);
+
+        var peakLine = new LineSeries
+        {
+            Title = "⚡ Ve špičce (Peak)",
+            Color = OxyColor.Parse("#FF7043"),
+            MarkerType = MarkerType.Circle,
+            MarkerSize = 4,
+            MarkerFill = OxyColor.Parse("#FF7043"),
+            StrokeThickness = 2
+        };
+
+        var offPeakLine = new LineSeries
+        {
+            Title = "🌙 Mimo špičku (Off-Peak)",
+            Color = OxyColor.Parse("#66BB6A"),
+            MarkerType = MarkerType.Circle,
+            MarkerSize = 4,
+            MarkerFill = OxyColor.Parse("#66BB6A"),
+            StrokeThickness = 2
+        };
+
+        for (int day = 1; day <= daysInMonth; day++)
+        {
+            var dayStr = $"{year}-{month:D2}-{day:D2}";
+            double dayPeakCost = 0;
+            double dayOffPeakCost = 0;
+
+            foreach (var r in details)
+            {
+                if (r.UtcDate == dayStr && r.Type != "request_count" && r.Price.HasValue)
+                {
+                    bool isRowPeak = TariffService.DetermineIsPeak(r.Model, r.Type, r.Price, r.StartTimeIso);
+                    var cost = r.Price.Value * r.Amount;
+                    if (isRowPeak)
+                    {
+                        dayPeakCost += cost;
+                    }
+                    else
+                    {
+                        dayOffPeakCost += cost;
+                    }
+                }
+            }
+
+            peakLine.Points.Add(new DataPoint(day - 1, dayPeakCost));
+            offPeakLine.Points.Add(new DataPoint(day - 1, dayOffPeakCost));
+        }
+
+        tariffTrendPlot.Series.Add(peakLine);
+        tariffTrendPlot.Series.Add(offPeakLine);
+        HourlyDistributionModel = tariffTrendPlot;
+
+        // 3. Tabulka tarifů
+        var tariffGroups = details.GroupBy(d => new
+        {
+            d.Model,
+            IsPeak = TariffService.DetermineIsPeak(d.Model, d.Type, d.Price, d.StartTimeIso)
+        });
+
+        var tariffItems = new List<TariffUsageItem>();
+        foreach (var g in tariffGroups)
+        {
+            var item = new TariffUsageItem
+            {
+                Model = g.Key.Model,
+                TariffName = g.Key.IsPeak ? "⚡ Špička (Peak)" : "🌙 Mimo špičku (Off-Peak - 50 %)",
+                IsPeak = g.Key.IsPeak,
+                RequestCount = g.Where(x => x.Type == "request_count").Sum(x => x.Amount),
+                CacheHitTokens = g.Where(x => x.Type == "input_cache_hit_tokens").Sum(x => x.Amount),
+                CacheMissTokens = g.Where(x => x.Type == "input_cache_miss_tokens").Sum(x => x.Amount),
+                OutputTokens = g.Where(x => x.Type == "output_tokens").Sum(x => x.Amount)
+            };
+            double cost = 0;
+            foreach (var r in g)
+            {
+                if (r.Type != "request_count" && r.Price.HasValue)
+                {
+                    cost += r.Price.Value * r.Amount;
+                }
+            }
+            item.Cost = cost;
+            tariffItems.Add(item);
+        }
+        TariffUsageList = tariffItems.OrderByDescending(x => x.Cost).ToList();
     }
 
     private void BuildDailyTrendChart(IReadOnlyList<UsageDetailSnapshot> details, int year, int month)
@@ -624,6 +940,27 @@ public class ModelUsageItem
 public class MonthlyComparisonItem
 {
     public string Month { get; set; } = "";
+    public long RequestCount { get; set; }
+    public long CacheHitTokens { get; set; }
+    public long CacheMissTokens { get; set; }
+    public long OutputTokens { get; set; }
+    public long TotalTokens => CacheHitTokens + CacheMissTokens + OutputTokens;
+    public double Cost { get; set; }
+    public string CostText => $"$ {Cost:F2}";
+
+    // Naformátovaný text s oddělovači tisíců
+    public string RequestCountText => RequestCount.ToString("N0");
+    public string CacheHitTokensText => CacheHitTokens.ToString("N0");
+    public string CacheMissTokensText => CacheMissTokens.ToString("N0");
+    public string OutputTokensText => OutputTokens.ToString("N0");
+    public string TotalTokensText => TotalTokens.ToString("N0");
+}
+
+public class TariffUsageItem
+{
+    public string Model { get; set; } = "";
+    public string TariffName { get; set; } = "";
+    public bool IsPeak { get; set; }
     public long RequestCount { get; set; }
     public long CacheHitTokens { get; set; }
     public long CacheMissTokens { get; set; }

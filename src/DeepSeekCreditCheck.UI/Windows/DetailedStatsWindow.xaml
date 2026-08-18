@@ -244,7 +244,10 @@
                 
                 <Button Content="🔄 Aktualizovat data" 
                         Command="{Binding DownloadStatsCommand}" 
-                        Style="{StaticResource ActionBtn}" Height="30" FontSize="12" Padding="12,0" Margin="12,0,0,0" />
+                        Style="{StaticResource ActionBtn}" Height="30" FontSize="12" Padding="12,0" Margin="12,0,0,0" ToolTip="Stáhnout podrobné statistiky z DeepSeek platformy" />
+                <Button Content="📁 Importovat soubor" 
+                        Command="{Binding ImportFileCommand}" 
+                        Style="{StaticResource ActionBtn}" Height="30" FontSize="12" Padding="12,0" Margin="8,0,0,0" ToolTip="Nahrát stažený ZIP nebo CSV soubor ze souborového systému" />
             </StackPanel>
         </Grid>
 
@@ -257,11 +260,16 @@
                     <TextBlock Text="📊" FontSize="64" HorizontalAlignment="Center" Margin="0,0,0,16" />
                     <TextBlock Text="Pro vybraný měsíc nejsou stažena žádná podrobná data." 
                                FontSize="16" Foreground="#B0BEC5" HorizontalAlignment="Center" Margin="0,0,0,4" />
-                    <TextBlock Text="Stažení ZIP souboru z platformy DeepSeek zabere pouze okamžik." 
+                    <TextBlock Text="Můžete data stáhnout přímo z platformy, nebo načíst dříve stažený ZIP/CSV soubor." 
                                FontSize="12" Foreground="#777" HorizontalAlignment="Center" Margin="0,0,0,24" />
-                    <Button Content="📥 Stáhnout a analyzovat data" 
-                            Command="{Binding DownloadStatsCommand}" 
-                            Style="{StaticResource ActionBtn}" Background="#0D47A1" BorderBrush="#1565C0" HorizontalAlignment="Center" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Button Content="📥 Stáhnout data z platformy" 
+                                Command="{Binding DownloadStatsCommand}" 
+                                Style="{StaticResource ActionBtn}" Background="#0D47A1" BorderBrush="#1565C0" Margin="0,0,12,0" />
+                        <Button Content="📁 Importovat ze souboru (ZIP/CSV)" 
+                                Command="{Binding ImportFileCommand}" 
+                                Style="{StaticResource ActionBtn}" />
+                    </StackPanel>
                 </StackPanel>
             </Border>
 
@@ -463,6 +471,133 @@
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
                                     <GridViewColumn Header="Náklady" Width="85">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding CostText}" HorizontalAlignment="Right" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                    </Grid>
+                </TabItem>
+
+                <!-- ZÁLOŽKA: ŠPIČKA (PEAK / OFF-PEAK) -->
+                <TabItem Header="⚡ Špička (Peak / Off-Peak)">
+                    <Grid Margin="0,12,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" /> <!-- KPI Karty -->
+                            <RowDefinition Height="240" />  <!-- Grafy -->
+                            <RowDefinition Height="*" />    <!-- Tabulka -->
+                        </Grid.RowDefinitions>
+
+                        <!-- 1. KPI Karty -->
+                        <Grid Grid.Row="0" Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Karta: Špička (Peak) -->
+                            <Border Grid.Column="0" Style="{StaticResource CardBorder}" Margin="0,0,8,0" Padding="14,10" BorderBrush="#E65100">
+                                <StackPanel>
+                                    <TextBlock Text="⚡ VE ŠPIČCE (PEAK)" FontSize="10" Foreground="#FF9800" FontWeight="Bold" />
+                                    <TextBlock Text="{Binding PeakCostText}" FontSize="18" FontWeight="Bold" Foreground="#FF7043" Margin="0,2,0,2" />
+                                    <TextBlock FontSize="11" Foreground="#B0BEC5">
+                                        <Run Text="Tokeny:" />
+                                        <Run Text="{Binding PeakTokensText}" FontWeight="SemiBold" Foreground="White" />
+                                        <Run Text="(" />
+                                        <Run Text="{Binding PeakRatioText}" Foreground="#FFB74D" />
+                                        <Run Text=")" />
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Karta: Mimo špičku (Off-Peak) -->
+                            <Border Grid.Column="1" Style="{StaticResource CardBorder}" Margin="4,0,4,0" Padding="14,10" BorderBrush="#2E7D32">
+                                <StackPanel>
+                                    <TextBlock Text="🌙 MIMO ŠPIČKU (OFF-PEAK – 50% SLEVA)" FontSize="10" Foreground="#81C784" FontWeight="Bold" />
+                                    <TextBlock Text="{Binding OffPeakCostText}" FontSize="18" FontWeight="Bold" Foreground="#66BB6A" Margin="0,2,0,2" />
+                                    <TextBlock FontSize="11" Foreground="#B0BEC5">
+                                        <Run Text="Tokeny:" />
+                                        <Run Text="{Binding OffPeakTokensText}" FontWeight="SemiBold" Foreground="White" />
+                                        <Run Text="(" />
+                                        <Run Text="{Binding OffPeakRatioText}" Foreground="#A5D6A7" />
+                                        <Run Text=")" />
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Karta: Ušetřeno -->
+                            <Border Grid.Column="2" Style="{StaticResource CardBorder}" Margin="8,0,0,0" Padding="14,10" BorderBrush="#0288D1">
+                                <StackPanel>
+                                    <TextBlock Text="💰 UŠETŘENO DÍKY SLEVOVÉMU OKNU" FontSize="10" Foreground="#4FC3F7" FontWeight="Bold" />
+                                    <TextBlock Text="{Binding SavingsCostText}" FontSize="18" FontWeight="Bold" Foreground="#4FC3F7" Margin="0,2,0,2" />
+                                    <TextBlock Text="50% sleva z ceny tokenů mimo špičku" FontSize="11" Foreground="#90CAF9" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <!-- 2. Grafy -->
+                        <Grid Grid.Row="1" Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="320" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0" Style="{StaticResource CardBorder}" Margin="0,0,8,0" Padding="6">
+                                <oxy:PlotView Model="{Binding TariffPieModel}" />
+                            </Border>
+
+                            <Border Grid.Column="1" Style="{StaticResource CardBorder}" Margin="4,0,0,0" Padding="6">
+                                <oxy:PlotView Model="{Binding HourlyDistributionModel}" />
+                            </Border>
+                        </Grid>
+
+                        <!-- 3. Tabulka tarifů -->
+                        <ListView Grid.Row="2" ItemsSource="{Binding TariffUsageList}">
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Header="Model" DisplayMemberBinding="{Binding Model}" Width="140" />
+                                    <GridViewColumn Header="Tarifní pásmo" DisplayMemberBinding="{Binding TariffName}" Width="190" />
+                                    <GridViewColumn Header="Volání" Width="70">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding RequestCountText}" HorizontalAlignment="Right" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Cache Hit" Width="100">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding CacheHitTokensText}" HorizontalAlignment="Right" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Input Miss" Width="100">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding CacheMissTokensText}" HorizontalAlignment="Right" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Output" Width="100">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding OutputTokensText}" HorizontalAlignment="Right" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Celkem tokenů" Width="110">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding TotalTokensText}" HorizontalAlignment="Right" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Náklady" Width="90">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding CostText}" HorizontalAlignment="Right" />

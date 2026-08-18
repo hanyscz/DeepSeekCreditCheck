@@ -131,7 +131,7 @@ namespace DeepSeekCreditCheck.Core.Services
 
         /// <summary>
         /// Stáhne ZIP s podrobnými CSV výkazy spotřeby a nákladů.
-        /// Volá: GET /api/v0/usage/export?month=X&year=Y
+        /// Volá: GET /api/v0/usage/export s parametry roku, měsíce a časového intervalu (start_date, end_date).
         /// </summary>
         public async Task<byte[]> GetUsageExportZipAsync(string sessionToken, int year, int month)
         {
@@ -140,13 +140,25 @@ namespace DeepSeekCreditCheck.Core.Services
                 throw new ArgumentException("Session token nesmí být prázdný.", nameof(sessionToken));
             }
  
+            var startDate = new DateTime(year, month, 1).ToString("yyyy-MM-dd");
+            var daysInMonth = DateTime.DaysInMonth(year, month);
+            var endDate = new DateTime(year, month, daysInMonth).ToString("yyyy-MM-dd");
+
             var uriBuilder = new UriBuilder($"{BaseUrl}/api/v0/usage/export");
             var query = HttpUtility.ParseQueryString(uriBuilder.Query);
             query["year"] = year.ToString();
             query["month"] = month.ToString();
+            query["start_date"] = startDate;
+            query["end_date"] = endDate;
+            query["date_start"] = startDate;
+            query["date_end"] = endDate;
             uriBuilder.Query = query.ToString();
  
             using var request = new HttpRequestMessage(HttpMethod.Get, uriBuilder.Uri);
+            request.Headers.Accept.Clear();
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/zip"));
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*"));
+
             var tokenValue = sessionToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) 
                 ? sessionToken.Substring(7) 
                 : sessionToken;
@@ -156,11 +168,47 @@ namespace DeepSeekCreditCheck.Core.Services
             var response = await _httpClient.SendAsync(request);
             if (!response.IsSuccessStatusCode)
             {
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized || 
+                    response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    throw new InvalidOperationException("Platnost přihlášení (session token) vypršela nebo je neplatná. Znovu se přihlaste v aplikaci.");
+                }
+
                 var errorContent = await response.Content.ReadAsStringAsync();
-                throw new HttpRequestException($"Chyba při volání export API ({response.StatusCode}): {errorContent}");
+                var msg = string.IsNullOrWhiteSpace(errorContent)
+                    ? $"Server vrátil chybu {(int)response.StatusCode} ({response.ReasonPhrase})."
+                    : $"Chyba při volání export API ({(int)response.StatusCode}): {errorContent}";
+                throw new HttpRequestException(msg);
             }
  
-            return await response.Content.ReadAsByteArrayAsync();
+            var bytes = await response.Content.ReadAsByteArrayAsync();
+            if (bytes == null || bytes.Length == 0)
+            {
+                throw new InvalidOperationException("Server vrátil prázdný soubor.");
+            }
+
+            // Pokud server vrátil JSON chybovou odpověď (např. { "code": 40001, "msg": "..." })
+            if (bytes.Length > 0 && bytes[0] == (byte)'{')
+            {
+                try
+                {
+                    var jsonStr = System.Text.Encoding.UTF8.GetString(bytes);
+                    var node = System.Text.Json.Nodes.JsonNode.Parse(jsonStr);
+                    if (node != null)
+                    {
+                        var code = node["code"]?.GetValue<int>() ?? 0;
+                        var msg = node["msg"]?.GetValue<string>() ?? jsonStr;
+                        if (code != 0)
+                        {
+                            throw new InvalidOperationException($"Chyba platformy DeepSeek: {msg} (kód {code})");
+                        }
+                    }
+                }
+                catch (InvalidOperationException) { throw; }
+                catch { /* Ignorovat chybu parsování JSONu, pokračovat na ZIP */ }
+            }
+
+            return bytes;
         }
 
         public void Dispose()

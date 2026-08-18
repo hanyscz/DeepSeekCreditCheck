@@ -36,6 +36,8 @@ public class AppDbContext
             Year            INTEGER NOT NULL,
             Month           INTEGER NOT NULL,
             UtcDate         TEXT    NOT NULL,
+            StartTimeIso    TEXT,
+            IsPeak          INTEGER NOT NULL DEFAULT 0,
             Model           TEXT    NOT NULL,
             ApiKeyName      TEXT    NOT NULL,
             ApiKeyMasked    TEXT    NOT NULL,
@@ -45,8 +47,13 @@ public class AppDbContext
         );
 
         CREATE INDEX IF NOT EXISTS idx_balance_timestamp ON BalanceSnapshots(Timestamp);
-        CREATE INDEX IF NOT EXISTS idx_monthly_usage_ym ON MonthlyUsageDetails(Year, Month);";
+        CREATE INDEX IF NOT EXISTS idx_monthly_usage_ym ON MonthlyUsageDetails(Year, Month);
+        CREATE INDEX IF NOT EXISTS idx_monthly_usage_ym_date ON MonthlyUsageDetails(Year, Month, UtcDate);";
 
         await connection.ExecuteAsync(sql);
+
+        // Bezpečná migrace pro existující databáze
+        try { await connection.ExecuteAsync("ALTER TABLE MonthlyUsageDetails ADD COLUMN StartTimeIso TEXT;"); } catch { }
+        try { await connection.ExecuteAsync("ALTER TABLE MonthlyUsageDetails ADD COLUMN IsPeak INTEGER NOT NULL DEFAULT 0;"); } catch { }
     }
 }

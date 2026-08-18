@@ -137,4 +137,66 @@ public class DeepSeekPlatformClientTests
         await Assert.ThrowsAsync<HttpRequestException>(
             () => client.GetUserSummaryAsync("bad-token"));
     }
+
+    [Fact]
+    public async Task GetUsageExportZip_ValidResponse_ReturnsBytes()
+    {
+        var dummyZip = new byte[] { 0x50, 0x4B, 0x03, 0x04, 0x00, 0x00 };
+        var handler = new Mock<HttpMessageHandler>();
+        handler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.OK,
+                Content = new ByteArrayContent(dummyZip)
+            });
+
+        var client = new DeepSeekPlatformClient(new HttpClient(handler.Object));
+        var result = await client.GetUsageExportZipAsync("test-token", 2026, 8);
+
+        Assert.NotNull(result);
+        Assert.Equal(dummyZip.Length, result.Length);
+    }
+
+    [Fact]
+    public async Task GetUsageExportZip_Unauthorized_ThrowsInvalidOperationException()
+    {
+        var handler = new Mock<HttpMessageHandler>();
+        handler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.Unauthorized,
+                Content = new StringContent("")
+            });
+
+        var client = new DeepSeekPlatformClient(new HttpClient(handler.Object));
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => client.GetUsageExportZipAsync("expired-token", 2026, 8));
+    }
+
+    [Fact]
+    public async Task GetUsageExportZip_JsonErrorCode_ThrowsInvalidOperationException()
+    {
+        var jsonError = @"{""code"": 40001, ""msg"": ""Session token expired""}";
+        var handler = new Mock<HttpMessageHandler>();
+        handler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.OK,
+                Content = new StringContent(jsonError)
+            });
+
+        var client = new DeepSeekPlatformClient(new HttpClient(handler.Object));
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => client.GetUsageExportZipAsync("token", 2026, 8));
+        Assert.Contains("Session token expired", ex.Message);
+    }
 }
