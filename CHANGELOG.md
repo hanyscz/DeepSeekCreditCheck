@@ -1,5 +1,25 @@
 # Changelog – DeepSeek Credit Checker
 
+## v1.10.0 (2026-08-18)
+
+### ✨ New Features
+
+* **⚡ Comprehensive Peak / Off-Peak Tariff Analytics** – Added a dedicated `⚡ Špička (Peak / Off-Peak)` tab in the *Detailed Statistics* window providing in-depth analysis of tariff consumption and cost optimization.
+  * **Summary KPI Cards** – View total cost, token counts, and ratios for **Peak hours**, **Off-Peak hours (50% discount)**, and the exact financial amount **Saved via Off-Peak discount**.
+  * **Tariff Cost Share Pie Chart** – Visual breakdown of spending between Peak and Off-Peak usage.
+  * **Daily Trend Chart (Peak vs. Off-Peak)** – Interactive plot spanning days 1..31 of the selected month with dual curves (⚡ Peak in orange, 🌙 Off-Peak in green).
+  * **Structured Usage Table** – Granular breakdown by model and tariff tier including request counts, token decomposition (Cache Hit, Input Miss, Output), total volume, and billed USD cost.
+  * **Robust Tariff Detection** – Determines tariff tier primarily from billed unit token prices (`price` in CSV export) with intelligent UTC window fallbacks (08:00–12:00 & 03:00–06:00 CEST).
+* **🧹 Cleaned Up Dashboard** – Removed redundant tariff indicator from the Today card on the main dashboard for a cleaner, streamlined layout.
+
+### 🛠️ Tech Stack
+
+* **🧩 SQLite Database Migration** – Added `StartTimeIso` and `IsPeak` columns to `MonthlyUsageDetails` with automatic non-destructive `ALTER TABLE` migration.
+* **🧩 TariffService.DetermineIsPeak Method** – Centralized deterministic logic for rate tier classification based on unit price and UTC timestamp.
+* **🧪 127 Unit Tests** – Expanded test suite verifying rate tiers across Pro/Flash models, UTC and local time offsets, and database persistence.
+
+---
+
 ## v1.9.0 (2026-08-16)
 
 ### ✨ New Features

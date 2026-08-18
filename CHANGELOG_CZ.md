@@ -1,5 +1,25 @@
 # Changelog CZ – DeepSeek Credit Checker
 
+## v1.10.0 (2026-08-18)
+
+### ✨ Nové funkce
+
+* **⚡ Podrobná analýza tarifních špiček (Peak / Off-Peak)** – Do okna *Podrobné statistiky* byla přidána zbrusu nová záložka `⚡ Špička (Peak / Off-Peak)` pro kompletní přehled a analýzu spotřeby ve špičkách a mimo špičku.
+  * **Souhrnné KPI karty** – Zobrazují celkové náklady, spotřebované tokeny a procentuální podíl pro **Ve špičce (Peak)**, **Mimo špičku (Off-Peak – 50% sleva)** a celkovou finanční částku **Ušetřeno díky slevovému oknu**.
+  * **Koláčový graf podílu nákladů** – Vizuální poměr finančních výdajů mezi špičkovým a mimošpičkovým provozem.
+  * **Graf denního vývoje (Špička vs. Mimo špičku)** – Interaktivní graf pokrývající dny 1..31 ve vybraném měsíci se samostatnými křivkami pro špičkový (oranžová) a slevový (zelená) provoz.
+  * **Strukturovaná tabulka spotřeby** – Detailní rozpis podle jednotlivých modelů a tarifních pásem včetně počtu požadavků, rozdělení tokenů (Cache Hit, Input Miss, Output), celkového objemu a vyúčtovaných nákladů v USD.
+  * **Inteligentní a spolehlivá detekce tarifu** – Vyhodnocení probíhá primárně podle přesné jednotkové ceny tokenů (`price`) z CSV exportu platformy (plná sazba vs. 50% sleva) s časovým fallbackem na UTC okna (08:00–12:00 a 03:00–06:00 našeho letního času CEST).
+* **🧹 Zjednodušení hlavní obrazovky Dashboardu** – Odstranění přebytečného rámečku špičky z karty dnešní spotřeby pro čistší, kompaktnější a přehlednější vzhled.
+
+### 🛠️ Technický stack
+
+* **🧩 Databázová migrace SQLite** – Tabulka `MonthlyUsageDetails` byla rozšířena o sloupce `StartTimeIso` a `IsPeak` s automatickou `ALTER TABLE` migrací pro zachování kompatibility s existujícími databázemi.
+* **🧩 Metoda TariffService.DetermineIsPeak** – Centralizovaná deterministická logika pro rozpoznání špičkového a mimošpičkového pásma.
+* **🧪 127 jednotkových testů** – Rozšířené testy pokrývající cenové hladiny modelů Pro a Flash, časová okna v UTC i lokálním čase a perzistenci v databázi.
+
+---
+
 ## v1.9.0 (2026-08-16)
 
 ### ✨ Nové funkce

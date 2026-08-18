@@ -14,7 +14,7 @@ public class ChangelogServiceTests
 
         Assert.NotNull(text);
         Assert.NotEmpty(text);
-        Assert.Contains("v1.9.0", text);
+        Assert.Contains("v1.10.0", text);
     }
 
     [Fact]
@@ -24,7 +24,7 @@ public class ChangelogServiceTests
 
         Assert.NotNull(text);
         Assert.NotEmpty(text);
-        Assert.Contains("v1.9.0", text);
+        Assert.Contains("v1.10.0", text);
     }
 
     [Fact]
@@ -35,9 +35,9 @@ public class ChangelogServiceTests
         Assert.NotNull(versions);
         Assert.NotEmpty(versions);
 
-        var v190 = versions.FirstOrDefault(v => v.Version.Contains("1.9.0"));
-        Assert.NotNull(v190);
-        Assert.Equal("2026-08-16", v190.Date);
-        Assert.NotEmpty(v190.Content);
+        var v1100 = versions.FirstOrDefault(v => v.Version.Contains("1.10.0"));
+        Assert.NotNull(v1100);
+        Assert.Equal("2026-08-18", v1100.Date);
+        Assert.NotEmpty(v1100.Content);
     }
 }

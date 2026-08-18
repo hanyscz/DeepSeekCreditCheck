@@ -24,6 +24,7 @@ public static class TariffService
     /// <summary>
     /// Určí, zda v daný UTC čas platí špičkový tarif (Peak).
     /// Špičková okna (UTC): 01:00 - 04:00 a 06:00 - 10:00.
+    /// V našem lokálním čase (CEST / UTC+2 v létě): 03:00 - 06:00 a 08:00 - 12:00.
     /// </summary>
     public static bool IsPeak(DateTime utcTime)
     {
@@ -35,6 +36,55 @@ public static class TariffService
 
         return (time >= p1Start && time < p1End) ||
                (time >= p2Start && time < p2End);
+    }
+
+    /// <summary>
+    /// Určí, zda řádek spotřeby proběhl ve špičce (Peak) na základě ceny tokenů nebo časového razítka.
+    /// </summary>
+    public static bool DetermineIsPeak(string model, string type, double? price, string startTimeIso)
+    {
+        // 1. Primární vyhodnocení podle přesné jednotkové ceny (price z CSV)
+        if (price.HasValue && price.Value > 0)
+        {
+            var isFlash = model.Contains("flash", StringComparison.OrdinalIgnoreCase) || model.Contains("chat", StringComparison.OrdinalIgnoreCase);
+            var isPro = model.Contains("pro", StringComparison.OrdinalIgnoreCase) || model.Contains("reasoner", StringComparison.OrdinalIgnoreCase);
+
+            if (isFlash)
+            {
+                if (type.Contains("miss", StringComparison.OrdinalIgnoreCase) && price.Value > 0.00000030) return true;
+                if (type.Contains("hit", StringComparison.OrdinalIgnoreCase) && price.Value > 0.000000010) return true;
+                if (type.Contains("output", StringComparison.OrdinalIgnoreCase) && price.Value > 0.00000090) return true;
+
+                if (type.Contains("miss", StringComparison.OrdinalIgnoreCase) && price.Value <= 0.00000030) return false;
+                if (type.Contains("hit", StringComparison.OrdinalIgnoreCase) && price.Value <= 0.000000010) return false;
+                if (type.Contains("output", StringComparison.OrdinalIgnoreCase) && price.Value <= 0.00000090) return false;
+            }
+            else if (isPro)
+            {
+                if (type.Contains("miss", StringComparison.OrdinalIgnoreCase) && price.Value > 0.00000090) return true;
+                if (type.Contains("hit", StringComparison.OrdinalIgnoreCase) && price.Value > 0.000000030) return true;
+                if (type.Contains("output", StringComparison.OrdinalIgnoreCase) && price.Value > 0.00000250) return true;
+
+                if (type.Contains("miss", StringComparison.OrdinalIgnoreCase) && price.Value <= 0.00000090) return false;
+                if (type.Contains("hit", StringComparison.OrdinalIgnoreCase) && price.Value <= 0.000000030) return false;
+                if (type.Contains("output", StringComparison.OrdinalIgnoreCase) && price.Value <= 0.00000250) return false;
+            }
+        }
+
+        // 2. Sekundární vyhodnocení podle časového razítka (start_time_iso)
+        if (!string.IsNullOrWhiteSpace(startTimeIso) && (startTimeIso.Contains("T") || startTimeIso.Contains(":")))
+        {
+            if (DateTimeOffset.TryParse(startTimeIso, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var dto))
+            {
+                return IsPeak(dto.UtcDateTime);
+            }
+            if (DateTime.TryParse(startTimeIso, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AdjustToUniversal, out var dt))
+            {
+                return IsPeak(dt.Kind == DateTimeKind.Utc ? dt : dt.ToUniversalTime());
+            }
+        }
+
+        return false;
     }
 
     /// <summary>

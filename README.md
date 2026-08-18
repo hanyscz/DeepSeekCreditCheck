@@ -1,7 +1,7 @@
 # DeepSeek Credit Checker
 
 **Monitor your DeepSeek API credit balance from the Windows system tray.**  
-*v1.9.0 — released 2026-08-16*
+*v1.10.0 — released 2026-08-18*
 
 ---
 
@@ -13,6 +13,7 @@ A lightweight Windows application that runs in the system tray and periodically 
 
 - **🎨 Balance on tray icon** — the icon dynamically shows your current balance as a number with status colors: green (OK), orange (approaching threshold), red (critical), blue (awaiting key)
 - **🔥 Peak / Off-Peak tariff tracking** — real-time monitoring of DeepSeek API rate tiers (Peak: 01:00–04:00 & 06:00–10:00 UTC at standard rates; Off-Peak: 50% discount on all tokens). Displayed via a badge dot on the tray icon (🔴 Red / 🟢 Green), tooltips, context menu, and a dedicated dashboard card with countdowns
+- **⚡ Peak / Off-Peak analytics in Detailed Statistics** — dedicated tab providing complete breakdown of Peak vs. Off-Peak token usage, cost ratios, exact savings calculated from 50% discount windows, daily trend curves across all days of the month, and granular model-by-tier tables based on exact billing prices
 - **💰 Balance in hover** — tooltip shows current balance, today's spend, prediction, tariff tier, and last update time
 - **📋 In-app Changelog** — explore release notes and updates directly in the app via the dashboard button, tray context menu, or automatic post-update popup
 - **📊 Dashboard** — hourly spend chart with calendar-day aggregation, daily/weekly/monthly spend stats, and dedicated tariff banner
@@ -107,6 +108,7 @@ Odlehčená Windows aplikace běžící v systémové trayi, která pravidelně 
 
 - **🎨 Zůstatek na ikoně** — ikona dynamicky zobrazuje aktuální zůstatek jako číslo s barvou: zelená (OK), oranžová (blíží se prahu), červená (pod prahem), modrá (čeká na klíč)
 - **🔥 Sledování tarifních špiček (Peak / Off-Peak)** — monitorování cenových pásem DeepSeek API v reálném čase (špička 01:00–04:00 a 06:00–10:00 UTC za plnou cenu, mimo špičku 50% sleva na všechny tokeny). Indikováno tečkou na tray ikoně (🔴 červená / 🟢 zelená), v tooltipu, v menu a na samostatném bloku dashboardu s odpočtem času
+- **⚡ Analýza špiček v podrobných statistikách (Peak / Off-Peak)** — samostatná záložka pro detailní přehled a rozbor spotřeby ve špičce a mimo špičku, poměru nákladů, celkové finanční úspory z 50% slevy, grafu denního vývoje napříč dny v měsíci a přehledné tabulky podle modelů a pásem na základě přesných vyúčtovaných cen
 - **💰 Zůstatek v trayi** — tooltip při najetí myší ukazuje zůstatek, dnešní spotřebu, predikci, tarif a čas
 - **📋 Historie změn v aplikaci** — procházení novinek a přehledu verzí přímo v okně aplikace přes tlačítko na dashboardu, položku v tray menu nebo automaticky po dokončení aktualizace
 - **📊 Dashboard** — graf hodinové spotřeby, dnešní spotřeba, průměr/den, statistiky za týden a měsíc a vyhrazený tarifní panel
