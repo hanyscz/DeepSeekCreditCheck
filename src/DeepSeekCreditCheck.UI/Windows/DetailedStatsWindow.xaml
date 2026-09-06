@@ -11,6 +11,16 @@
         TextOptions.TextFormattingMode="Display">
     
     <Window.Resources>
+        <Style TargetType="oxy:TrackerControl">
+            <Setter Property="Background" Value="#2A2A2A" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="#555" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Padding" Value="8,5" />
+        </Style>
+
         <!-- Převodník boolean na Visibility -->
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         
@@ -297,7 +307,7 @@
                             <ListView.View>
                                 <GridView>
                                     <GridViewColumn Header="Nástroj (Klíč)" DisplayMemberBinding="{Binding ApiKeyName}" Width="140" />
-                                    <GridViewColumn Header="Model" DisplayMemberBinding="{Binding Model}" Width="140" />
+                                    <GridViewColumn Header="Model" DisplayMemberBinding="{Binding Model}" Width="220" />
                                     <GridViewColumn Header="Maska" DisplayMemberBinding="{Binding ApiKeyMasked}" Width="90" />
                                     <GridViewColumn Header="Volání" Width="70">
                                         <GridViewColumn.CellTemplate>
@@ -364,7 +374,7 @@
                         <ListView Grid.Column="1" ItemsSource="{Binding ModelUsageList}">
                             <ListView.View>
                                 <GridView>
-                                    <GridViewColumn Header="Model" DisplayMemberBinding="{Binding Model}" Width="150" />
+                                    <GridViewColumn Header="Model" DisplayMemberBinding="{Binding Model}" Width="220" />
                                     <GridViewColumn Header="Požadavky" Width="90">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate>
@@ -435,42 +445,42 @@
                             <ListView.View>
                                 <GridView>
                                     <GridViewColumn Header="Měsíc" DisplayMemberBinding="{Binding Month}" Width="75" />
-                                    <GridViewColumn Header="Volání" Width="70">
+                                    <GridViewColumn Header="Volání" Width="75">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding RequestCountText}" HorizontalAlignment="Right" />
                                             </DataTemplate>
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
-                                    <GridViewColumn Header="Cache Hit" Width="95">
+                                    <GridViewColumn Header="Cache Hit" Width="125">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding CacheHitTokensText}" HorizontalAlignment="Right" />
                                             </DataTemplate>
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
-                                    <GridViewColumn Header="Input Miss" Width="95">
+                                    <GridViewColumn Header="Input Miss" Width="125">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding CacheMissTokensText}" HorizontalAlignment="Right" />
                                             </DataTemplate>
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
-                                    <GridViewColumn Header="Output" Width="95">
+                                    <GridViewColumn Header="Output" Width="110">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding OutputTokensText}" HorizontalAlignment="Right" />
                                             </DataTemplate>
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
-                                    <GridViewColumn Header="Celkem" Width="105">
+                                    <GridViewColumn Header="Celkem" Width="135">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding TotalTokensText}" HorizontalAlignment="Right" />
                                             </DataTemplate>
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
-                                    <GridViewColumn Header="Náklady" Width="85">
+                                    <GridViewColumn Header="Náklady" Width="95">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding CostText}" HorizontalAlignment="Right" />
@@ -560,8 +570,8 @@
                         <ListView Grid.Row="2" ItemsSource="{Binding TariffUsageList}">
                             <ListView.View>
                                 <GridView>
-                                    <GridViewColumn Header="Model" DisplayMemberBinding="{Binding Model}" Width="140" />
-                                    <GridViewColumn Header="Tarifní pásmo" DisplayMemberBinding="{Binding TariffName}" Width="190" />
+                                    <GridViewColumn Header="Model" DisplayMemberBinding="{Binding Model}" Width="220" />
+                                    <GridViewColumn Header="Tarifní pásmo" DisplayMemberBinding="{Binding TariffName}" Width="240" />
                                     <GridViewColumn Header="Volání" Width="70">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate>

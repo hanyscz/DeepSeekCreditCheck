@@ -1,5 +1,25 @@
 # Changelog – DeepSeek Credit Checker
 
+## v1.11.0 (2026-09-06)
+
+### ✨ New Features
+
+* **👁️ DeepSeek Vision Model Support** – Added dedicated rows with a distinctive purple indicator for DeepSeek's new Vision model (`deepseek-v4-flash-vision-exp`) on the main Dashboard across both *Monthly Usage* and *Today's Spend* cards.
+  * **Accurate Model Classification** – Vision models are recognized with priority before Flash to prevent them from being aggregated into Flash stats.
+  * **Updated Aggregations** – Total token sums, cost calculations, and cache hit ratio tooltips now calculate across Pro + Flash + Vision.
+* **📊 Layout Enhancements in Detailed Statistics** – Expanded and optimized column widths to ensure large numbers and model names are fully readable:
+  * **API Keys & Models Tabs** – Expanded *Model* column to 220 px to fit full model names.
+  * **Monthly Comparison Tab** – Widened *Calls*, *Cache Hit*, *Input Miss*, *Output*, *Total*, and *Cost* columns to accommodate token numbers in tens of millions without truncating.
+  * **Peak / Off-Peak Tab** – Expanded *Model* (220 px) and *Tariff Tier* (240 px) to display full descriptions (e.g. `🌙 Mimo špičku (Off-Peak - 50 %)`).
+* **🎨 Dark-Themed Chart Tooltips (OxyPlot Tracker)** – Resolved unreadable light-yellow tooltip bubbles across all OxyPlot charts. Implemented a modern dark styling (`#2A2A2A` background, white text, subtle border) with structured number formatting across all charts (API keys, model share, tariff split, daily trends, monthly comparison).
+
+### 🛠️ Tech Stack
+
+* **🧪 Unit Tests** – Expanded `DashboardViewModelTests` to verify parsing, token aggregation, and separation of the Vision model.
+* **🌐 Localization** – Updated English and Czech tooltips to include Vision model token breakdown.
+
+---
+
 ## v1.10.0 (2026-08-18)
 
 ### ✨ New Features

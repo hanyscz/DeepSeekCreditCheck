@@ -54,6 +54,12 @@ public class DashboardViewModel : BaseViewModel
     private string _platformFlashTotal = "—";
     private string _platformFlashCost = "—";
 
+    private string _platformVisionInput = "—";
+    private string _platformVisionCache = "—";
+    private string _platformVisionOutput = "—";
+    private string _platformVisionTotal = "—";
+    private string _platformVisionCost = "—";
+
     private string _platformTotalInput = "—";
     private string _platformTotalCache = "—";
     private string _platformTotalOutput = "—";
@@ -74,6 +80,12 @@ public class DashboardViewModel : BaseViewModel
     private string _platformTodayFlashOutput = "—";
     private string _platformTodayFlashTotal = "—";
     private string _platformTodayFlashCost = "—";
+
+    private string _platformTodayVisionInput = "—";
+    private string _platformTodayVisionCache = "—";
+    private string _platformTodayVisionOutput = "—";
+    private string _platformTodayVisionTotal = "—";
+    private string _platformTodayVisionCost = "—";
 
     private string _platformTodayTotalInput = "—";
     private string _platformTodayTotalCache = "—";
@@ -124,6 +136,12 @@ public class DashboardViewModel : BaseViewModel
     public string PlatformFlashTotal { get => _platformFlashTotal; set => SetProperty(ref _platformFlashTotal, value); }
     public string PlatformFlashCost { get => _platformFlashCost; set => SetProperty(ref _platformFlashCost, value); }
 
+    public string PlatformVisionInput { get => _platformVisionInput; set => SetProperty(ref _platformVisionInput, value); }
+    public string PlatformVisionCache { get => _platformVisionCache; set => SetProperty(ref _platformVisionCache, value); }
+    public string PlatformVisionOutput { get => _platformVisionOutput; set => SetProperty(ref _platformVisionOutput, value); }
+    public string PlatformVisionTotal { get => _platformVisionTotal; set => SetProperty(ref _platformVisionTotal, value); }
+    public string PlatformVisionCost { get => _platformVisionCost; set => SetProperty(ref _platformVisionCost, value); }
+
     public string PlatformTotalInput { get => _platformTotalInput; set => SetProperty(ref _platformTotalInput, value); }
     public string PlatformTotalCache { get => _platformTotalCache; set => SetProperty(ref _platformTotalCache, value); }
     public string PlatformTotalOutput { get => _platformTotalOutput; set => SetProperty(ref _platformTotalOutput, value); }
@@ -144,6 +162,12 @@ public class DashboardViewModel : BaseViewModel
     public string PlatformTodayFlashOutput { get => _platformTodayFlashOutput; set => SetProperty(ref _platformTodayFlashOutput, value); }
     public string PlatformTodayFlashTotal { get => _platformTodayFlashTotal; set => SetProperty(ref _platformTodayFlashTotal, value); }
     public string PlatformTodayFlashCost { get => _platformTodayFlashCost; set => SetProperty(ref _platformTodayFlashCost, value); }
+
+    public string PlatformTodayVisionInput { get => _platformTodayVisionInput; set => SetProperty(ref _platformTodayVisionInput, value); }
+    public string PlatformTodayVisionCache { get => _platformTodayVisionCache; set => SetProperty(ref _platformTodayVisionCache, value); }
+    public string PlatformTodayVisionOutput { get => _platformTodayVisionOutput; set => SetProperty(ref _platformTodayVisionOutput, value); }
+    public string PlatformTodayVisionTotal { get => _platformTodayVisionTotal; set => SetProperty(ref _platformTodayVisionTotal, value); }
+    public string PlatformTodayVisionCost { get => _platformTodayVisionCost; set => SetProperty(ref _platformTodayVisionCost, value); }
 
     public string PlatformTodayTotalInput { get => _platformTodayTotalInput; set => SetProperty(ref _platformTodayTotalInput, value); }
     public string PlatformTodayTotalCache { get => _platformTodayTotalCache; set => SetProperty(ref _platformTodayTotalCache, value); }
@@ -621,6 +645,12 @@ public class DashboardViewModel : BaseViewModel
             PlatformFlashTotal = "—";
             PlatformFlashCost = "—";
 
+            PlatformVisionInput = "—";
+            PlatformVisionCache = "—";
+            PlatformVisionOutput = "—";
+            PlatformVisionTotal = "—";
+            PlatformVisionCost = "—";
+
             PlatformTotalInput = "—";
             PlatformTotalCache = "—";
             PlatformTotalOutput = "—";
@@ -639,6 +669,11 @@ public class DashboardViewModel : BaseViewModel
             PlatformTodayFlashOutput = "—";
             PlatformTodayFlashTotal = "—";
             PlatformTodayFlashCost = "—";
+            PlatformTodayVisionInput = "—";
+            PlatformTodayVisionCache = "—";
+            PlatformTodayVisionOutput = "—";
+            PlatformTodayVisionTotal = "—";
+            PlatformTodayVisionCost = "—";
             PlatformTodayTotalInput = "—";
             PlatformTodayTotalCache = "—";
             PlatformTodayTotalOutput = "—";
@@ -678,6 +713,7 @@ public class DashboardViewModel : BaseViewModel
 
             long proCacheHit = 0, proCacheMiss = 0, proResponse = 0;
             long flashCacheHit = 0, flashCacheMiss = 0, flashResponse = 0;
+            long visionCacheHit = 0, visionCacheMiss = 0, visionResponse = 0;
 
             if (amountTotalNode is JsonArray arr)
             {
@@ -689,7 +725,13 @@ public class DashboardViewModel : BaseViewModel
                         var usageNode = modelObj["usage"];
                         var (hit, miss, resp) = ParseUsageAmount(usageNode);
 
-                        if (modelName.Contains("flash", StringComparison.OrdinalIgnoreCase))
+                        if (modelName.Contains("vision", StringComparison.OrdinalIgnoreCase))
+                        {
+                            visionCacheHit += hit;
+                            visionCacheMiss += miss;
+                            visionResponse += resp;
+                        }
+                        else if (modelName.Contains("flash", StringComparison.OrdinalIgnoreCase))
                         {
                             flashCacheHit += hit;
                             flashCacheMiss += miss;
@@ -712,9 +754,9 @@ public class DashboardViewModel : BaseViewModel
                 proResponse = resp;
             }
 
-            long totalCacheHit = proCacheHit + flashCacheHit;
-            long totalCacheMiss = proCacheMiss + flashCacheMiss;
-            long totalResponse = proResponse + flashResponse;
+            long totalCacheHit = proCacheHit + flashCacheHit + visionCacheHit;
+            long totalCacheMiss = proCacheMiss + flashCacheMiss + visionCacheMiss;
+            long totalResponse = proResponse + flashResponse + visionResponse;
             long totalTokens = totalCacheHit + totalCacheMiss + totalResponse;
 
             // Získání a rozdělení nákladů podle modelů
@@ -726,6 +768,7 @@ public class DashboardViewModel : BaseViewModel
 
             decimal proCost = 0;
             decimal flashCost = 0;
+            decimal visionCost = 0;
 
             if (costTotalNode is JsonArray costArr)
             {
@@ -737,7 +780,11 @@ public class DashboardViewModel : BaseViewModel
                         var usageNode = modelObj["usage"];
                         var costVal = ParseUsageCost(usageNode);
 
-                        if (modelName.Contains("flash", StringComparison.OrdinalIgnoreCase))
+                        if (modelName.Contains("vision", StringComparison.OrdinalIgnoreCase))
+                        {
+                            visionCost += costVal;
+                        }
+                        else if (modelName.Contains("flash", StringComparison.OrdinalIgnoreCase))
                         {
                             flashCost += costVal;
                         }
@@ -754,7 +801,7 @@ public class DashboardViewModel : BaseViewModel
                 proCost = costVal;
             }
 
-            decimal totalCost = proCost + flashCost;
+            decimal totalCost = proCost + flashCost + visionCost;
 
             // Uložení detailních textů pro zobrazení v UI tabulce
             PlatformProInput = $"{proCacheMiss:N0}";
@@ -770,6 +817,13 @@ public class DashboardViewModel : BaseViewModel
             long flashTotal = flashCacheMiss + flashCacheHit + flashResponse;
             PlatformFlashTotal = $"{flashTotal:N0}";
             PlatformFlashCost = $"${flashCost:F2}";
+
+            PlatformVisionInput = $"{visionCacheMiss:N0}";
+            PlatformVisionCache = $"{visionCacheHit:N0}";
+            PlatformVisionOutput = $"{visionResponse:N0}";
+            long visionTotal = visionCacheMiss + visionCacheHit + visionResponse;
+            PlatformVisionTotal = $"{visionTotal:N0}";
+            PlatformVisionCost = $"${visionCost:F2}";
 
             PlatformTotalInput = $"{totalCacheMiss:N0}";
             PlatformTotalCache = $"{totalCacheHit:N0}";
@@ -796,6 +850,7 @@ public class DashboardViewModel : BaseViewModel
 
                 long todayProCacheHit = 0, todayProCacheMiss = 0, todayProResponse = 0;
                 long todayFlashCacheHit = 0, todayFlashCacheMiss = 0, todayFlashResponse = 0;
+                long todayVisionCacheHit = 0, todayVisionCacheMiss = 0, todayVisionResponse = 0;
 
                 if (amountDaysNode is JsonArray daysArr)
                 {
@@ -813,7 +868,13 @@ public class DashboardViewModel : BaseViewModel
                                     var usageNode = modelObj["usage"];
                                     var (hit, miss, resp) = ParseUsageAmount(usageNode);
 
-                                    if (modelName.Contains("flash", StringComparison.OrdinalIgnoreCase))
+                                    if (modelName.Contains("vision", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        todayVisionCacheHit += hit;
+                                        todayVisionCacheMiss += miss;
+                                        todayVisionResponse += resp;
+                                    }
+                                    else if (modelName.Contains("flash", StringComparison.OrdinalIgnoreCase))
                                     {
                                         todayFlashCacheHit += hit;
                                         todayFlashCacheMiss += miss;
@@ -831,9 +892,9 @@ public class DashboardViewModel : BaseViewModel
                     }
                 }
 
-                long todayTotalCacheHit = todayProCacheHit + todayFlashCacheHit;
-                long todayTotalCacheMiss = todayProCacheMiss + todayFlashCacheMiss;
-                long todayTotalResponse = todayProResponse + todayFlashResponse;
+                long todayTotalCacheHit = todayProCacheHit + todayFlashCacheHit + todayVisionCacheHit;
+                long todayTotalCacheMiss = todayProCacheMiss + todayFlashCacheMiss + todayVisionCacheMiss;
+                long todayTotalResponse = todayProResponse + todayFlashResponse + todayVisionResponse;
                 long todayTotalTokens = todayTotalCacheHit + todayTotalCacheMiss + todayTotalResponse;
 
                 // 2. Zpracování nákladů pro dnešek
@@ -844,6 +905,7 @@ public class DashboardViewModel : BaseViewModel
 
                 decimal todayProCost = 0;
                 decimal todayFlashCost = 0;
+                decimal todayVisionCost = 0;
 
                 if (costDaysNode is JsonArray costDaysArr)
                 {
@@ -861,7 +923,11 @@ public class DashboardViewModel : BaseViewModel
                                     var usageNode = modelObj["usage"];
                                     var costVal = ParseUsageCost(usageNode);
 
-                                    if (modelName.Contains("flash", StringComparison.OrdinalIgnoreCase))
+                                    if (modelName.Contains("vision", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        todayVisionCost += costVal;
+                                    }
+                                    else if (modelName.Contains("flash", StringComparison.OrdinalIgnoreCase))
                                     {
                                         todayFlashCost += costVal;
                                     }
@@ -875,7 +941,7 @@ public class DashboardViewModel : BaseViewModel
                     }
                 }
 
-                decimal todayTotalCost = todayProCost + todayFlashCost;
+                decimal todayTotalCost = todayProCost + todayFlashCost + todayVisionCost;
 
                 // 3. Nastavení dnešních UI vlastností
                 PlatformTodayProInput = $"{todayProCacheMiss:N0}";
@@ -891,6 +957,13 @@ public class DashboardViewModel : BaseViewModel
                 long todayFlashTotal = todayFlashCacheMiss + todayFlashCacheHit + todayFlashResponse;
                 PlatformTodayFlashTotal = $"{todayFlashTotal:N0}";
                 PlatformTodayFlashCost = $"${todayFlashCost:F2}";
+
+                PlatformTodayVisionInput = $"{todayVisionCacheMiss:N0}";
+                PlatformTodayVisionCache = $"{todayVisionCacheHit:N0}";
+                PlatformTodayVisionOutput = $"{todayVisionResponse:N0}";
+                long todayVisionTotal = todayVisionCacheMiss + todayVisionCacheHit + todayVisionResponse;
+                PlatformTodayVisionTotal = $"{todayVisionTotal:N0}";
+                PlatformTodayVisionCost = $"${todayVisionCost:F2}";
 
                 PlatformTodayTotalInput = $"{todayTotalCacheMiss:N0}";
                 PlatformTodayTotalCache = $"{todayTotalCacheHit:N0}";
@@ -908,6 +981,7 @@ public class DashboardViewModel : BaseViewModel
             PlatformCacheRatio = loc.Format("platform_tooltip_tokens_v2", 
                 $"{proCacheMiss:N0}", $"{proCacheHit:N0}", $"{proResponse:N0}",
                 $"{flashCacheMiss:N0}", $"{flashCacheHit:N0}", $"{flashResponse:N0}",
+                $"{visionCacheMiss:N0}", $"{visionCacheHit:N0}", $"{visionResponse:N0}",
                 $"{totalCacheMiss:N0}", $"{totalCacheHit:N0}", $"{totalResponse:N0}");
         }
         catch (Exception ex)
@@ -929,6 +1003,12 @@ public class DashboardViewModel : BaseViewModel
             PlatformFlashTotal = "error";
             PlatformFlashCost = "error";
 
+            PlatformVisionInput = "error";
+            PlatformVisionCache = "error";
+            PlatformVisionOutput = "error";
+            PlatformVisionTotal = "error";
+            PlatformVisionCost = "error";
+
             PlatformTotalInput = "error";
             PlatformTotalCache = "error";
             PlatformTotalOutput = "error";
@@ -947,6 +1027,11 @@ public class DashboardViewModel : BaseViewModel
             PlatformTodayFlashOutput = "error";
             PlatformTodayFlashTotal = "error";
             PlatformTodayFlashCost = "error";
+            PlatformTodayVisionInput = "error";
+            PlatformTodayVisionCache = "error";
+            PlatformTodayVisionOutput = "error";
+            PlatformTodayVisionTotal = "error";
+            PlatformTodayVisionCost = "error";
             PlatformTodayTotalInput = "error";
             PlatformTodayTotalCache = "error";
             PlatformTodayTotalOutput = "error";
