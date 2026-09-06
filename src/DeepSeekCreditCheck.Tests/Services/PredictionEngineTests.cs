@@ -129,7 +129,7 @@ public class PredictionEngineTests
         history.Add(new BalanceSnapshot { Timestamp = new DateTime(2026, 6, 10, 7, 45, 0, DateTimeKind.Utc), TotalBalance = "20.92" });
 
         var currentBalance = 20.92m;
-        var result = engine.Calculate(history, currentBalance);
+        var result = engine.Calculate(history, currentBalance, new DateTime(2026, 6, 10, 8, 29, 0, DateTimeKind.Utc));
 
         // Průměrná denní spotřeba: jen z plných dnů (08.06 a 09.06)
         // ~(1.04 + 0.69) / 2 ≈ 0.87
@@ -153,27 +153,29 @@ public class PredictionEngineTests
     public void Calculate_WithThreeFullDays_ComputesRange()
     {
         var engine = new PredictionEngine();
+        var today = DateTime.Today;
 
         // 3 plné dny s RŮZNÝMI spotřebami (aby stdDev > 0).
-        // UTC časy volíme tak, aby po převodu na lokální (UTC+2) zůstaly ve stejném dni.
-        // 04:00 UTC = 06:00 local, 20:00 UTC = 22:00 local → rozpětí 16h (> 12h).
-
+        // Lokální časy s rozpětím 16h (> 12h)
         var history = new List<BalanceSnapshot>();
 
-        // Den 1: spend $2.00
-        history.Add(new BalanceSnapshot { Timestamp = new DateTime(2026, 6, 7, 4, 0, 0, DateTimeKind.Utc), TotalBalance = "100.00" });
-        history.Add(new BalanceSnapshot { Timestamp = new DateTime(2026, 6, 7, 20, 0, 0, DateTimeKind.Utc), TotalBalance = "98.00" });
+        // Den 1 (před 3 dny): spend $2.00
+        var day1Local = today.AddDays(-3);
+        history.Add(new BalanceSnapshot { Timestamp = DateTime.SpecifyKind(day1Local.AddHours(6), DateTimeKind.Local).ToUniversalTime(), TotalBalance = "100.00" });
+        history.Add(new BalanceSnapshot { Timestamp = DateTime.SpecifyKind(day1Local.AddHours(22), DateTimeKind.Local).ToUniversalTime(), TotalBalance = "98.00" });
 
-        // Den 2: spend $1.50
-        history.Add(new BalanceSnapshot { Timestamp = new DateTime(2026, 6, 8, 4, 0, 0, DateTimeKind.Utc), TotalBalance = "98.00" });
-        history.Add(new BalanceSnapshot { Timestamp = new DateTime(2026, 6, 8, 20, 0, 0, DateTimeKind.Utc), TotalBalance = "96.50" });
+        // Den 2 (před 2 dny): spend $1.50
+        var day2Local = today.AddDays(-2);
+        history.Add(new BalanceSnapshot { Timestamp = DateTime.SpecifyKind(day2Local.AddHours(6), DateTimeKind.Local).ToUniversalTime(), TotalBalance = "98.00" });
+        history.Add(new BalanceSnapshot { Timestamp = DateTime.SpecifyKind(day2Local.AddHours(22), DateTimeKind.Local).ToUniversalTime(), TotalBalance = "96.50" });
 
-        // Den 3: spend $1.00
-        history.Add(new BalanceSnapshot { Timestamp = new DateTime(2026, 6, 9, 4, 0, 0, DateTimeKind.Utc), TotalBalance = "96.50" });
-        history.Add(new BalanceSnapshot { Timestamp = new DateTime(2026, 6, 9, 20, 0, 0, DateTimeKind.Utc), TotalBalance = "95.50" });
+        // Den 3 (před 1 dnem): spend $1.00
+        var day3Local = today.AddDays(-1);
+        history.Add(new BalanceSnapshot { Timestamp = DateTime.SpecifyKind(day3Local.AddHours(6), DateTimeKind.Local).ToUniversalTime(), TotalBalance = "96.50" });
+        history.Add(new BalanceSnapshot { Timestamp = DateTime.SpecifyKind(day3Local.AddHours(22), DateTimeKind.Local).ToUniversalTime(), TotalBalance = "95.50" });
 
         // Dnešek (vynechán z průměru)
-        history.Add(new BalanceSnapshot { Timestamp = new DateTime(2026, 6, 10, 4, 0, 0, DateTimeKind.Utc), TotalBalance = "95.50" });
+        history.Add(new BalanceSnapshot { Timestamp = DateTime.SpecifyKind(today.AddHours(6), DateTimeKind.Local).ToUniversalTime(), TotalBalance = "95.50" });
 
         var result = engine.Calculate(history, 95.50m);
 

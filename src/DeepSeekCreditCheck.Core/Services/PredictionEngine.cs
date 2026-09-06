@@ -4,7 +4,7 @@ namespace DeepSeekCreditCheck.Core.Services;
 
 public class PredictionEngine
 {
-    public PredictionResult Calculate(IReadOnlyList<BalanceSnapshot> history, decimal currentBalance)
+    public PredictionResult Calculate(IReadOnlyList<BalanceSnapshot> history, decimal currentBalance, DateTime? referenceDate = null)
     {
         if (history.Count < 2 || currentBalance <= 0)
             return new PredictionResult { DaysRemaining = null, AvgDailySpend = 0, IsReliable = false };
@@ -14,7 +14,7 @@ public class PredictionEngine
         // Agregovat denní spotřebu po kalendářních dnech (lokální čas)
         // Každý den se spočítá SumPositiveDeltas (ignoruje dobíjení)
         // Částečné dny (< 12h rozpětí dat) jsou vyřazeny
-        var daySpends = AggregateDailySpend(sorted);
+        var daySpends = AggregateDailySpend(sorted, referenceDate);
 
         if (daySpends.Count < 1)
             return new PredictionResult { DaysRemaining = null, AvgDailySpend = 0, IsReliable = false };
@@ -60,7 +60,7 @@ public class PredictionEngine
         return result;
     }
 
-    private static List<DaySpend> AggregateDailySpend(List<BalanceSnapshot> sorted)
+    private static List<DaySpend> AggregateDailySpend(List<BalanceSnapshot> sorted, DateTime? referenceDate = null)
     {
         // Seskupit snapshoty po kalendářních dnech (lokální čas)
         var groups = sorted
@@ -69,7 +69,9 @@ public class PredictionEngine
             .ToList();
 
         var result = new List<DaySpend>();
-        var todayLocal = DateTime.Today; // dnešek (nekompletní) vynecháme
+        var todayLocal = referenceDate.HasValue
+            ? (referenceDate.Value.Kind == DateTimeKind.Utc ? referenceDate.Value.ToLocalTime() : referenceDate.Value).Date
+            : DateTime.Today; // dnešek (nekompletní) vynecháme
 
         foreach (var group in groups)
         {
@@ -95,7 +97,7 @@ public class PredictionEngine
         }
 
         // Omezit na posledních 90 dní
-        var cutoff = DateTime.Today.AddDays(-90);
+        var cutoff = todayLocal.AddDays(-90);
         return result.Where(d => d.Day >= cutoff).TakeLast(90).ToList();
     }
 
