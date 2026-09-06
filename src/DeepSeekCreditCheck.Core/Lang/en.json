@@ -63,7 +63,7 @@
   "platform_cost_label": "COST (PLATFORM)",
   "platform_not_connected": "Do you want to track detailed token usage and exact costs?",
   "platform_tooltip_tokens": "Detailed token breakdown for this month:\n• Cache Hit: {0}\n• Cache Miss: {1}\n• Response: {2}",
-  "platform_tooltip_tokens_v2": "Pro: Input: {0} | Cache: {1} | Output: {2}\nFlash: Input: {3} | Cache: {4} | Output: {5}\nTotal: Input: {6} | Cache: {7} | Output: {8}",
+  "platform_tooltip_tokens_v2": "Pro: Input: {0} | Cache: {1} | Output: {2}\nFlash: Input: {3} | Cache: {4} | Output: {5}\nVision: Input: {6} | Cache: {7} | Output: {8}\nTotal: Input: {9} | Cache: {10} | Output: {11}",
   "platform_loading": "Loading...",
   "platform_login_title": "DeepSeek Platform Login",
   "tooltip_tariff_peak": "🔥 Peak hours: full price (ends at {0})",

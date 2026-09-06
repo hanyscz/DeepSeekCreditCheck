@@ -1,5 +1,25 @@
 # Changelog CZ – DeepSeek Credit Checker
 
+## v1.11.0 (2026-09-06)
+
+### ✨ Nové funkce
+
+* **👁️ Podpora nového modelu DeepSeek Vision** – Na hlavní Dashboard (v kartách *Měsíční přehled* i *Dnešní přehled*) byl přidán plnohodnotný řádek s fialovým indikátorem pro model Vision (`deepseek-v4-flash-vision-exp`).
+  * **Přesné dělení modelů** – Modely Vision jsou detekovány prioritně před modelem Flash, takže nedochází k jejich nechtěnému sloučení.
+  * **Aktualizované součty** – Měsíční i denní souhrny a poměr cache nyní počítají s kombinací Pro + Flash + Vision.
+* **📊 Vylepšení rozvržení v okně Podrobné statistiky** – Optimalizace šířek sloupců pro zobrazení kompletních a neoříznutých dat:
+  * **API klíče a Modely** – Sloupec *Model* rozšířen na 220 px (zobrazuje se celý název modelu včetně vision variant).
+  * **Srovnání měsíců** – Sloupce *Volání*, *Cache Hit*, *Input Miss*, *Output*, *Celkem* a *Náklady* byly rozšířeny pro pohodlné zobrazení velkých čísel v desítkách milionů bez zalamování a ořezu.
+  * **Špička (Peak / Off-Peak)** – Sloupec *Model* (220 px) a *Tarifní pásmo* (240 px) pro zobrazení kompletního textu tarifu (`🌙 Mimo špičku (Off-Peak - 50 %)`).
+* **🎨 Tmavé tooltipy grafů (OxyPlot Tracker)** – Opraveno výchozí světle žluté pozadí bublin v grafech. Všechny grafy (náklady API klíčů, podíl modelů, tarifní pásma, denní trendy, srovnání měsíců) nyní využívají elegantní tmavý styl s kontrastním bílým textem a přehledným formátováním.
+
+### 🛠️ Technický stack
+
+* **🧪 Aktualizace testů** – Jednotkové testy pro `DashboardViewModel` rozšířeny o testování nového modelu Vision, denních souhrnů a součtů.
+* **🌐 Lokalizace** – Doplněn rozpad tokenů o model Vision v nápovědných tooltipech v češtině i angličtině.
+
+---
+
 ## v1.10.0 (2026-08-18)
 
 ### ✨ Nové funkce

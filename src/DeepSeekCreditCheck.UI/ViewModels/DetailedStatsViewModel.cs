@@ -495,7 +495,8 @@ public class DetailedStatsViewModel : BaseViewModel
                 TextColor = OxyColor.Parse("#E0E0E0"),
                 LabelPlacement = LabelPlacement.Outside,
                 LabelFormatString = "${0:F2}",
-                FillColor = OxyColor.Parse("#4FC3F7")
+                FillColor = OxyColor.Parse("#4FC3F7"),
+                TrackerFormatString = "{0}\nKlíč: {1}\nNáklady: ${2:F4}"
             };
             foreach (var item in chartItems)
             {
@@ -507,7 +508,7 @@ public class DetailedStatsViewModel : BaseViewModel
 
         // 4. Koláčový graf modelů
         var modelPie = CreateDarkPlotModel("Podíl nákladů podle modelů");
-        var mdlPieSeries = new PieSeries { StrokeThickness = 1.0, InsideLabelPosition = 0.5, AngleSpan = 360, StartAngle = 0, InsideLabelFormat = "{1}: {2:F2}%" };
+        var mdlPieSeries = new PieSeries { StrokeThickness = 1.0, InsideLabelPosition = 0.5, AngleSpan = 360, StartAngle = 0, InsideLabelFormat = "{1}: {2:F2}%", TrackerFormatString = "{1}: ${2:F4} ({3:F1} %)" };
         foreach (var item in ModelUsageList.Where(x => x.Cost > 0))
         {
             mdlPieSeries.Slices.Add(new PieSlice(item.Model, item.Cost));
@@ -586,7 +587,8 @@ public class DetailedStatsViewModel : BaseViewModel
             InsideLabelPosition = 0.5,
             AngleSpan = 360,
             StartAngle = 0,
-            InsideLabelFormat = "{1}: {2:F1}%"
+            InsideLabelFormat = "{1}: {2:F1}%",
+            TrackerFormatString = "{1}: ${2:F2} ({3:F1} %)"
         };
         if (peakCost > 0 || offPeakCost > 0)
         {
@@ -638,7 +640,8 @@ public class DetailedStatsViewModel : BaseViewModel
             MarkerType = MarkerType.Circle,
             MarkerSize = 4,
             MarkerFill = OxyColor.Parse("#FF7043"),
-            StrokeThickness = 2
+            StrokeThickness = 2,
+            TrackerFormatString = "{0}\nDen: {2}\nNáklady: ${4:F4}"
         };
 
         var offPeakLine = new LineSeries
@@ -648,7 +651,8 @@ public class DetailedStatsViewModel : BaseViewModel
             MarkerType = MarkerType.Circle,
             MarkerSize = 4,
             MarkerFill = OxyColor.Parse("#66BB6A"),
-            StrokeThickness = 2
+            StrokeThickness = 2,
+            TrackerFormatString = "{0}\nDen: {2}\nNáklady: ${4:F4}"
         };
 
         for (int day = 1; day <= daysInMonth; day++)
@@ -754,7 +758,8 @@ public class DetailedStatsViewModel : BaseViewModel
                 Title = key,
                 MarkerType = MarkerType.Circle,
                 MarkerSize = 3,
-                StrokeThickness = 2
+                StrokeThickness = 2,
+                TrackerFormatString = "{0}\nDen: {2}\nNáklady: ${4:F4}"
             };
 
             var keyData = details.Where(x => x.ApiKeyName == key).ToList();
@@ -820,7 +825,8 @@ public class DetailedStatsViewModel : BaseViewModel
             TextColor = OxyColor.Parse("#E0E0E0"),
             LabelPlacement = LabelPlacement.Outside,
             LabelFormatString = "${0:F2}",
-            FillColor = OxyColor.Parse("#4FC3F7")
+            FillColor = OxyColor.Parse("#4FC3F7"),
+            TrackerFormatString = "{0}\nMěsíc: {1}\nNáklady: ${2:F2}"
         };
         foreach (var t in sorted)
         {

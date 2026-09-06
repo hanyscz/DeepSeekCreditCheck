@@ -171,6 +171,16 @@ public class DashboardViewModelTests
                                 new JsonObject { ["type"] = "PROMPT_CACHE_MISS_TOKEN", ["amount"] = 200000 },
                                 new JsonObject { ["type"] = "RESPONSE_TOKEN", ["amount"] = 30000 }
                             }
+                        },
+                        new JsonObject
+                        {
+                            ["model"] = "deepseek-v4-flash-vision-exp",
+                            ["usage"] = new JsonArray
+                            {
+                                new JsonObject { ["type"] = "PROMPT_CACHE_HIT_TOKEN", ["amount"] = 500000 },
+                                new JsonObject { ["type"] = "PROMPT_CACHE_MISS_TOKEN", ["amount"] = 80000 },
+                                new JsonObject { ["type"] = "RESPONSE_TOKEN", ["amount"] = 10000 }
+                            }
                         }
                     },
                     ["days"] = new JsonArray
@@ -209,6 +219,16 @@ public class DashboardViewModelTests
                                         new JsonObject { ["type"] = "PROMPT_CACHE_MISS_TOKEN", ["amount"] = 4000 },
                                         new JsonObject { ["type"] = "RESPONSE_TOKEN", ["amount"] = 400 }
                                     }
+                                },
+                                new JsonObject
+                                {
+                                    ["model"] = "deepseek-v4-flash-vision-exp", // Vision model
+                                    ["usage"] = new JsonArray
+                                    {
+                                        new JsonObject { ["type"] = "PROMPT_CACHE_HIT_TOKEN", ["amount"] = 8000 },
+                                        new JsonObject { ["type"] = "PROMPT_CACHE_MISS_TOKEN", ["amount"] = 1500 },
+                                        new JsonObject { ["type"] = "RESPONSE_TOKEN", ["amount"] = 200 }
+                                    }
                                 }
                             }
                         }
@@ -235,6 +255,14 @@ public class DashboardViewModelTests
                                 ["usage"] = new JsonArray
                                 {
                                     new JsonObject { ["type"] = "PROMPT_CACHE_HIT_TOKEN", ["cost"] = 5.50 }
+                                }
+                            },
+                            new JsonObject
+                            {
+                                ["model"] = "deepseek-v4-flash-vision-exp",
+                                ["usage"] = new JsonArray
+                                {
+                                    new JsonObject { ["type"] = "PROMPT_CACHE_HIT_TOKEN", ["cost"] = 1.20 }
                                 }
                             }
                         },
@@ -267,6 +295,14 @@ public class DashboardViewModelTests
                                         ["usage"] = new JsonArray
                                         {
                                             new JsonObject { ["type"] = "PROMPT_CACHE_HIT_TOKEN", ["cost"] = 0.01 }
+                                        }
+                                    },
+                                    new JsonObject
+                                    {
+                                        ["model"] = "deepseek-v4-flash-vision-exp",
+                                        ["usage"] = new JsonArray
+                                        {
+                                            new JsonObject { ["type"] = "PROMPT_CACHE_HIT_TOKEN", ["cost"] = 0.03 }
                                         }
                                     }
                                 }
@@ -302,7 +338,14 @@ public class DashboardViewModelTests
         Assert.True(vm.IsPlatformTodayVisible);
         Assert.Equal(todayStr, vm.PlatformTodayDateText);
 
-        // Pro model:
+        // Monthly Vision:
+        Assert.Equal($"80{grpSep}000", vm.PlatformVisionInput);
+        Assert.Equal($"500{grpSep}000", vm.PlatformVisionCache);
+        Assert.Equal($"10{grpSep}000", vm.PlatformVisionOutput);
+        Assert.Equal($"590{grpSep}000", vm.PlatformVisionTotal);
+        Assert.Equal($"$1{decSep}20", vm.PlatformVisionCost);
+
+        // Pro model (today):
         // Input: 2000 + 1000 = 3000
         // Cache: 10000 + 5000 = 15000
         // Output: 300 + 100 = 400
@@ -314,7 +357,7 @@ public class DashboardViewModelTests
         Assert.Equal($"18{grpSep}400", vm.PlatformTodayProTotal);
         Assert.Equal($"$0{decSep}07", vm.PlatformTodayProCost);
 
-        // Flash model:
+        // Flash model (today):
         // Input: 4000
         // Cache: 20000
         // Output: 400
@@ -326,17 +369,29 @@ public class DashboardViewModelTests
         Assert.Equal($"24{grpSep}400", vm.PlatformTodayFlashTotal);
         Assert.Equal($"$0{decSep}01", vm.PlatformTodayFlashCost);
 
-        // Celkem:
-        // Input: 6000 (Pro input 3000 + Flash input 4000 = 7000)
-        // Cache: 35000
-        // Output: 800
-        // Total: 42800
-        // Cost: 0.08 => $0.08
-        Assert.Equal($"7{grpSep}000", vm.PlatformTodayTotalInput);
-        Assert.Equal($"35{grpSep}000", vm.PlatformTodayTotalCache);
-        Assert.Equal("800", vm.PlatformTodayTotalOutput);
-        Assert.Equal($"42{grpSep}800", vm.PlatformTodayTotalTotal);
-        Assert.Equal($"$0{decSep}08", vm.PlatformTodayTotalCost);
+        // Vision model (today):
+        // Input: 1500
+        // Cache: 8000
+        // Output: 200
+        // Total: 9700
+        // Cost: 0.03 => $0.03
+        Assert.Equal($"1{grpSep}500", vm.PlatformTodayVisionInput);
+        Assert.Equal($"8{grpSep}000", vm.PlatformTodayVisionCache);
+        Assert.Equal("200", vm.PlatformTodayVisionOutput);
+        Assert.Equal($"9{grpSep}700", vm.PlatformTodayVisionTotal);
+        Assert.Equal($"$0{decSep}03", vm.PlatformTodayVisionCost);
+
+        // Celkem (today):
+        // Input: 3000 + 4000 + 1500 = 8500
+        // Cache: 15000 + 20000 + 8000 = 43000
+        // Output: 400 + 400 + 200 = 1000
+        // Total: 18400 + 24400 + 9700 = 52500
+        // Cost: 0.07 + 0.01 + 0.03 = 0.11 => $0.11
+        Assert.Equal($"8{grpSep}500", vm.PlatformTodayTotalInput);
+        Assert.Equal($"43{grpSep}000", vm.PlatformTodayTotalCache);
+        Assert.Equal($"1{grpSep}000", vm.PlatformTodayTotalOutput);
+        Assert.Equal($"52{grpSep}500", vm.PlatformTodayTotalTotal);
+        Assert.Equal($"$0{decSep}11", vm.PlatformTodayTotalCost);
     }
 
     [Fact]
