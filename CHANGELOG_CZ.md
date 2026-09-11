@@ -1,5 +1,20 @@
 # Changelog CZ – DeepSeek Credit Checker
 
+## v1.12.0 (2026-09-11)
+
+### ✨ Nové funkce
+
+* **⚡ Podpora nového modelu DeepSeek-V4.1-Flash (`deepseek-flash`)** – Přizpůsobení aplikace novému vlajkovému multimodálnímu modelu DeepSeeku a jeho sníženému ceníku (Peak: $0.30 Miss, $0.006 Hit, $1.20 Output; Off-Peak: 50% sleva na všechny tokeny).
+* **🧹 Čistý a kompaktní Flash Dashboard** – Zjednodušení karet *Měsíční přehled* i *Dnešní přehled* na hlavním dashboardu na přehledný jednořádkový přehled modelu Flash. Výška karet byla zmenšena a layout sjednocen, přičemž historická data a rozpad starších modelů (Pro, Vision) zůstávají plně zachovány v okně *Podrobné statistiky*.
+* **🔥 Aktualizovaná detekce tarifních špiček** – Metoda `TariffService.DetermineIsPeak` byla rozšířena o adaptivní rozhodovací prahy schopné přesně rozlišit špičku a 50% slevu pro nové jednotkové ceny modelu `deepseek-flash` a současně zachovat 100% zpětnou kompatibilitu pro dřívější data modelů V4.
+
+### 🛠️ Technický stack
+
+* **🧪 Nové jednotkové testy** – Sada testů v `TariffStatsTests` rozšířena o ověřování nových cenových hladin `deepseek-flash` (Input Miss, Cache Hit, Output) pro špičkový i mimoměsíční provoz.
+* **📐 Optimalizace XAML layoutu** – Úprava definic řádků a minimálních výšek v `DashboardWindow.xaml` pro čistý vzhled bez prázdných řádků.
+
+---
+
 ## v1.11.0 (2026-09-06)
 
 ### ✨ Nové funkce

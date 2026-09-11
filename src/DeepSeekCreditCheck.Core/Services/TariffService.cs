@@ -51,23 +51,32 @@ public static class TariffService
 
             if (isFlash)
             {
-                if (type.Contains("miss", StringComparison.OrdinalIgnoreCase) && price.Value > 0.00000030) return true;
-                if (type.Contains("hit", StringComparison.OrdinalIgnoreCase) && price.Value > 0.000000010) return true;
-                if (type.Contains("output", StringComparison.OrdinalIgnoreCase) && price.Value > 0.00000090) return true;
+                // Input miss: Nový Peak = 0.30/M (3.0e-7), Off-Peak = 0.15/M (1.5e-7). Starý Peak = 0.44/M, Off-Peak = 0.22/M.
+                if (type.Contains("miss", StringComparison.OrdinalIgnoreCase))
+                    return price.Value >= 0.00000026;
 
-                if (type.Contains("miss", StringComparison.OrdinalIgnoreCase) && price.Value <= 0.00000030) return false;
-                if (type.Contains("hit", StringComparison.OrdinalIgnoreCase) && price.Value <= 0.000000010) return false;
-                if (type.Contains("output", StringComparison.OrdinalIgnoreCase) && price.Value <= 0.00000090) return false;
+                // Cache hit: Nový Peak = 0.006/M (6.0e-9), Off-Peak = 0.003/M (3.0e-9). Starý Peak = 0.014/M, Off-Peak = 0.007/M.
+                if (type.Contains("hit", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (price.Value <= 0.0000000065)
+                        return price.Value >= 0.0000000045; // Nová hladina V4.1-Flash (Peak: 6.0e-9, Off-Peak: 3.0e-9)
+                    return price.Value >= 0.000000010;      // Stará hladina V4-Flash (Peak: 14.0e-9, Off-Peak: 7.0e-9)
+                }
+
+                // Output: Nový Peak = 1.20/M (1.2e-6), Off-Peak = 0.60/M (6.0e-7). Starý Peak = 1.32/M, Off-Peak = 0.66/M.
+                if (type.Contains("output", StringComparison.OrdinalIgnoreCase))
+                    return price.Value >= 0.00000090;
             }
             else if (isPro)
             {
-                if (type.Contains("miss", StringComparison.OrdinalIgnoreCase) && price.Value > 0.00000090) return true;
-                if (type.Contains("hit", StringComparison.OrdinalIgnoreCase) && price.Value > 0.000000030) return true;
-                if (type.Contains("output", StringComparison.OrdinalIgnoreCase) && price.Value > 0.00000250) return true;
+                if (type.Contains("miss", StringComparison.OrdinalIgnoreCase))
+                    return price.Value >= 0.00000090;
 
-                if (type.Contains("miss", StringComparison.OrdinalIgnoreCase) && price.Value <= 0.00000090) return false;
-                if (type.Contains("hit", StringComparison.OrdinalIgnoreCase) && price.Value <= 0.000000030) return false;
-                if (type.Contains("output", StringComparison.OrdinalIgnoreCase) && price.Value <= 0.00000250) return false;
+                if (type.Contains("hit", StringComparison.OrdinalIgnoreCase))
+                    return price.Value >= 0.0000000050;
+
+                if (type.Contains("output", StringComparison.OrdinalIgnoreCase))
+                    return price.Value >= 0.00000250;
             }
         }
 

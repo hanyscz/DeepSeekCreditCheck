@@ -111,13 +111,26 @@ public class TariffStatsTests
     [Fact]
     public void DetermineIsPeak_ByPrice_DetectsPeakAndOffPeakAccurately()
     {
-        // Flash Input Miss: Off-Peak = 0.00000022 ($0.22/M), Peak = 0.00000044 ($0.44/M)
+        // V4-Flash (starší ceny) Input Miss: Off-Peak = 0.00000022 ($0.22/M), Peak = 0.00000044 ($0.44/M)
         Assert.True(TariffService.DetermineIsPeak("deepseek-v4-flash", "input_cache_miss_tokens", 0.00000044, ""));
         Assert.False(TariffService.DetermineIsPeak("deepseek-v4-flash", "input_cache_miss_tokens", 0.00000022, ""));
 
-        // Flash Output: Off-Peak = 0.00000066 ($0.66/M), Peak = 0.00000132 ($1.32/M)
+        // V4-Flash (starší ceny) Output: Off-Peak = 0.00000066 ($0.66/M), Peak = 0.00000132 ($1.32/M)
         Assert.True(TariffService.DetermineIsPeak("deepseek-v4-flash", "output_tokens", 0.00000132, ""));
         Assert.False(TariffService.DetermineIsPeak("deepseek-v4-flash", "output_tokens", 0.00000066, ""));
+
+        // V4.1-Flash (deepseek-flash nové ceny od 10.9.2026):
+        // Input Miss: Off-Peak = 0.00000015 ($0.15/M), Peak = 0.00000030 ($0.30/M)
+        Assert.True(TariffService.DetermineIsPeak("deepseek-flash", "input_cache_miss_tokens", 0.00000030, ""));
+        Assert.False(TariffService.DetermineIsPeak("deepseek-flash", "input_cache_miss_tokens", 0.00000015, ""));
+
+        // Input Hit: Off-Peak = 0.000000003 ($0.003/M), Peak = 0.000000006 ($0.006/M)
+        Assert.True(TariffService.DetermineIsPeak("deepseek-flash", "input_cache_hit_tokens", 0.000000006, ""));
+        Assert.False(TariffService.DetermineIsPeak("deepseek-flash", "input_cache_hit_tokens", 0.000000003, ""));
+
+        // Output: Off-Peak = 0.00000060 ($0.60/M), Peak = 0.00000120 ($1.20/M)
+        Assert.True(TariffService.DetermineIsPeak("deepseek-flash", "output_tokens", 0.00000120, ""));
+        Assert.False(TariffService.DetermineIsPeak("deepseek-flash", "output_tokens", 0.00000060, ""));
 
         // Pro Input Miss: Off-Peak = 0.00000066 ($0.66/M), Peak = 0.00000132 ($1.32/M)
         Assert.True(TariffService.DetermineIsPeak("deepseek-v4-pro", "input_cache_miss_tokens", 0.00000132, ""));

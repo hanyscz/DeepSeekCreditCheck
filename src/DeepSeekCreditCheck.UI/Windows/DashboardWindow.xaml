@@ -217,7 +217,7 @@
         </Border>
 
         <!-- Platform Section -->
-        <Border Grid.Row="2" Style="{StaticResource CardBorder}" Padding="16,14" MinHeight="145" Margin="0,0,0,12">
+        <Border Grid.Row="2" Style="{StaticResource CardBorder}" Padding="16,14" MinHeight="100" Margin="0,0,0,12">
             <Grid>
                 <!-- Grid pro nepřihlášený stav -->
                 <Grid Visibility="{Binding IsPlatformDisconnected, Converter={StaticResource BoolToVis}}">
@@ -255,14 +255,11 @@
                                 Margin="0,10,0,0" FontSize="11" Padding="8,4" HorizontalAlignment="Left" />
                     </StackPanel>
 
-                    <!-- Tabulka s detailní spotřebou a cenou -->
+                    <!-- Tabulka s detailní spotřebou a cenou (pouze Flash) -->
                     <Grid Grid.Column="1" Margin="20,0,20,0" VerticalAlignment="Center">
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="15" /> <!-- Hlavička -->
-                            <RowDefinition Height="19" /> <!-- Pro -->
-                            <RowDefinition Height="19" /> <!-- Flash -->
-                            <RowDefinition Height="19" /> <!-- Vision -->
-                            <RowDefinition Height="19" /> <!-- Celkem -->
+                            <RowDefinition Height="18" /> <!-- Hlavička -->
+                            <RowDefinition Height="24" /> <!-- Flash -->
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="55" /> <!-- Model name -->
@@ -284,40 +281,13 @@
                         <!-- Oddělovač pod hlavičkou -->
                         <Border Grid.Row="0" Grid.ColumnSpan="6" BorderBrush="#3A3A3A" BorderThickness="0,0,0,1" VerticalAlignment="Bottom" Height="2" Margin="0,0,0,0" />
 
-                        <!-- Pro Řádek (Řádek 1) -->
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Pro" FontSize="11" Foreground="#E0E0E0" VerticalAlignment="Center" Margin="0,3" />
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding PlatformProInput}" FontSize="11" Foreground="#B0BEC5" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                        <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding PlatformProCache}" FontSize="11" Foreground="#90A4AE" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                        <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding PlatformProOutput}" FontSize="11" Foreground="#B0BEC5" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                        <TextBlock Grid.Row="1" Grid.Column="4" Text="{Binding PlatformProTotal}" FontSize="11" Foreground="#81C784" FontWeight="SemiBold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                        <TextBlock Grid.Row="1" Grid.Column="5" Text="{Binding PlatformProCost}" FontSize="11" Foreground="#FFB74D" FontWeight="SemiBold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-
-                        <!-- Flash Řádek (Řádek 2) -->
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Flash" FontSize="11" Foreground="#E0E0E0" VerticalAlignment="Center" Margin="0,3" />
-                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding PlatformFlashInput}" FontSize="11" Foreground="#B0BEC5" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                        <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding PlatformFlashCache}" FontSize="11" Foreground="#90A4AE" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                        <TextBlock Grid.Row="2" Grid.Column="3" Text="{Binding PlatformFlashOutput}" FontSize="11" Foreground="#B0BEC5" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                        <TextBlock Grid.Row="2" Grid.Column="4" Text="{Binding PlatformFlashTotal}" FontSize="11" Foreground="#81C784" FontWeight="SemiBold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                        <TextBlock Grid.Row="2" Grid.Column="5" Text="{Binding PlatformFlashCost}" FontSize="11" Foreground="#FFB74D" FontWeight="SemiBold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-
-                        <!-- Vision Řádek (Řádek 3) -->
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Vision" FontSize="11" Foreground="#E0E0E0" VerticalAlignment="Center" Margin="0,3" />
-                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding PlatformVisionInput}" FontSize="11" Foreground="#B0BEC5" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                        <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding PlatformVisionCache}" FontSize="11" Foreground="#90A4AE" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                        <TextBlock Grid.Row="3" Grid.Column="3" Text="{Binding PlatformVisionOutput}" FontSize="11" Foreground="#B0BEC5" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                        <TextBlock Grid.Row="3" Grid.Column="4" Text="{Binding PlatformVisionTotal}" FontSize="11" Foreground="#81C784" FontWeight="SemiBold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                        <TextBlock Grid.Row="3" Grid.Column="5" Text="{Binding PlatformVisionCost}" FontSize="11" Foreground="#FFB74D" FontWeight="SemiBold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-
-                        <!-- Oddělovač nad Celkem -->
-                        <Border Grid.Row="3" Grid.ColumnSpan="6" BorderBrush="#444" BorderThickness="0,0,0,1" VerticalAlignment="Bottom" Height="2" Margin="0,0,0,0" />
-
-                        <!-- Celkem Řádek (Řádek 4) -->
-                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Celkem" FontSize="11" Foreground="White" FontWeight="Bold" VerticalAlignment="Center" Margin="0,3" />
-                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding PlatformTotalInput}" FontSize="11" Foreground="White" FontWeight="Bold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                        <TextBlock Grid.Row="4" Grid.Column="2" Text="{Binding PlatformTotalCache}" FontSize="11" Foreground="#A5D6A7" FontWeight="Bold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                        <TextBlock Grid.Row="4" Grid.Column="3" Text="{Binding PlatformTotalOutput}" FontSize="11" Foreground="White" FontWeight="Bold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                        <TextBlock Grid.Row="4" Grid.Column="4" Text="{Binding PlatformTotalTotal}" FontSize="12" Foreground="#81C784" FontWeight="Bold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                        <TextBlock Grid.Row="4" Grid.Column="5" Text="{Binding PlatformTotalCost}" FontSize="12" Foreground="#FFB74D" FontWeight="Bold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
+                        <!-- Flash Řádek (Řádek 1) -->
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Flash" FontSize="12" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,3" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding PlatformFlashInput}" FontSize="12" Foreground="#B0BEC5" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
+                        <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding PlatformFlashCache}" FontSize="12" Foreground="#A5D6A7" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
+                        <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding PlatformFlashOutput}" FontSize="12" Foreground="#B0BEC5" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
+                        <TextBlock Grid.Row="1" Grid.Column="4" Text="{Binding PlatformFlashTotal}" FontSize="12" Foreground="#81C784" FontWeight="Bold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
+                        <TextBlock Grid.Row="1" Grid.Column="5" Text="{Binding PlatformFlashCost}" FontSize="12" Foreground="#FFB74D" FontWeight="Bold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
                     </Grid>
 
                     <Button Grid.Column="2" Content="Odpojit" 
@@ -327,7 +297,7 @@
         </Border>
 
         <!-- Platform Section - Today -->
-        <Border Grid.Row="3" Style="{StaticResource CardBorder}" Padding="16,14" MinHeight="125" Margin="0,0,0,12"
+        <Border Grid.Row="3" Style="{StaticResource CardBorder}" Padding="16,14" MinHeight="95" Margin="0,0,0,12"
                 Visibility="{Binding IsPlatformTodayVisible, Converter={StaticResource BoolToVis}}">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -344,14 +314,11 @@
                     </TextBlock>
                 </StackPanel>
 
-                <!-- Tabulka s detailní dnešní spotřebou a cenou -->
+                <!-- Tabulka s detailní dnešní spotřebou a cenou (pouze Flash) -->
                 <Grid Grid.Column="1" Margin="20,0,20,0" VerticalAlignment="Center">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="15" /> <!-- Hlavička -->
-                        <RowDefinition Height="19" /> <!-- Pro -->
-                        <RowDefinition Height="19" /> <!-- Flash -->
-                        <RowDefinition Height="19" /> <!-- Vision -->
-                        <RowDefinition Height="19" /> <!-- Celkem -->
+                        <RowDefinition Height="18" /> <!-- Hlavička -->
+                        <RowDefinition Height="24" /> <!-- Flash -->
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="55" /> <!-- Model name -->
@@ -373,40 +340,13 @@
                     <!-- Oddělovač pod hlavičkou -->
                     <Border Grid.Row="0" Grid.ColumnSpan="6" BorderBrush="#3A3A3A" BorderThickness="0,0,0,1" VerticalAlignment="Bottom" Height="2" />
 
-                    <!-- Pro Řádek (Řádek 1) -->
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Pro" FontSize="11" Foreground="#E0E0E0" VerticalAlignment="Center" Margin="0,3" />
-                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding PlatformTodayProInput}" FontSize="11" Foreground="#B0BEC5" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                    <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding PlatformTodayProCache}" FontSize="11" Foreground="#90A4AE" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                    <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding PlatformTodayProOutput}" FontSize="11" Foreground="#B0BEC5" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                    <TextBlock Grid.Row="1" Grid.Column="4" Text="{Binding PlatformTodayProTotal}" FontSize="11" Foreground="#81C784" FontWeight="SemiBold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                    <TextBlock Grid.Row="1" Grid.Column="5" Text="{Binding PlatformTodayProCost}" FontSize="11" Foreground="#FFB74D" FontWeight="SemiBold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-
-                    <!-- Flash Řádek (Řádek 2) -->
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Flash" FontSize="11" Foreground="#E0E0E0" VerticalAlignment="Center" Margin="0,3" />
-                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding PlatformTodayFlashInput}" FontSize="11" Foreground="#B0BEC5" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                    <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding PlatformTodayFlashCache}" FontSize="11" Foreground="#90A4AE" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                    <TextBlock Grid.Row="2" Grid.Column="3" Text="{Binding PlatformTodayFlashOutput}" FontSize="11" Foreground="#B0BEC5" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                    <TextBlock Grid.Row="2" Grid.Column="4" Text="{Binding PlatformTodayFlashTotal}" FontSize="11" Foreground="#81C784" FontWeight="SemiBold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                    <TextBlock Grid.Row="2" Grid.Column="5" Text="{Binding PlatformTodayFlashCost}" FontSize="11" Foreground="#FFB74D" FontWeight="SemiBold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-
-                    <!-- Vision Řádek (Řádek 3) -->
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Vision" FontSize="11" Foreground="#E0E0E0" VerticalAlignment="Center" Margin="0,3" />
-                    <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding PlatformTodayVisionInput}" FontSize="11" Foreground="#B0BEC5" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                    <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding PlatformTodayVisionCache}" FontSize="11" Foreground="#90A4AE" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                    <TextBlock Grid.Row="3" Grid.Column="3" Text="{Binding PlatformTodayVisionOutput}" FontSize="11" Foreground="#B0BEC5" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                    <TextBlock Grid.Row="3" Grid.Column="4" Text="{Binding PlatformTodayVisionTotal}" FontSize="11" Foreground="#81C784" FontWeight="SemiBold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                    <TextBlock Grid.Row="3" Grid.Column="5" Text="{Binding PlatformTodayVisionCost}" FontSize="11" Foreground="#FFB74D" FontWeight="SemiBold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-
-                    <!-- Oddělovač nad Celkem -->
-                    <Border Grid.Row="3" Grid.ColumnSpan="6" BorderBrush="#444" BorderThickness="0,0,0,1" VerticalAlignment="Bottom" Height="2" />
-
-                    <!-- Celkem Řádek (Řádek 4) -->
-                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Celkem" FontSize="11" Foreground="White" FontWeight="Bold" VerticalAlignment="Center" Margin="0,3" />
-                    <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding PlatformTodayTotalInput}" FontSize="11" Foreground="White" FontWeight="Bold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                    <TextBlock Grid.Row="4" Grid.Column="2" Text="{Binding PlatformTodayTotalCache}" FontSize="11" Foreground="#A5D6A7" FontWeight="Bold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                    <TextBlock Grid.Row="4" Grid.Column="3" Text="{Binding PlatformTodayTotalOutput}" FontSize="11" Foreground="White" FontWeight="Bold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                    <TextBlock Grid.Row="4" Grid.Column="4" Text="{Binding PlatformTodayTotalTotal}" FontSize="12" Foreground="#81C784" FontWeight="Bold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
-                    <TextBlock Grid.Row="4" Grid.Column="5" Text="{Binding PlatformTodayTotalCost}" FontSize="12" Foreground="#FFB74D" FontWeight="Bold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
+                    <!-- Flash Řádek (Řádek 1) -->
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Flash" FontSize="12" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,3" />
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding PlatformTodayFlashInput}" FontSize="12" Foreground="#B0BEC5" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
+                    <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding PlatformTodayFlashCache}" FontSize="12" Foreground="#A5D6A7" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
+                    <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding PlatformTodayFlashOutput}" FontSize="12" Foreground="#B0BEC5" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
+                    <TextBlock Grid.Row="1" Grid.Column="4" Text="{Binding PlatformTodayFlashTotal}" FontSize="12" Foreground="#81C784" FontWeight="Bold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
+                    <TextBlock Grid.Row="1" Grid.Column="5" Text="{Binding PlatformTodayFlashCost}" FontSize="12" Foreground="#FFB74D" FontWeight="Bold" TextAlignment="Right" VerticalAlignment="Center" Margin="0,3" />
                 </Grid>
             </Grid>
         </Border>

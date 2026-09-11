@@ -1,5 +1,20 @@
 # Changelog – DeepSeek Credit Checker
 
+## v1.12.0 (2026-09-11)
+
+### ✨ New Features
+
+* **⚡ DeepSeek-V4.1-Flash (`deepseek-flash`) Support** – Updated the application for DeepSeek's new flagship multimodal model and its reduced pricing tier (Peak: $0.30 Miss, $0.006 Hit, $1.20 Output; Off-Peak: 50% discount across all tokens).
+* **🧹 Clean and Compact Flash Dashboard** – Streamlined both *Monthly Usage* and *Today's Spend* cards on the main dashboard to a single, clean Flash row. Reduced card heights and consolidated layout while preserving all multi-model historical breakdowns (Pro, Vision) in the *Detailed Statistics* window.
+* **🔥 Updated Peak / Off-Peak Tariff Detection** – Enhanced `TariffService.DetermineIsPeak` with adaptive rate thresholds capable of accurately distinguishing peak hours from 50% discount off-peak hours based on the new `deepseek-flash` unit prices, while retaining 100% backward compatibility for legacy V4 rate tiers.
+
+### 🛠️ Tech Stack
+
+* **🧪 New Unit Tests** – Expanded test suite in `TariffStatsTests` covering unit price verification for `deepseek-flash` (Input Miss, Cache Hit, Output) in both Peak and Off-Peak scenarios.
+* **📐 XAML Layout Optimization** – Adjusted row definitions and minimum heights in `DashboardWindow.xaml` for a clean layout without empty rows.
+
+---
+
 ## v1.11.0 (2026-09-06)
 
 ### ✨ New Features

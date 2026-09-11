@@ -59,7 +59,7 @@
                 <TextBlock Text="Changelog aplikace" FontSize="20" FontWeight="Bold" Foreground="#4FC3F7" Margin="0,2,0,2" />
                 <TextBlock Text="Přehled novinek, vylepšení a úprav v jednotlivých verzích" FontSize="12" Foreground="#999" />
             </StackPanel>
-            <TextBlock Grid.Column="1" x:Name="CurrentVersionText" Text="v1.11.0" FontSize="13" Foreground="#81C784" 
+            <TextBlock Grid.Column="1" x:Name="CurrentVersionText" Text="v1.12.0" FontSize="13" Foreground="#81C784" 
                        FontWeight="SemiBold" VerticalAlignment="Top" Margin="0,4,0,0" />
         </Grid>
 
