@@ -23,6 +23,8 @@ public class DashboardViewModel : BaseViewModel
     private bool _historyLoaded = false;
 
     private string _currentBalance = "—";
+    private string _secondaryBalanceText = "";
+    private bool _isSecondaryBalanceVisible = false;
     private string _prediction = "—";
     private string _todaySpend = "—";
     private string _dailySpend = "—";
@@ -94,6 +96,8 @@ public class DashboardViewModel : BaseViewModel
     private string _platformTodayTotalCost = "—";
 
     public string CurrentBalance { get => _currentBalance; set => SetProperty(ref _currentBalance, value); }
+    public string SecondaryBalanceText { get => _secondaryBalanceText; set => SetProperty(ref _secondaryBalanceText, value); }
+    public bool IsSecondaryBalanceVisible { get => _isSecondaryBalanceVisible; set => SetProperty(ref _isSecondaryBalanceVisible, value); }
     public string TodaySpend { get => _todaySpend; set => SetProperty(ref _todaySpend, value); }
     public string Prediction { get => _prediction; set => SetProperty(ref _prediction, value); }
     public string DailySpend { get => _dailySpend; set => SetProperty(ref _dailySpend, value); }
@@ -335,9 +339,21 @@ public class DashboardViewModel : BaseViewModel
     {
         try
         {
-            var all = await _balanceRepo.GetAllAsync(limit: 10000);
+            var all = await _balanceRepo.GetAllAsync(limit: 10000, currency: "USD");
             _history = all.OrderBy(h => h.Timestamp).ToList();
             _historyLoaded = true;
+
+            var latestCny = await _balanceRepo.GetLatestAsync("CNY");
+            if (latestCny != null && latestCny.TotalBalanceDecimal > 0)
+            {
+                SecondaryBalanceText = $"(+ {latestCny.TotalBalanceDecimal:F2} CNY)";
+                IsSecondaryBalanceVisible = true;
+            }
+            else
+            {
+                SecondaryBalanceText = "";
+                IsSecondaryBalanceVisible = false;
+            }
         }
         catch { }
     }
@@ -391,7 +407,7 @@ public class DashboardViewModel : BaseViewModel
         if (!_historyLoaded)
             await LoadHistoryFromDbAsync();
 
-        if (result.Snapshot != null)
+        if (result.Snapshot != null && string.Equals(result.Snapshot.Currency, "USD", StringComparison.OrdinalIgnoreCase))
             _history.Add(result.Snapshot);
 
         var cutoff = DateTime.UtcNow.AddDays(-180);
@@ -399,6 +415,18 @@ public class DashboardViewModel : BaseViewModel
 
         var bal = result.Snapshot?.TotalBalanceDecimal ?? 0;
         CurrentBalance = $"${bal:F2}";
+
+        var cny = result.AllBalances?.FirstOrDefault(b => string.Equals(b.Currency, "CNY", StringComparison.OrdinalIgnoreCase) && b.TotalBalanceDecimal > 0);
+        if (cny != null)
+        {
+            SecondaryBalanceText = $"(+ {cny.TotalBalanceDecimal:F2} CNY)";
+            IsSecondaryBalanceVisible = true;
+        }
+        else
+        {
+            SecondaryBalanceText = "";
+            IsSecondaryBalanceVisible = false;
+        }
 
         // Dnešní spotřeba
         TodaySpend = result.TodaySpend.HasValue
@@ -481,8 +509,11 @@ public class DashboardViewModel : BaseViewModel
             TextColor = OxyColor.FromRgb(200, 200, 200),
         };
 
-        // Agregovat spotřebu po hodinách
-        var sorted = _history.OrderBy(h => h.Timestamp).ToList();
+        // Agregovat spotřebu po hodinách (výhradně v USD)
+        var sorted = _history
+            .Where(h => string.Equals(h.Currency, "USD", StringComparison.OrdinalIgnoreCase))
+            .OrderBy(h => h.Timestamp)
+            .ToList();
         var byHour = new SortedDictionary<DateTime, decimal>();
 
         for (int i = 1; i < sorted.Count; i++)

@@ -1,5 +1,16 @@
 # Changelog – DeepSeek Credit Checker
 
+## v1.12.1 (2026-10-04)
+
+### 🐛 Bug Fixes
+
+* **💰 Multi-Currency (USD / CNY) Handling for DeepSeek API** – Fixed balance fluctuation and erroneous spend calculations when DeepSeek returns balances across multiple currencies (e.g. topped-up USD alongside granted CNY):
+  * **Separate DB Logging** – All returned currencies from `balance_infos` are logged into SQLite with their respective currency codes.
+  * **Calculations Strictly in USD** – Daily, weekly, and monthly spend (`SpendCalculator`), days remaining predictions (`PredictionEngine`), hourly charts, and the status bar operate exclusively on USD records and never compute deltas across different currencies.
+  * **Recharge Detection Guard** – Top-up notifications (`PollingService`) only trigger upon an actual increase in USD balance, preventing false recharge alerts from currency switches in API responses.
+
+---
+
 ## v1.12.0 (2026-09-11)
 
 ### ✨ New Features

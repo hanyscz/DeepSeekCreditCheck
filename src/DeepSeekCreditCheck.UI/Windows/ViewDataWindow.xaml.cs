@@ -46,7 +46,7 @@ namespace DeepSeekCreditCheck.UI.Windows
                 {
                     var sb = new System.Text.StringBuilder();
                     // Hlavička
-                    sb.AppendLine("Datum;Čas;Měna;Zůstatek (USD)");
+                    sb.AppendLine("Datum;Čas;Měna;Zůstatek");
                     // Data — seřazeno od nejnovějších (stejně jako v tabulce)
                     foreach (var r in allRecords.OrderByDescending(r => r.Timestamp))
                     {
@@ -117,7 +117,7 @@ namespace DeepSeekCreditCheck.UI.ViewModels
 
         public async Task LoadAsync()
         {
-            var all = await _balanceRepo.GetAllAsync(limit: 10000);
+            var all = await _balanceRepo.GetAllAsync(limit: 10000, currency: null);
             Records = new ObservableCollection<BalanceSnapshot>(
                 all.OrderByDescending(r => r.Timestamp));
             RecordCount = Records.Count.ToString();

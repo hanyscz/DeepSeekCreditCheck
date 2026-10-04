@@ -10,19 +10,22 @@ public class PollingServiceRechargeTests
     private static (PollingService svc, Mock<IBalanceRepository> repo, Mock<IDeepSeekApiClient> api)
         CreateService(BalanceSnapshot? previous, string newBalance)
     {
+        var snapshot = new BalanceSnapshot
+        {
+            Timestamp = DateTime.UtcNow,
+            Currency = "USD",
+            TotalBalance = newBalance
+        };
+
         var api = new Mock<IDeepSeekApiClient>();
-        api.Setup(a => a.GetBalanceAsync(It.IsAny<string>()))
-            .ReturnsAsync(new BalanceSnapshot
-            {
-                Timestamp = DateTime.UtcNow,
-                Currency = "USD",
-                TotalBalance = newBalance
-            });
+        api.Setup(a => a.GetBalanceAsync(It.IsAny<string>())).ReturnsAsync(snapshot);
+        api.Setup(a => a.GetAllBalancesAsync(It.IsAny<string>()))
+            .ReturnsAsync(new List<BalanceSnapshot> { snapshot });
 
         var repo = new Mock<IBalanceRepository>();
-        repo.Setup(r => r.GetLatestAsync()).ReturnsAsync(previous);
+        repo.Setup(r => r.GetLatestAsync(It.IsAny<string?>())).ReturnsAsync(previous);
         repo.Setup(r => r.SaveAsync(It.IsAny<BalanceSnapshot>())).Returns(Task.CompletedTask);
-        repo.Setup(r => r.GetAllAsync(It.IsAny<int>()))
+        repo.Setup(r => r.GetAllAsync(It.IsAny<int>(), It.IsAny<string?>()))
             .ReturnsAsync(new List<BalanceSnapshot>());
 
         var settings = new Mock<IAppSettingsService>();
@@ -106,5 +109,24 @@ public class PollingServiceRechargeTests
 
         Assert.NotNull(result);
         Assert.Equal(2.00m, result!.Threshold);
+    }
+
+    [Fact]
+    public async Task PollOnce_CrossCurrencyBalanceJump_NoRechargeEvent()
+    {
+        var cnyPrevious = new BalanceSnapshot
+        {
+            Timestamp = DateTime.UtcNow.AddMinutes(-15),
+            Currency = "CNY",
+            TotalBalance = "6.00"
+        };
+
+        var (svc, _, _) = CreateService(cnyPrevious, "17.13");
+        var fired = false;
+        svc.RechargeDetected += (_, _) => fired = true;
+
+        await svc.PollOnceAsync(CancellationToken.None);
+
+        Assert.False(fired);
     }
 }

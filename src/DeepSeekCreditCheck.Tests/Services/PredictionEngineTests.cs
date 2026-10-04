@@ -186,4 +186,39 @@ public class PredictionEngineTests
         Assert.NotNull(result.RangeHigh);
         Assert.Contains("-", result.FormattedPrediction);
     }
+
+    [Fact]
+    public void Calculate_WithMixedCurrencyHistory_IgnoresNonUsdSnapshots()
+    {
+        var engine = new PredictionEngine();
+        var today = DateTime.Today;
+
+        var history = new List<BalanceSnapshot>();
+
+        // Den 1 (před 3 dny): spend $2.00 in USD, plus stray CNY snapshots
+        var day1Local = today.AddDays(-3);
+        history.Add(new BalanceSnapshot { Timestamp = DateTime.SpecifyKind(day1Local.AddHours(6), DateTimeKind.Local).ToUniversalTime(), Currency = "USD", TotalBalance = "100.00" });
+        history.Add(new BalanceSnapshot { Timestamp = DateTime.SpecifyKind(day1Local.AddHours(12), DateTimeKind.Local).ToUniversalTime(), Currency = "CNY", TotalBalance = "6.00" });
+        history.Add(new BalanceSnapshot { Timestamp = DateTime.SpecifyKind(day1Local.AddHours(22), DateTimeKind.Local).ToUniversalTime(), Currency = "USD", TotalBalance = "98.00" });
+
+        // Den 2 (před 2 dny): spend $1.50 in USD
+        var day2Local = today.AddDays(-2);
+        history.Add(new BalanceSnapshot { Timestamp = DateTime.SpecifyKind(day2Local.AddHours(6), DateTimeKind.Local).ToUniversalTime(), Currency = "USD", TotalBalance = "98.00" });
+        history.Add(new BalanceSnapshot { Timestamp = DateTime.SpecifyKind(day2Local.AddHours(14), DateTimeKind.Local).ToUniversalTime(), Currency = "CNY", TotalBalance = "5.98" });
+        history.Add(new BalanceSnapshot { Timestamp = DateTime.SpecifyKind(day2Local.AddHours(22), DateTimeKind.Local).ToUniversalTime(), Currency = "USD", TotalBalance = "96.50" });
+
+        // Den 3 (před 1 dnem): spend $1.00 in USD
+        var day3Local = today.AddDays(-1);
+        history.Add(new BalanceSnapshot { Timestamp = DateTime.SpecifyKind(day3Local.AddHours(6), DateTimeKind.Local).ToUniversalTime(), Currency = "USD", TotalBalance = "96.50" });
+        history.Add(new BalanceSnapshot { Timestamp = DateTime.SpecifyKind(day3Local.AddHours(22), DateTimeKind.Local).ToUniversalTime(), Currency = "USD", TotalBalance = "95.50" });
+
+        // Dnešek
+        history.Add(new BalanceSnapshot { Timestamp = DateTime.SpecifyKind(today.AddHours(6), DateTimeKind.Local).ToUniversalTime(), Currency = "USD", TotalBalance = "95.50" });
+
+        var result = engine.Calculate(history, 95.50m);
+
+        Assert.True(result.IsReliable);
+        // (2.00 + 1.50 + 1.00) / 3 = 1.50
+        Assert.Equal(1.50m, Math.Round(result.AvgDailySpend, 2));
+    }
 }

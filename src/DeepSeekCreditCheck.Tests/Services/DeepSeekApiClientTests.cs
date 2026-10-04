@@ -57,4 +57,49 @@ public class DeepSeekApiClientTests
             () => client.GetBalanceAsync("bad-key"));
     }
 
+    [Fact]
+    public async Task GetBalance_MultipleCurrenciesWithCnyFirst_ReturnsUsdSnapshot()
+    {
+        var json = @"{
+            ""is_available"": true,
+            ""balance_infos"": [
+                {
+                    ""currency"": ""CNY"",
+                    ""total_balance"": ""6.00"",
+                    ""granted_balance"": ""6.00"",
+                    ""topped_up_balance"": ""0.00""
+                },
+                {
+                    ""currency"": ""USD"",
+                    ""total_balance"": ""17.13"",
+                    ""granted_balance"": ""0.00"",
+                    ""topped_up_balance"": ""17.13""
+                }
+            ]
+        }";
+
+        var handler = new Mock<HttpMessageHandler>();
+        handler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(() => new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.OK,
+                Content = new StringContent(json)
+            });
+
+        var client = new DeepSeekApiClient(new HttpClient(handler.Object));
+        var result = await client.GetBalanceAsync("test-key");
+
+        Assert.Equal("USD", result.Currency);
+        Assert.Equal("17.13", result.TotalBalance);
+
+        var all = await client.GetAllBalancesAsync("test-key");
+        Assert.Equal(2, all.Count);
+        Assert.Equal("CNY", all[0].Currency);
+        Assert.Equal("6.00", all[0].TotalBalance);
+        Assert.Equal("USD", all[1].Currency);
+        Assert.Equal("17.13", all[1].TotalBalance);
+    }
 }
