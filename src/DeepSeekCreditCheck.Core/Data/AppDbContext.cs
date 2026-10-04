@@ -47,6 +47,7 @@ public class AppDbContext
         );
 
         CREATE INDEX IF NOT EXISTS idx_balance_timestamp ON BalanceSnapshots(Timestamp);
+        CREATE INDEX IF NOT EXISTS idx_balance_currency_timestamp ON BalanceSnapshots(Currency, Timestamp);
         CREATE INDEX IF NOT EXISTS idx_monthly_usage_ym ON MonthlyUsageDetails(Year, Month);
         CREATE INDEX IF NOT EXISTS idx_monthly_usage_ym_date ON MonthlyUsageDetails(Year, Month, UtcDate);";
 

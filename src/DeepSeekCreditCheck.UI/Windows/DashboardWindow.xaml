@@ -127,8 +127,14 @@
                 <!-- Left: Balance + prediction stacked -->
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="AKTUÁLNÍ ZŮSTATEK" FontSize="11" Foreground="#888" />
-                    <TextBlock Text="{Binding CurrentBalance}" FontSize="32" FontWeight="Bold"
-                               Foreground="#4FC3F7" Margin="0,2,0,4" />
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,2,0,4">
+                        <TextBlock Text="{Binding CurrentBalance}" FontSize="32" FontWeight="Bold"
+                                   Foreground="#4FC3F7" VerticalAlignment="Bottom" />
+                        <TextBlock Text="{Binding SecondaryBalanceText}" FontSize="14" FontWeight="SemiBold"
+                                   Foreground="#80DEEA" VerticalAlignment="Bottom" Margin="8,0,0,5"
+                                   Visibility="{Binding IsSecondaryBalanceVisible, Converter={StaticResource BoolToVis}}"
+                                   ToolTip="Zbývající propagační / bonusový kredit v CNY" />
+                    </StackPanel>
                     <TextBlock FontSize="13" Foreground="#999" Margin="0,0,0,2">
                         <Run Text="Predikce:" />
                         <Run Text="{Binding Prediction}" FontWeight="SemiBold" Foreground="#81C784"

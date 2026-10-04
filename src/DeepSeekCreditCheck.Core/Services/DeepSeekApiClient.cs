@@ -16,7 +16,7 @@ public class DeepSeekApiClient : IDeepSeekApiClient
         _http.DefaultRequestHeaders.Add("Accept", "application/json");
     }
 
-    public async Task<BalanceSnapshot> GetBalanceAsync(string apiKey)
+    public async Task<IReadOnlyList<BalanceSnapshot>> GetAllBalancesAsync(string apiKey)
     {
         var request = new HttpRequestMessage(HttpMethod.Get, "/user/balance");
         request.Headers.Add("Authorization", $"Bearer {apiKey}");
@@ -26,13 +26,37 @@ public class DeepSeekApiClient : IDeepSeekApiClient
 
         var json = await response.Content.ReadFromJsonAsync<JsonElement>();
         var infos = json.GetProperty("balance_infos");
-        var info = infos[0];
+        var now = DateTime.UtcNow;
 
-        return new BalanceSnapshot
+        var list = new List<BalanceSnapshot>();
+        foreach (var info in infos.EnumerateArray())
         {
-            Timestamp = DateTime.UtcNow,
-            Currency = info.GetProperty("currency").GetString() ?? "USD",
-            TotalBalance = info.GetProperty("total_balance").GetString() ?? "0.00"
-        };
+            list.Add(new BalanceSnapshot
+            {
+                Timestamp = now,
+                Currency = info.GetProperty("currency").GetString() ?? "USD",
+                TotalBalance = info.GetProperty("total_balance").GetString() ?? "0.00"
+            });
+        }
+
+        return list;
+    }
+
+    public async Task<BalanceSnapshot> GetBalanceAsync(string apiKey)
+    {
+        var balances = await GetAllBalancesAsync(apiKey);
+        if (balances.Count == 0)
+        {
+            return new BalanceSnapshot
+            {
+                Timestamp = DateTime.UtcNow,
+                Currency = "USD",
+                TotalBalance = "0.00"
+            };
+        }
+
+        // Vždy preferujeme USD pro výpočty a zobrazení
+        return balances.FirstOrDefault(b => string.Equals(b.Currency, "USD", StringComparison.OrdinalIgnoreCase))
+               ?? balances[0];
     }
 }

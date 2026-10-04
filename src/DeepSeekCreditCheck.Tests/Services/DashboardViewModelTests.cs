@@ -429,5 +429,64 @@ public class DashboardViewModelTests
         Assert.False(vm.IsPlatformTodayVisible);
         Assert.Equal("—", vm.PlatformTodayDateText);
     }
+
+    [Fact]
+    public async Task OnPollCompleted_WithCnyBalance_ShowsSecondaryBalance()
+    {
+        var vm = new DashboardViewModel(
+            _pollingMock.Object,
+            _balanceRepoMock.Object,
+            _predictionEngineMock.Object,
+            _updateServiceMock.Object,
+            _platformClientMock.Object,
+            _settingsMock.Object,
+            _usageRepoMock.Object
+        );
+
+        var usdSnapshot = new BalanceSnapshot { Currency = "USD", TotalBalance = "17.13" };
+        var cnySnapshot = new BalanceSnapshot { Currency = "CNY", TotalBalance = "5.98" };
+
+        var pollResult = new PollResult
+        {
+            Snapshot = usdSnapshot,
+            AllBalances = new List<BalanceSnapshot> { cnySnapshot, usdSnapshot },
+            TodaySpend = 0.50m
+        };
+
+        await vm.OnPollCompleted(pollResult);
+
+        Assert.Equal($"${usdSnapshot.TotalBalanceDecimal:F2}", vm.CurrentBalance);
+        Assert.True(vm.IsSecondaryBalanceVisible);
+        Assert.Equal($"(+ {cnySnapshot.TotalBalanceDecimal:F2} CNY)", vm.SecondaryBalanceText);
+    }
+
+    [Fact]
+    public async Task OnPollCompleted_WithoutCnyBalance_HidesSecondaryBalance()
+    {
+        var vm = new DashboardViewModel(
+            _pollingMock.Object,
+            _balanceRepoMock.Object,
+            _predictionEngineMock.Object,
+            _updateServiceMock.Object,
+            _platformClientMock.Object,
+            _settingsMock.Object,
+            _usageRepoMock.Object
+        );
+
+        var usdSnapshot = new BalanceSnapshot { Currency = "USD", TotalBalance = "17.13" };
+
+        var pollResult = new PollResult
+        {
+            Snapshot = usdSnapshot,
+            AllBalances = new List<BalanceSnapshot> { usdSnapshot },
+            TodaySpend = 0.50m
+        };
+
+        await vm.OnPollCompleted(pollResult);
+
+        Assert.Equal($"${usdSnapshot.TotalBalanceDecimal:F2}", vm.CurrentBalance);
+        Assert.False(vm.IsSecondaryBalanceVisible);
+        Assert.Equal("", vm.SecondaryBalanceText);
+    }
 }
 

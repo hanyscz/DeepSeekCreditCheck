@@ -6,10 +6,16 @@ public class PredictionEngine
 {
     public PredictionResult Calculate(IReadOnlyList<BalanceSnapshot> history, decimal currentBalance, DateTime? referenceDate = null)
     {
-        if (history.Count < 2 || currentBalance <= 0)
+        if (history == null || history.Count < 2 || currentBalance <= 0)
             return new PredictionResult { DaysRemaining = null, AvgDailySpend = 0, IsReliable = false };
 
-        var sorted = history.OrderBy(h => h.Timestamp).ToList();
+        var sorted = history
+            .Where(h => string.Equals(h.Currency, "USD", StringComparison.OrdinalIgnoreCase))
+            .OrderBy(h => h.Timestamp)
+            .ToList();
+
+        if (sorted.Count < 2)
+            return new PredictionResult { DaysRemaining = null, AvgDailySpend = 0, IsReliable = false };
 
         // Agregovat denní spotřebu po kalendářních dnech (lokální čas)
         // Každý den se spočítá SumPositiveDeltas (ignoruje dobíjení)

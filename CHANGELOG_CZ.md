@@ -1,5 +1,16 @@
 # Changelog CZ – DeepSeek Credit Checker
 
+## v1.12.1 (2026-10-04)
+
+### 🐛 Opravy chyb
+
+* **💰 Podpora více měn (USD / CNY) v API DeepSeeku** – Vyřešen problém se skoky zůstatku a falešnou spotřebou, pokud DeepSeek vrátí na účtu více měn (např. dobité USD a připsaný bonus v CNY):
+  * **Oddělené logování do DB** – Do databáze se ukládají všechny vrácené měny z pole `balance_infos` s příslušným označením měny.
+  * **Výpočty striktně v USD** – Veškeré výpočty denní, týdenní a měsíční spotřeby (`SpendCalculator`), predikce zůstatku (`PredictionEngine`), hodinové grafy i stavový panel pracují výhradně s USD a nikdy nemíchají různé měny dohromady.
+  * **Ochrana detekce dobití** – Notifikace o dobití kreditu (`PollingService`) se spustí pouze při reálném nárůstu USD zůstatku, nikoli při přepnutí měn v odpovědi API.
+
+---
+
 ## v1.12.0 (2026-09-11)
 
 ### ✨ Nové funkce

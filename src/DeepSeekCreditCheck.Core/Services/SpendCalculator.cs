@@ -13,13 +13,25 @@ public static class SpendCalculator
     /// <returns>Total spend (sum of all positive deltas), or 0 if fewer than 2 snapshots.</returns>
     public static decimal SumPositiveDeltas(IReadOnlyList<BalanceSnapshot> snapshots)
     {
-        if (snapshots.Count < 2)
+        if (snapshots == null || snapshots.Count < 2)
             return 0;
+
+        // Pokud seznam obsahuje záznamy v USD, počítáme výhradně s USD (ochrana proti míchání měn např. CNY a USD).
+        // Pokud USD neobsahuje, použije se měna prvního záznamu.
+        var targetCurrency = snapshots.Any(s => string.Equals(s.Currency, "USD", StringComparison.OrdinalIgnoreCase))
+            ? "USD"
+            : snapshots[0].Currency;
 
         // Pozor! Timestamp může mít v DB různé DateTimeKind (Utc / Unspecified),
         // takže OrderBy by řadilo podle ticks bez konverze → špatně.
-        // Data už přichází seřazená od volajícího, bereme je tak, jak jsou.
-        var sorted = snapshots.ToList();
+        // Data už přichází seřazená od volajícího, bereme je tak, jak jsou, pouze vyfiltrujeme shodnou měnu.
+        var sorted = snapshots
+            .Where(s => string.Equals(s.Currency, targetCurrency, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        if (sorted.Count < 2)
+            return 0;
+
         decimal total = 0;
         for (int i = 1; i < sorted.Count; i++)
         {

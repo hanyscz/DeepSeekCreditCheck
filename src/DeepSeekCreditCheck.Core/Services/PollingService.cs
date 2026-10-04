@@ -1,3 +1,4 @@
+using DeepSeekCreditCheck.Core.Models;
 using DeepSeekCreditCheck.Core.Repositories;
 
 namespace DeepSeekCreditCheck.Core.Services;
@@ -69,14 +70,42 @@ public class PollingService : IPollingService
 
         try
         {
-            // Předchozí snapshot pro detekci dobití (musí se načíst před uložením nového)
-            var previous = await _balanceRepo.GetLatestAsync();
+            // Předchozí snapshot v USD pro detekci dobití (musí se načíst před uložením nového)
+            var previous = await _balanceRepo.GetLatestAsync("USD");
 
-            var snapshot = await _apiClient.GetBalanceAsync(apiKey);
-            await _balanceRepo.SaveAsync(snapshot);
+            // Načíst všechny měny z API (USD, CNY, ...)
+            IReadOnlyList<BalanceSnapshot> allBalances;
+            try
+            {
+                allBalances = await _apiClient.GetAllBalancesAsync(apiKey);
+            }
+            catch
+            {
+                var single = await _apiClient.GetBalanceAsync(apiKey);
+                allBalances = new[] { single };
+            }
 
-            // Detekce dobití kreditu — kladný skok zůstatku oproti předchozímu záznamu
-            if (previous != null)
+            if (allBalances == null || allBalances.Count == 0)
+            {
+                var single = await _apiClient.GetBalanceAsync(apiKey);
+                allBalances = new[] { single };
+            }
+
+            // Do DB zalogujeme všechny vrácené měny
+            foreach (var b in allBalances)
+            {
+                await _balanceRepo.SaveAsync(b);
+            }
+
+            // Pro výpočty a zobrazení bereme výhradně USD
+            var snapshot = allBalances.FirstOrDefault(b => string.Equals(b.Currency, "USD", StringComparison.OrdinalIgnoreCase))
+                           ?? allBalances.FirstOrDefault()
+                           ?? new BalanceSnapshot { Currency = "USD", TotalBalance = "0.00", Timestamp = DateTime.UtcNow };
+
+            // Detekce dobití kreditu — kladný skok zůstatku v USD oproti předchozímu záznamu v USD
+            if (previous != null &&
+                string.Equals(previous.Currency, "USD", StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(snapshot.Currency, "USD", StringComparison.OrdinalIgnoreCase))
             {
                 var delta = snapshot.TotalBalanceDecimal - previous.TotalBalanceDecimal;
                 if (delta > RechargeMinDelta)
@@ -89,10 +118,10 @@ public class PollingService : IPollingService
                 }
             }
 
-            var history = await _balanceRepo.GetAllAsync(limit: 500);
+            var history = await _balanceRepo.GetAllAsync(limit: 500, currency: "USD");
             var prediction = _predictionEngine.Calculate(history, snapshot.TotalBalanceDecimal);
 
-            // Spočítat dnešní spotřebu z historie
+            // Spočítat dnešní spotřebu z historie (výhradně USD)
             // Používáme lokální kalendářní den pro správné filtrování bez ohledu na DateTime.Kind
             decimal? todaySpend = null;
             var todayLocal = DateTime.Today;
@@ -115,6 +144,7 @@ public class PollingService : IPollingService
             PollCompleted?.Invoke(this, new PollResult
             {
                 Snapshot = snapshot,
+                AllBalances = allBalances,
                 Prediction = prediction,
                 TodaySpend = todaySpend,
                 Timestamp = DateTime.UtcNow,
@@ -138,6 +168,7 @@ public class PollingService : IPollingService
 public class PollResult
 {
     public Models.BalanceSnapshot? Snapshot { get; init; }
+    public IReadOnlyList<Models.BalanceSnapshot> AllBalances { get; init; } = Array.Empty<Models.BalanceSnapshot>();
     public PredictionResult? Prediction { get; init; }
     public decimal? TodaySpend { get; init; }
     public DateTime Timestamp { get; init; }

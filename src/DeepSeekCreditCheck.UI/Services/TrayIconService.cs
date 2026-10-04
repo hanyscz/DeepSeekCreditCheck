@@ -210,6 +210,11 @@ public class TrayIconService : IDisposable
         var loc = LocalizationService.Instance;
         var bal = result.Snapshot?.TotalBalanceDecimal ?? 0;
         var balStr = $"${bal:F2}";
+        var cny = result.AllBalances.FirstOrDefault(b => string.Equals(b.Currency, "CNY", StringComparison.OrdinalIgnoreCase) && b.TotalBalanceDecimal > 0);
+        if (cny != null)
+        {
+            balStr += $" (+ {cny.TotalBalanceDecimal:F2} CNY)";
+        }
         var pred = result.Prediction?.FormattedPrediction ?? "—";
         var todayStr = result.TodaySpend.HasValue ? $"${result.TodaySpend.Value:F2}" : "—";
 

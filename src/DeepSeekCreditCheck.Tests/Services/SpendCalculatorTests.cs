@@ -132,4 +132,21 @@ public class SpendCalculatorTests
         var result = SpendCalculator.SumPositiveDeltas(snapshots);
         Assert.Equal(20.00m, result);
     }
+
+    [Fact]
+    public void MixedCurrencies_CalculatesOnlyUsd()
+    {
+        var snapshots = new List<BalanceSnapshot>
+        {
+            new() { Timestamp = new DateTime(2026, 10, 3, 10, 0, 0, DateTimeKind.Utc), Currency = "USD", TotalBalance = "17.13" },
+            new() { Timestamp = new DateTime(2026, 10, 3, 10, 15, 0, DateTimeKind.Utc), Currency = "CNY", TotalBalance = "6.00" },
+            new() { Timestamp = new DateTime(2026, 10, 3, 10, 30, 0, DateTimeKind.Utc), Currency = "USD", TotalBalance = "17.00" },
+            new() { Timestamp = new DateTime(2026, 10, 3, 10, 45, 0, DateTimeKind.Utc), Currency = "CNY", TotalBalance = "5.98" },
+            new() { Timestamp = new DateTime(2026, 10, 3, 11, 0, 0, DateTimeKind.Utc), Currency = "USD", TotalBalance = "16.50" }
+        };
+
+        var result = SpendCalculator.SumPositiveDeltas(snapshots);
+        // (17.13 - 17.00) + (17.00 - 16.50) = 0.13 + 0.50 = 0.63
+        Assert.Equal(0.63m, result);
+    }
 }
